@@ -1,3 +1,3 @@
 [submodule "SvgPlus"]
-	path = SvgPlus
+	path = src/SvgPlus
 	url = https://github.com/GabrielRalph/SvgPlus.git
