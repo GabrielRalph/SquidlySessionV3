@@ -1,0 +1,197 @@
+
+tool-bar, tool-bar-ring {
+    --margin: 0.5em;
+    --border: 3px; 
+
+    --tool-bar-size: calc(var(--tool-bar-area-height) - 2 * var(--margin) - 2 * var(--border));
+    --tool-bar-width: calc(var(--width) - 2 * var(--margin) - 2 * var(--border));
+    --icon-size: min(calc(0.5 * var(--tool-bar-size)), calc(var(--tool-bar-width) / 8));
+    --max-icons: 5;
+
+    --tbr: calc(3 * var(--rad-1));
+}
+tool-bar {
+    position: absolute;
+    top: var(--margin);
+    bottom: var(--margin);
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--panel-color);
+    border: var(--border) solid var(--panel-dark-color);
+    display: flex;
+    border-radius: var(--tbr);
+    pointer-events: all;
+}
+
+
+
+.tool-bar-icon {
+    display: flex;
+    flex-direction: column;
+    width: calc(var(--tool-bar-width) / var(--max-icons));
+    align-items: center;
+    justify-content: center;
+    color: rgb(255, 254, 254);
+    text-shadow: -1px 1px 1px rgb(0 0 0), 0px -2px 3px rgb(204 198 198 / 38%);
+    cursor: pointer;
+}
+tool-bar .tool-bar-icon {
+    border: var(--border) solid var(--panel-darker-color);
+    --ibr: calc(var(--tbr) - var(--border));
+    background: linear-gradient(to bottom, var(--panel-color), #2d2b2b);
+    box-shadow: inset 0px 0px 6px var(--panel-dark-color), inset 0px 9px 6px -8px #ffffff;
+    text-shadow: 0px 0px 3px rgb(255, 255, 255),
+}
+tool-bar .tool-bar-icon:first-of-type {
+    border-radius: var(--ibr) 0 0 var(--ibr);
+}
+tool-bar .tool-bar-icon:last-of-type {
+    border-radius: 0 var(--ibr) var(--ibr) 0;
+}
+
+
+.tool-bar-icon[color="red"] {
+    --icon-color: var(--icon-color-red);
+    --icon-color-hover: var(--icon-color-red-hover);
+}
+.tool-bar-icon[color="blue"] {
+    --icon-color: #7fceec;
+    --icon-color-hover: var(--color-blue1);
+}
+.tool-bar-icon[color="danger"] {
+    --icon-color: var(--color-danger-lighter);
+    --icon-color-hover: var(--color-danger-light);
+}
+.tool-bar-icon[color="orange"] {
+    --icon-color: #fac165;
+    --icon-color-hover: #ffb53d;
+}
+
+
+
+.tool-bar-icon .icon-box {
+    display: flex;
+    position: relative;
+}
+.icon {
+    height: var(--icon-size);
+    filter: drop-shadow(-1px 1px 1px rgb(0, 0, 0)) drop-shadow(0px -2px 2px rgba(255, 255, 255, 0.344));
+}
+.tool-bar-icon .hint {
+    font-size: calc(var(--icon-size) / 3);
+}
+
+.tool-bar-icon .notification {
+    font-size: calc(var(--icon-size) / 4);
+    position: absolute;
+    top: 0;
+    left: 0;
+    min-width: 1em;
+    min-height: 1em;
+    border-radius: 1em;
+    opacity: 0;
+    text-align: center;
+}
+.tool-bar-icon .notification[shown=true] {
+    opacity: 1;
+}
+
+ring-selector {
+    --r0: min(var(--width), calc(var(--height) - var(--tool-bar-size)));
+    --r1: calc(var(--r0) / 2);
+    --r2: calc((var(--r1) + 1.5 * var(--icon-size))/2);
+    --cxy: calc(50% - var(--tool-bar-area-extent) / 2);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+
+.tool-bar-icon[hover] .icon-box,
+.tool-bar-icon[highlight] .icon-box {
+    --icon-color: var(--icon-color-hover);
+}
+
+
+tool-bar .tool-bar-icon:hover, tool-bar .tool-bar-icon[hover] {
+    background: var(--panel-dark-color);
+    border-color: black;
+    box-shadow: inset 1px 1px 20px black,
+    inset 0px -9px 6px -8px #ffffff7c;;
+    --icon-color: var(--icon-color-hover);
+}
+tool-bar .tool-bar-icon[hover] {
+    border-color: var(--color-danger);
+}
+
+
+
+ring-selector .tool-bar-icon {
+    position: absolute;
+    top: calc(var(--cxy) + var(--r2) * var(--sin-t));
+    left: calc(50% + var(--r2) * var(--cos-t));
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.ring-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% + var(--tool-bar-area-extent) + 1px);
+    transform: translateY(calc(-1 * var(--tool-bar-area-extent)));
+}
+
+/* Click boxes for ring icon */
+.click-boxes * {
+    fill: var(--panel-color);
+    fill-opacity: 0.8;
+    stroke: var(--panel-dark-color);
+    stroke-width: calc(2 * var(--border));
+    /* filter: url(#my-filter); */
+}
+
+.click-boxes *[hover],
+.click-boxes *[highlight] {
+    fill: var(--panel-dark-color);
+    fill-opacity: 0.95;
+}
+
+
+/* Outlines for ring icon */
+.outlines {
+    pointer-events: none;
+}
+.outlines *{
+    stroke-width: calc(2 * var(--border));
+    fill: none;
+    stroke: none;
+    stroke-linejoin: round;
+}
+
+.outlines *[highlight]{
+    stroke: var(--color-danger);
+}
+.outlines *[hover]{
+    stroke: var(--panel-darker-color);
+}
+
+
+.cancel {
+    position: absolute;
+    left: 50%;
+    top: var(--cxy);
+    transform: translate(-50%, -50%);
+    width: calc(3 * var(--icon-size));
+    height: calc(3 * var(--icon-size));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;;
+}
+.cancel[hover], .cancel[highlight] {
+    --icon-color: var(--icon-color-hover);
+}

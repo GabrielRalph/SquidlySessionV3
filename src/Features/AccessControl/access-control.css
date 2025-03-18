@@ -1,0 +1,28 @@
+control-overlay {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: none;
+}
+
+.circle-loader {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 7em;
+    opacity: 0.9;
+}
+.circle-loader path{
+    stroke: var(--color-danger);
+    fill: none;
+    stroke-width: 15;
+    stroke-linecap: round;
+    filter: url(#shadow-filter);
+}
+
+@supports (font: -apple-system-body) and (-webkit-appearance: none) {
+    .circle-loader path{ 
+        filter: none;
+    }
+    .circle-loader {
+    }
+  }

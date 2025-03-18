@@ -13,6 +13,66 @@ window.onmousemove = (e) => {
   window.change_flag = true;
 }
 
+export function isIOS() {
+  if (/iPad|iPhone|iPod/.test(navigator.platform)) {
+    return true;
+  } else {
+    return navigator.maxTouchPoints &&
+      navigator.maxTouchPoints > 2 &&
+      /MacIntel/.test(navigator.platform);
+  }
+}
+
+export function isIpadOS() {
+  return navigator.maxTouchPoints &&
+    navigator.maxTouchPoints > 2 &&
+    /MacIntel/.test(navigator.platform);
+}
+
+export function isExactSame(obj1, obj2) {
+  if (typeof obj1 !== typeof obj2) return false;
+  else if (typeof obj1 === "object") {
+      if (obj1 === null && obj2 === null ) return true;
+      else if (obj1 === null || obj2 === null) return false;
+      else {
+          let k1 = new Set(Object.keys(obj1));
+          let k2 = new Set(Object.keys(obj2));
+          let k3 = new Set();
+          for (let v of k1) k3.add(v);
+          for (let v of k2) k3.add(v);
+      
+          if (k1.size !== k3.size) {
+              return false;
+          } else {
+              for (let key of k1) {
+                  let v1 = obj1[key];
+                  let v2 = obj2[key];
+                  if (!isExactSame(v1, v2)) return false;
+              }
+          }
+      }
+  } else if ( obj1 !== obj2 ) return false;
+
+  return true;
+}
+
+/**
+ * @TODO Make this work for all devices
+ */
+export function getDevice(){
+  if (isIOS()) {
+    if (isIpadOS()) {
+      return "tablet"
+    } else {
+      return "phonoe"
+    }
+  } else {
+    return "computer"
+  }
+}
+
+console.log(getDevice());
+
 export function isPageHidden(){
   return document.hidden || document.msHidden || document.webkitHidden || document.mozHidden;
 }
@@ -114,12 +174,19 @@ export class TransitionVariable {
   constructor(initialValue, durationPerUnit, onupdate) {
     if (onupdate instanceof Function) this.onupdate = onupdate;
     this.duration = durationPerUnit;
+    this.reverseDuration = durationPerUnit;
     this.hardSet(initialValue);
     this._updating = null;
   }
 
   onupdate() {
 
+  }
+
+  async waitTransition(){
+    if (this._updating instanceof Promise) {
+      await this._updating;
+    }
   }
 
   async startUpdating(){
@@ -130,7 +197,8 @@ export class TransitionVariable {
       while(this.goalValue != this.transValue) {
         await delay();
         let t1 = performance.now();
-        let dv = (t1 - t0) / (1000 * this.duration);
+        let duration = this.transValue > this.goalValue ? this.reverseDuration : this.duration;
+        let dv = (t1 - t0) / (1000 * duration);
         t0 = t1;
 
         let value = this.goalValue;
@@ -141,7 +209,7 @@ export class TransitionVariable {
         }
 
         if (this.onupdate instanceof Function) {
-          this.onupdate(this.getTransValue());
+          this.onupdate(this.getTransValue(), this.goalValue);
         }
       }
     }
@@ -159,6 +227,7 @@ export class TransitionVariable {
   hardSet(value) {
     this.goalValue = value;
     this.transValue = value;
+    this.onupdate(this.getTransValue());
   }
 
   get(){
@@ -177,7 +246,7 @@ export class WaveStateVariable extends TransitionVariable {
 
   async set(value) {
     value = value ? 1 : 0;
-    super.set(value);
+    await super.set(value);
   }
 
   hardSet(value) {
@@ -187,5 +256,64 @@ export class WaveStateVariable extends TransitionVariable {
 
   getTransValue(){
     return (1 - Math.cos(this.transValue * Math.PI))/2
+  }
+}
+
+export function getQueryKey(string = window.location.search) {
+  let key = null;
+  try {
+    let match = string.match(/^\?([ !"%&'()*+\,\-\/0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ\^_`abcdefghijklmnopqrstuvwxyz{|}]{20})(?:\.(\w*))?$/);
+    if (match) {
+      if (!match[2]) match[2] = null;
+      key = {
+        key: match[1],
+        option: match[2]
+      }
+    }
+  } catch (e) { }
+  return key;
+}
+
+export class PromiseChain {
+  constructor(){
+      this.head = null;
+      this.tail = null;
+
+  }
+  /** 
+   * @param {() => Promise} 
+   * @return {Promise}
+   * */
+  async addPromise(func) {
+      let item = {next: null, prom: null};
+
+      // Add item to chain
+      if (this.head == null) {
+          this.head = item;
+          this.tail = item;
+      } else {
+          this.tail.next = item;
+          this.tail = item;
+      }
+
+      // wait for previous promises in the chain
+      let node = this.head;
+      while (node != item) {
+          await node.prom;
+          node = node.next;
+      }
+
+      // call the promise added.
+      item.prom = func();
+      let res = await item.prom;
+
+      // remove the item from the chain
+      if (this.tail == item) {
+          this.tail = null;
+          this.head = null;
+      } else {
+          this.head = item.next;
+      }
+      return res;
   }
 }

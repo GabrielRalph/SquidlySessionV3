@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 100 100">
+  <!-- Generator: Adobe Illustrator 28.7.3, SVG Export Plug-In . SVG Version: 1.2.0 Build 164)  -->
+  <g>
+    <g id="Layer_1">
+      <g>
+        <g>
+          <ellipse cx="19.56" cy="15.93" rx="9.22" ry="3.53" transform="translate(-5.53 18.5) rotate(-45)"/>
+          <path d="M76.52,59.87L28.99,12.32c1.37,1.37-.43,5.41-4.02,9s-7.63,5.39-9,4.02l47.53,47.53c1.37,1.37,5.41-.43,9-4.02s5.39-7.63,4.02-9h0Z"/>
+          <path d="M67.37,76.2l17.74,7.44c1.37.58,2.74-.8,2.18-2.18l-7.44-17.74c.26,1.82-1.46,5.07-4.42,8.04s-6.22,4.68-8.04,4.42h-.01Z"/>
+        </g>
+        <rect x="5" y="83.79" width="90" height="7.26"/>
+      </g>
+    </g>
+  </g>
+</svg>

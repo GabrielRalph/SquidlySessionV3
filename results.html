@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+<script type = "module">
+import { QuizResultsPage } from "./src/Features/Quiz/results.js";
+
+let quiz = {"n_questions":6,"name":"Math 102","owned":true,"owner":"s6NoggwP78XlE7LtWnu5Q38VbF32","ownerName":"Gabriel","public":true,"qid":"-OIY6--Z2ZuC5iGy1RmI","questions":[{"answers":[{"color":"light-red","correct":false,"subtitle":"","title":"2"},{"color":"light-orange","correct":false,"subtitle":"","title":"-2"},{"color":"light-green","correct":false,"subtitle":"","title":"$$\\pm$$2"},{"color":"light-blue","correct":true,"subtitle":"","title":"$$\\pm$$2$$i$$"}],"n_answers":4,"question":"What is the answer\n\n$$x^2 + 4 = 0$$"},{"answers":[{"color":"light-red","correct":false,"subtitle":"","title":"$$y = \\log(x^2)$$"},{"color":"light-orange","correct":false,"subtitle":"","title":"$$y = \\log(\\cfrac{1}{x})$$"},{"color":"light-green","correct":true,"subtitle":"","title":"$$y=\\cfrac{1}{x}$$"},{"color":"light-blue","correct":false,"subtitle":"","title":"$$y = \\cfrac{1}{\\log(x)}$$"}],"n_answers":4,"question":"The derivative of $$y = \\log(x)$$"},{"answers":[{"color":"white","correct":false,"subtitle":"$$A_n = \\int^1_0 f(xn)dx$$","title":"A"},{"color":"white","correct":false,"subtitle":"$$A_n = \\int^\\pi_{-\\pi} f(2\\pi n) cos(n) dn$$","title":"B"},{"color":"white","correct":true,"subtitle":"$$A_n = \\int^\\pi_{-\\pi} f(x)cos(nx)dx$$","title":"C"},{"color":"white","correct":false,"subtitle":"$$\\cfrac{f(x) cos(nx)}{\\sin(nx) f^{-1}(x)}$$","title":"D"}],"n_answers":4,"question":"The Fourier transform approximates a function $$f(x)$$ as follows\n\n $$f(x) \\approx a_0 + \\sum^\\infty_{n=0} A_n\\cos(n\\theta)$$  \n$$ + \\sum^\\infty_{n=1}B_n \\sin(n\\theta) $$.  \n\nWhat is $$A_n$$."},{"answers":[{"color":"white","correct":false,"subtitle":"","title":"31"},{"color":"white","correct":true,"subtitle":"","title":"17"},{"color":"white","correct":false,"subtitle":"","title":"9"},{"color":"white","correct":false,"subtitle":"","title":"22"}],"n_answers":4,"question":"Solve for $$x$$\n\n$$17^{2221} \\equiv x \\mod{31}$$"},{"answers":[{"color":"white","correct":false,"subtitle":"Any matrix such that $$|M|\\ne 0$$","title":"A"},{"color":"white","correct":true,"subtitle":"A symmetric matrix.","title":"B"},{"color":"white","correct":false,"subtitle":"A vector of coefficients.","title":"C"},{"color":"white","correct":false,"subtitle":"A single coefficient value.","title":"D"}],"n_answers":4,"question":"A conic is defined by the equation $$\\mathcal{C} = \\{ \\mathbf{x} = (x:y:z) \\ | \\  \\mathbf{x^T Mx} = 0\\}.$$\n \nWhat does **M** represent?"},{"answers":[{"color":"white","correct":true,"subtitle":"$$\\mat{5+6y^2 & 5x+12y \\\\ 6x + 4y & 3x^2 + 4}$$","title":"A"},{"color":"white","correct":false,"subtitle":"$$\\mat{5+6y^2 & 6x + 4 \\\\ 6y + 5 & 12}$$","title":"B"},{"color":"white","correct":false,"subtitle":"$$\\mat{5 & 6 \\\\ 3 & 4}$$","title":"C"},{"color":"white","correct":false,"subtitle":"$$\\mat{5+6y & 6 \\\\ 3+4y & 3}$$","title":"D"}],"n_answers":4,"question":"What is the Jacobian matrix for\n\n$$f(x, y) = (5x + 6y^2, 3x^2 + 4y)$$"}]}
+let results = {"actions":[{"type":"answer","time":1741425830108,"value":3,"question":0,"answers":[3],"duration":1317},{"type":"next","time":1741425831906,"value":null,"question":0,"answers":[3],"duration":3115},{"type":"answer","time":1741425841683,"value":1,"question":1,"answers":[1],"duration":12892},{"type":"answer","time":1741425852246,"value":2,"question":1,"answers":[2],"duration":23455},{"type":"next","time":1741425853331,"value":null,"question":1,"answers":[2],"duration":24540},{"type":"answer","time":1741425855017,"value":2,"question":2,"answers":[2],"duration":26226},{"type":"next","time":1741425863474,"value":null,"question":2,"answers":[2],"duration":34683},{"type":"answer","time":1741425865003,"value":1,"question":3,"answers":[1],"duration":36212},{"type":"next","time":1741425866327,"value":null,"question":3,"answers":[1],"duration":37536},{"type":"answer","time":1741425867325,"value":1,"question":4,"answers":[1],"duration":38534},{"type":"next","time":1741425868155,"value":null,"question":4,"answers":[1],"duration":39364},{"type":"answer","time":1741425869900,"value":0,"question":5,"answers":[0],"duration":41109}],"answers":[{"choosen":[3],"question":0,"correct":[3],"score":1},{"choosen":[2],"question":1,"correct":[2],"score":1},{"choosen":[2],"question":2,"correct":[2],"score":1},{"choosen":[1],"question":3,"correct":[1],"score":1},{"choosen":[1],"question":4,"correct":[1],"score":1},{"choosen":[0],"question":5,"correct":[0],"score":1}],"csv":"**Quiz Actions**\nquestion,action,response time (s), selected answers\nQ1, answer, 1.32s, [3]\nQ1, next, 3.12s, [3]\nQ2, answer, 12.89s, [1]\nQ2, answer, 23.46s, [2]\nQ2, next, 24.54s, [2]\nQ3, answer, 26.23s, [2]\nQ3, next, 34.68s, [2]\nQ4, answer, 36.21s, [1]\nQ4, next, 37.54s, [1]\nQ5, answer, 38.53s, [1]\nQ5, next, 39.36s, [1]\nQ6, answer, 41.11s, [0]\n\n**Quiz Results\nquestion, correct, choosen\nQ1, [3], [3]\nQ2, [2], [2]\nQ3, [2], [2]\nQ4, [1], [1]\nQ5, [1], [1]\nQ6, [0], [0]","total":6,"summary":"help"}
+document.body.appendChild(new QuizResultsPage(quiz, results))
+</script>
+<style>
+    body {
+    margin: 5em;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+@media print {
+    body {margin: 0;}
+}
+.results {
+    column-count: 2;
+    /* position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0; */
+}
+.results > .section:first-of-type h2 {
+    margin-top: 0;
+}
+.section.break-okay {
+    break-inside: unset;
+}
+.section {
+    break-inside: avoid-column;
+}
+li[correct]::after {
+    content: " ";
+    width: 0.7em;
+    height: 0.7em;
+    background: greenyellow;
+    border-radius: 1em;
+    display: inline-block;
+    margin-left: 0.5em;
+}
+
+ol, h4 {
+    margin: 0;
+}
+.q-title {
+    margin-top: 0.5em;
+    display: flex;
+    gap: 0.5em;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 0.5em;
+}
+td, th {
+    border: 2px solid rgb(46, 46, 46);
+    padding: 0.5em;
+}
+table {
+    border-collapse: collapse;
+    margin: auto;
+}
+
+
+.axis {
+    stroke: black;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+</style>
+</html>

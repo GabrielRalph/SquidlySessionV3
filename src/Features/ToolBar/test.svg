@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 100 100">
+  <!-- Generator: Adobe Illustrator 28.7.3, SVG Export Plug-In . SVG Version: 1.2.0 Build 164)  -->
+  <!-- Generator: Adobe Illustrator 28.7.3, SVG Export Plug-In . SVG Version: 1.2.0 Build 164)  -->
+  <defs>
+    <filter id="my-filter" width="500" height="500" x = "-50" y = "-50">
+        <feMorphology operator="erode" radius="1" result="erode" in="SourceGraphic"></feMorphology>
+        <feComposite  operator="arithmetic" k2="1" k3 = "-1" result="outline" in="SourceGraphic" in2="erode"></feComposite>
+        <feMorphology operator="dilate" radius="1" result="dilate" in="outline"></feMorphology>
+        <feOffset dx="0.5" dy="0.5" result="bor" in="dilate"></feOffset>
+        <feGaussianBlur stdDeviation="1" result="blur" in="bor"></feGaussianBlur>
+        <feComposite  operator="in" result="crop" in2="blur" in="SourceGraphic"></feComposite>
+        <feComposite  operator="arithmetic" k2="1" k3 ="0.3" result="mer" in2="crop" in="SourceGraphic"></feComposite>
+
+
+    </filter>
+  </defs>
+  <g>
+    <g id="Layer_1">
+      <path filter = "url(#my-filter)" d="M61.07,49.04L128.04-22.5l-78.84-5.4L-20.2-16.63S37.65,49.04,37.65,49.04c3-3,7.14-4.85,11.71-4.85s8.71,1.85,11.71,4.85Z" style="fill: #333; fill-opacity: .8;"/>
+    </g>
+  </g>
+</svg>

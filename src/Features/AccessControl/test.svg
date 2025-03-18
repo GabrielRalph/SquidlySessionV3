@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 100 100">
+  <defs>
+    <filter id="shadow-filter" width="200" height="200" x = "-50" y = "-50">
+      <feGaussianBlur stdDeviation="2" result="gblur" in="SourceGraphic"></feGaussianBlur>
+       <feOffset dx="1" dy="2" result="gblurOff" in="gblur"></feOffset>
+
+
+      <feComposite 
+        in="gblurOff" 
+        in2="SourceGraphic" 
+        operator="arithmetic" 
+        k1 = "1" 
+        k2 = "0.5" 
+        k3 = "0"
+        k4 = "0" 
+        result="highlightText">
+      </feComposite>
+    </filter>
+  </defs>
+  <g>
+    <g id="Layer_1">
+      <path filter = "url(#shadow-filter)" d="M81.33,47.79c0,17.19-14.14,31.33-31.33,31.33s-31.33-14.14-31.33-31.33c0-11.03,5.82-21.27,15.3-26.92" style="fill: none; stroke: #8f53c9; stroke-linecap: round; stroke-linejoin: round; stroke-width: 10px;"/>
+    </g>
+  </g>
+</svg>

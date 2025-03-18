@@ -1,0 +1,64 @@
+quiz-feature {
+    pointer-events: all;
+    --c-light: rgb(231, 230, 229);
+    --c-dark: rgb(39, 39, 41);
+    --icon-color: rgb(223, 223, 223);
+    --icon-color-hover: white;
+
+    --c-public: rgb(0, 123, 255);
+    --c-starter: rgb(99, 234, 9);
+    --c-owned: rgb(255, 157, 0);
+    --toggle-color: rgb(7, 141, 27);
+    --wave: cubic-bezier(0.32, 0, 0.68, 1);
+    --c-semi: #403d3c;
+}
+
+quiz-feature:not([shown]) {
+    pointer-events: none;
+}
+
+quiz-feature:not([shown]) quiz-view {
+    transform: translateX(-150%);
+}
+
+
+quiz-list .list-body, quiz-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+.list-head {
+   background: #5c5757;
+   border-radius: 1em;
+}
+quiz-list {
+    margin: 0.5em;
+}
+
+
+quiz-list-icon {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    padding: 1em;
+    border-radius: 1em;
+}
+quiz-list-icon[hide] {
+    display: none;
+}
+
+.title {
+    font-size: 1.3em;
+}
+.sub-title {
+    font-style: italic;
+}
+
+input {
+    border: none;
+    outline: none;
+    padding: 1em;
+    background: #edeaea;
+    font: inherit;
+    border-radius: 1em;
+}

@@ -1,0 +1,404 @@
+
+session-view {
+    --s-unit: hypot(1vh, 1vh);
+    font-size: calc(1.5 * var(--s-unit));
+    
+    /* Colors */
+    --icon-color: #cac9c4;
+    --icon-color-hover: white;
+
+    --color-red1: #ff4a53;
+    --color-blue1: #5ad3ff;
+
+    --icon-color-red: #db4a4a;
+    --icon-color-red-hover: #ff4646;
+
+    
+
+    --color-danger: #8f53c9;
+    --color-danger-light: #c091ee;
+    --color-danger-lighter: #d7b9f4;
+
+    --panel-light-color: #252222ab;
+    --panel-dark-color: #252222;
+    --panel-darker-color: #1b1818;
+    --panel-color: #3a3737;
+
+    /* ~~~~~~~~~~~~ Layout parameters ~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~ TOP PANEL ~~~~~~~~~~~~~~~~ */
+    --top-panel-max-p: 0.5;
+    --top-panel-desired: 150px; 
+    --top-panel-min-p: 0.1;
+
+    /* ~~~~~~~~~~~~~~~~ SIDE PANEL ~~~~~~~~~~~~~~~~ */
+    --side-panel-max-p: 0.5;
+    --side-panel-desired: 150px;
+    --side-panel-min-p: 0.1;
+
+    /* ~~~~~~~~~~~~~~~ SIDE SCREEN ~~~~~~~~~~~~~~~ */
+    --side-screen-max-p: 0.5;
+    --side-screen-desired: 300px;
+    --side-screen-min-p: 0.1;
+
+    /* ~~~~~~~~~~~~~~ BOTTOM PANEL ~~~~~~~~~~~~~~ */
+    --bottom-panel-height: 2em;
+
+    /* ~~~~~~~~~~~~~ TOOL BAR AREA ~~~~~~~~~~~~~~~ */
+    --tool-bar-area-height: 8em;
+
+
+    --panel-slider-size: 0.7em;
+
+    --space-1: 0.25em;
+    --rad-1: 0.25em;
+
+
+    /* Used to slide pannels in and out */
+    --side-screen-extension-p: 0;
+    --side-panel-extension-p: 0;
+    --top-panel-extension-p: 0;
+    --bottom-panel-extension-p: 0;
+    --tool-bar-area-extension-p: 0;
+
+    /* Size of entire window */
+    --entire-width: 100vw;
+    --entire-height: 100vh;
+
+    /* Side Screen size */
+    --side-screen-min-width: calc(var(--entire-width) * var(--side-screen-min-p));
+    --side-screen-max-width: calc(var(--entire-width) * var(--side-screen-max-p));
+    --side-screen-width: clamp(var(--side-screen-min-width), var(--side-screen-desired), var(--side-screen-max-width));
+    --side-screen-extent: calc(var(--side-screen-extension-p) * var(--side-screen-width));
+    
+    /* Side Screen, Bottom Panel, Tool Bar Area extents*/
+    --bottom-panel-extent: calc(var(--bottom-panel-extension-p) * var(--bottom-panel-height));
+    --tool-bar-area-extent: calc(var(--tool-bar-area-extension-p) * var(--tool-bar-area-height));
+    
+
+    /* Top Panel Size */
+    --tp-height: calc(var(--entire-height) - var(--bottom-panel-extent));
+    --top-panel-min-height: calc(var(--tp-height) * var(--top-panel-min-p));
+    --top-panel-max-height: calc(var(--tp-height) * var(--top-panel-max-p));
+    --top-panel-height: clamp(var(--top-panel-min-height), var(--top-panel-desired), var(--top-panel-max-height));
+
+    /* Side Panel Size*/
+    --sp-width: calc(var(--entire-width) - var(--side-screen-extent));
+    --side-panel-min-width: calc(var(--sp-width) * var(--side-panel-min-p));
+    --side-panel-max-width: calc(var(--sp-width) * var(--side-panel-max-p));
+    --side-panel-width: clamp(var(--side-panel-min-width), var(--side-panel-desired), var(--side-panel-max-width));
+
+
+    /* Size Dimensions */
+    --top-panel-extent: calc(var(--top-panel-extension-p) * var(--top-panel-height));
+    --side-panel-extent: calc(var(--side-panel-extension-p) * var(--side-panel-width));
+
+    --main-width: calc(var(--entire-width) - var(--side-screen-extent));
+    --main-height: calc(var(--entire-height) - var(--bottom-panel-extent));
+
+    --inner-width: calc(var(--main-width) - var(--side-panel-extent));
+    --inner-height: calc(var(--main-height) - var(--top-panel-extent));
+    
+    background: var(--panel-color);
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: hidden;
+}
+
+session-view > * {
+    display: block;
+    position: absolute;
+    opacity: 1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.preview {
+   background-color: var(--preview-color);
+}
+
+.rel {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+.rel > * {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+}
+
+/* Layout of fixed panels */
+side-screen {
+    --width: var(--side-screen-width);
+    --height: var(--entire-height);
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: var(--side-screen-width);
+    transform: translateX(calc((1 - var(--side-screen-extension-p)) * 100%));
+    z-index: 300;
+
+    background-color: var(--panel-dark-color);
+    display: flex;
+}
+side-screen.preview {
+    --preview-color: rgb(48, 48, 156);
+}
+
+side-panel {
+    --width: var(--side-panel-width);
+    --height: var(--main-height);
+    top: 0;
+    right: var(--side-screen-extent);
+    bottom: var(--bottom-panel-extent);
+    width: var(--side-panel-width);
+    transform: translateX(calc((1 - var(--side-panel-extension-p)) * 100%));
+    z-index: 200;
+
+    background-color: var(--panel-color);
+    display: flex;
+
+}
+side-panel.preview {
+    --preview-color: #7FC575;
+}
+
+top-panel {
+    --width: var(--inner-width);
+    --height: var(--top-panel-height);
+    top: 0;
+    left: 0;
+    right: calc(var(--side-panel-extent) + var(--side-screen-extent));
+    height: var(--top-panel-height);
+    transform: translateY(calc((1 - var(--top-panel-extension-p)) * -100%));
+    z-index: 200;
+
+    background-color: var(--panel-color);
+    display: flex;
+    flex-direction: column-reverse;
+
+}
+top-panel.preview {
+    --preview-color: #734199;
+}
+
+bottom-panel {
+    width: var(--main-width);
+    height: var(--bottom-panel-height);
+    bottom: 0;
+    right: var(--side-screen-extent);
+    left: 0;
+    height: var(--bottom-panel-height);
+    transform: translateY(calc((1 - var(--bottom-panel-extension-p)) * 100%));
+    z-index: 300;
+
+    background-color: var(--panel-dark-color);
+}
+bottom-panel.preview {
+    --preview-color: #EF4136;
+}
+
+
+/* Layout of Areas */
+entire-screen {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+main-screen {
+    --height: var(--main-height);
+    --width: var(--main-width);
+    top: 0;
+    left: 0;
+    right: var(--side-screen-extent);
+    bottom: var(--bottom-panel-extent);
+}
+
+main-screen.preview {
+    --preview-color: #00A79D;
+}
+
+full-aspect-area {
+    --width: var(--inner-width);
+    --height: var(--inner-height);
+    top: var(--top-panel-extent);
+    bottom: var(--bottom-panel-extent);
+    right: calc(var(--side-panel-extent) + var(--side-screen-extent));
+    left: 0;
+}
+full-aspect-area.preview {
+    --preview-color: #27AAE1;
+}
+
+popup-area {
+    --width: var(--inner-width);
+    --height: calc(var(--inner-height) - var(--tool-bar-area-extent));
+    top: var(--top-panel-extent);
+    bottom: calc(var(--bottom-panel-extent) + var(--tool-bar-area-extent));
+    right: calc(var(--side-panel-extent) + var(--side-screen-extent));
+    left: 0;
+}
+popup-area.preview {
+    --preview-color: #7DC242;
+}
+
+
+tool-bar-area {
+    --height: var(--tool-bar-area-height);
+    --width: var(--inner-width);
+
+    bottom: var(--bottom-panel-extent);
+    right: calc(var(--side-panel-extent) + var(--side-screen-extent));
+    left: 0;
+    height: var(--tool-bar-area-height);
+    transform: translateY(calc((1 - var(--tool-bar-area-extension-p)) * 100%));
+    z-index: 200;
+}
+tool-bar-area.preview {
+    --preview-color: #e95aa25f;
+}
+
+fixed-aspect-area {
+    --total-width: calc(var(--entire-width) - var(--side-panel-extent) - var(--side-screen-extent));
+    --total-height: calc(var(--entire-height) - var(--top-panel-extent) - var(--bottom-panel-extent));
+    
+    --s-height: calc(var(--total-width) / var(--aspect-ratio));
+    --s-width: calc(var(--total-height) * var(--aspect-ratio));
+
+    --width: min(var(--total-width), var(--s-width, var(--total-width)));
+    --height: min(var(--total-height), var(--s-height, var(--total-height)));
+
+
+    top: calc(var(--top-panel-extent) + ( var(--total-height) - var(--height) ) / 2);
+    left: calc((var(--total-width) - var(--width)) / 2);
+    width: var(--width);
+    height: var(--height);
+}
+fixed-aspect-area.preview {
+    --preview-color: #F7941D;
+}
+
+
+/* Panel Slider Styles */
+top-panel, side-panel, side-screen {
+    --panel-slider-extension-p: 0;
+    --panel-slider-extent: calc(var(--panel-slider-extension-p) * var(--panel-slider-size));
+    --slider-icon-scale: 0;
+    overflow: hidden;
+    pointer-events: all;
+}
+
+
+.panel-slider {
+    height: 100%;
+    width: var(--panel-slider-extent);
+    background-color: var(--panel-color);
+    position: relative;
+}
+
+.panel-slider-clickbox {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--panel-slider-size);
+    cursor: ew-resize;
+    z-index: 1;
+}
+
+
+.panel-slider::after {
+    position: absolute;
+    content: " ";
+    width: calc((1 - var(--slider-icon-scale) * 0.15) * var(--panel-slider-extent) / 4);
+    height: calc((1 - var(--slider-icon-scale) * 0.15) * var(--panel-slider-extent) * 5);
+    border-radius: var(--panel-slider-size);
+    --percent: calc(100% * var(--slider-icon-scale));
+    background-color: var(--icon-color);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@supports (aspect-ratio: 1) {
+    .panel-slider::after {
+        background-color: color-mix(in oklab, var(--icon-color-hover) var(--percent), var(--icon-color));
+    }
+}
+
+top-panel .panel-slider {
+    height: var(--panel-slider-extent);
+    width: 100%;
+}
+
+top-panel .panel-slider-clickbox {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--panel-slider-size);
+    transform: translateY(calc((var(--panel-slider-extension-p) - 1) * var(--panel-slider-size)));
+    cursor: ns-resize;
+}
+
+top-panel > .panel-slider::after {
+    height: calc((1 - var(--slider-icon-scale) * 0.15) * var(--panel-slider-extent) / 4);
+    width: calc((1 - var(--slider-icon-scale) * 0.15) * var(--panel-slider-extent) * 5);
+}
+
+/* Side screen panels */
+
+side-screen .panel-slider {
+    background-color: var(--panel-dark-color);
+}
+
+side-screen .side-screen-content {
+    display: flex;
+    flex-direction: column;
+    margin: var(--space-1);
+    margin-left: calc(var(--space-1) * (1 - var(--panel-slider-extension-p)));
+    width: 100%;
+    position: relative;
+    gap: var(--space-1);
+}
+
+side-screen side-screen-panel {
+    --hide-p: 1;
+    height: calc(100% * var(--hide-p));
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-width: calc(var(--side-screen-width) - 2* var(--space-1));
+    overflow: hidden;
+}
+
+side-screen-panel .title-box {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.2em;
+    align-items: center;
+    color: white;
+    opacity: var(--hide-p);
+    margin-bottom: var(--space-1);
+}
+
+side-screen-panel .title-text {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+i.close::after {
+    content: "x";
+}
+
+side-screen-panel .content-box {
+    /* background-color: white; */
+    border-radius: var(--rad-1);
+    overflow: hidden;
+}

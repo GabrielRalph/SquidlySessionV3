@@ -1,0 +1,71 @@
+my-buttons {
+    background-color: white;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    pointer-events: all;
+
+}
+my-class {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    pointer-events: all;
+
+}
+app-test {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    pointer-events: all;
+
+
+
+    flex-direction: column;
+    background-color: var(--panel-color);
+}
+.row {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.5em;
+    color: white;
+    margin-bottom: 0.25em;
+}
+.cont {
+    height: 100%;
+    background-color: white;
+    overflow: scroll;
+
+}
+.test {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+}
+.side {
+    flex-direction: column;
+}
+
+.ok {
+    background-color: orange;
+    aspect-ratio: 1;
+}
+
+
+.flex-col {
+    flex-direction: column;
+    display: flex;
+    gap: 0.2em;
+    margin: 1em;
+}
+
+button {
+    outline: none;
+    border: none;
+    background: rgb(255, 115, 0);
+    color: white;
+    border-radius: var(--rad-1);
+    font-size: 1em;
+    cursor: pointer;
+}
