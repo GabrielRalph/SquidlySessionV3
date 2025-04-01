@@ -3,8 +3,6 @@
  * @typedef {import("./topics.js").GTopic} GTopic
  * @typedef {import("./topics.js").GItem} GItem
  */
-
-import { callFunction, initialise } from "../../Firebase/firebase.js";
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
 import { AccessButton, AccessClickEvent } from "../../Utilities/access-buttons.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
@@ -12,11 +10,12 @@ import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { relURL, isExactSame } from "../../Utilities/usefull-funcs.js";
 import { Features } from "../features-interface.js";
 import * as Topics from "./topics.js"
+
+
 const {speakUtterance} = Topics;
 function range(end) {
     return new Array(end).fill(0).map((...a)=>a[1])
 }
-
 
 class IconSelectionEvent extends Event {
     /** @type {GItem} */
@@ -48,56 +47,62 @@ function plainCard(size, border = 4) {
     return `<rect class = "card" x = "${border/2}" y = "${border/2}" width = "${inSize.x}"  height = "${inSize.y}" rx = "${g}" ry = "${g}" />
             <rect stroke-width = "${border}" class = "outline" x = "${border/2}" y = "${border/2}" width = "${inSize.x}"  height = "${inSize.y}" rx = "${g}" ry = "${g}" />`
 }
+function folderCard(size, border = 4) {
+    let inSize = size.sub(border);
+    let g = inSize.y / 20;
+    let w = inSize.x;
+    let b = w * 0.45;
+
+    g = Math.min(b / 3, g);
+
+
+    let t = g / 3;
+    let h = inSize.y;
+
+
+    let p0 = new Vector(border/2, border/2 + 2*g);
+    let p1 = p0.addV(-g);
+    let p2 = p1.add(g, -g);
+
+    let c2 = p1.addH(b);
+    let c1 = c2.add(-g);
+    
+    let tv = new Vector(t, 0);
+    let tv2 = tv.rotate(-Math.PI * 3 / 4);
+
+    let p3 = c1.sub(tv);
+    let p4 = c1.sub(tv2);
+
+    let p5 = c2.add(tv2);
+    let p6 = c2.add(tv);
+
+    let p7 = p1.addH(w - g);
+    let p8 = p0.addH(w);
+
+    let rg = new Vector(g);
+    let rt = new Vector(t * Math.tan(Math.PI * 3 / 8));
+
+    let tabPath = `M${p0}L${p1}A${rg},0,0,1,${p2}L${p3}A${rt},0,0,1,${p4}L${p5}A${rt},0,0,0,${p6}L${p7}A${rg},0,0,1,${p8}Z`
+
+    let p9 = p8.addV(h - 3 * g);
+    let p10 = p9.add(-g, g);
+
+    let p11 = p10.addH(2 * g - w);
+    let p12 = p11.sub(g);
+
+    let card = `M${p8.addV(-0.1)}L${p9}A${rg},0,0,1,${p10}L${p11}A${rg},0,0,1,${p12}L${p0.addV(-0.1)}Z`
+    let outline = `M${p0}L${p1}A${rg},0,0,1,${p2}L${p3}A${rt},0,0,1,${p4}L${p5}A${rt},0,0,0,${p6}L${p7}A${rg},0,0,1,${p8}L${p9}A${rg},0,0,1,${p10}L${p11}A${rg},0,0,1,${p12}Z`;
+    return  `<path class = "card" d = "${card}" />
+             <path class = "tab" d = "${tabPath}" />
+             <path stroke-width = "${border}" class = "outline" d = "${outline}" />`
+}
 const MAKE_CARD_ICON = {
-    topic(size, border = 4) {
-        let inSize = size.sub(border);
-        let g = inSize.y / 20;
-        let w = inSize.x;
-        let b = w * 0.45;
-    
-        g = Math.min(b / 3, g);
-    
-    
-        let t = g / 3;
-        let h = inSize.y;
-    
-    
-        let p0 = new Vector(border/2, border/2 + 2*g);
-        let p1 = p0.addV(-g);
-        let p2 = p1.add(g, -g);
-    
-        let c2 = p1.addH(b);
-        let c1 = c2.add(-g);
-        
-        let tv = new Vector(t, 0);
-        let tv2 = tv.rotate(-Math.PI * 3 / 4);
-    
-        let p3 = c1.sub(tv);
-        let p4 = c1.sub(tv2);
-    
-        let p5 = c2.add(tv2);
-        let p6 = c2.add(tv);
-    
-        let p7 = p1.addH(w - g);
-        let p8 = p0.addH(w);
-    
-        let rg = new Vector(g);
-        let rt = new Vector(t * Math.tan(Math.PI * 3 / 8));
-    
-        let tabPath = `M${p0}L${p1}A${rg},0,0,1,${p2}L${p3}A${rt},0,0,1,${p4}L${p5}A${rt},0,0,0,${p6}L${p7}A${rg},0,0,1,${p8}Z`
-    
-        let p9 = p8.addV(h - 3 * g);
-        let p10 = p9.add(-g, g);
-    
-        let p11 = p10.addH(2 * g - w);
-        let p12 = p11.sub(g);
-    
-        let card = `M${p8.addV(-0.1)}L${p9}A${rg},0,0,1,${p10}L${p11}A${rg},0,0,1,${p12}L${p0.addV(-0.1)}Z`
-        let outline = `M${p0}L${p1}A${rg},0,0,1,${p2}L${p3}A${rt},0,0,1,${p4}L${p5}A${rt},0,0,0,${p6}L${p7}A${rg},0,0,1,${p8}L${p9}A${rg},0,0,1,${p10}L${p11}A${rg},0,0,1,${p12}Z`;
-        return  `<path class = "card" d = "${card}" />
-                 <path class = "tab" d = "${tabPath}" />
-                 <path stroke-width = "${border}" class = "outline" d = "${outline}" />`
-    },
+    topic: folderCard,
+    "topic-normal": folderCard,
+    "topic-starter": folderCard,
+    "topic-noun": folderCard,
+    "topic-verb": folderCard,
+    "topic-adjective": folderCard,
     normal: plainCard,
     starter: plainCard,
     noun: plainCard,
@@ -107,14 +112,14 @@ const MAKE_CARD_ICON = {
 }
 
 
-
 /** A GridIconSymbol represents the image from a grid icon. */
 export class GridIconSymbol extends SvgPlus{
     constructor(symbol){
         super("div");
         this.class = "symbol";
 
-        if (typeof symbol == "object" && symbol !== null) {
+        this.isLoaded = false;
+        if (typeof symbol == "object" && symbol !== null && "url" in symbol && typeof symbol.url === "string") {
             // Create image and add load event.
             this.createChild("img", {
                 events: {
@@ -125,6 +130,8 @@ export class GridIconSymbol extends SvgPlus{
             });
         } else if (typeof symbol === "string") {
             this.createChild(Icon, {}, symbol)
+        } else {
+            this.isLoaded = true;
         }
     }
 }
@@ -138,6 +145,7 @@ class GridIcon extends AccessButton {
         // Set class to type
         this.class = "grid-icon " + item.type;
         this.type = item.type;
+        this.item = item;
 
         // Get utterance url
         this.getUtterance(item);
@@ -147,6 +155,7 @@ class GridIcon extends AccessButton {
 
         // Enable draggability
         this.setAttribute("draggable", true)
+
 
         // Create card background svg, and icon content box.
         this.cardIcon = this.createChild("svg", {class: "card-icon"});
@@ -160,9 +169,10 @@ class GridIcon extends AccessButton {
                 this.dispatchEvent(new Event("load"));
             }}
         }, item.symbol);
+        this.loaded = this.symbol.isLoaded;
 
         // Add text box with display value to content box.
-        this.content.createChild("div", {content: item.displayValue, class: "display-value"});
+        this.content.createChild("div", {content: item.displayValue || "", class: "display-value"});
 
         // Set up resize observer to re render the card when the size of the 
         // grid icon changes.
@@ -182,6 +192,7 @@ class GridIcon extends AccessButton {
         let proms = [this.utteranceProm]
         if (!this.loaded) proms.push(new Promise((r) => this.onload = () => r()));
         await Promise.all(proms);
+        
     }
 
     // Called when the size of the icon changes.
@@ -192,7 +203,7 @@ class GridIcon extends AccessButton {
             let size = this.bbox[1]; 
             
             // If there are no zero values in size dimension.
-            if (size.x > 1e-10 && size.y > 1e-10) {
+            if (size.x > 1e-10 && size.y > 1e-10 && this.type in MAKE_CARD_ICON) {
                 this.cardIcon.props = {
                     viewBox: `0 0 ${size.x} ${size.y}`,      // Update the svg viewBox.
                     content: MAKE_CARD_ICON[this.type](size) // Recompute the svg content.
@@ -673,13 +684,13 @@ class AACGridBoard extends ShadowElement {
     async onIconSelect(event) {
         
         let item = event.selectedItem;
-        
-        if (item.type === "topic") {
-            await this.setTopic(item.topicUID);
-            this.aacGrid.updateTopics(this.topicPath);
-        } else {
+        if (item.type !== "topic") {
             speakUtterance(item);
             this.output.addItem(item);
+        }
+        if (Topics.isTopicItem(item.type)) {
+            await this.setTopic(item.topicUID);
+            this.aacGrid.updateTopics(this.topicPath);
         }
         // console.log(this.output.items);
     }

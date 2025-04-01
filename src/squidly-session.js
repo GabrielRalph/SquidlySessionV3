@@ -17,6 +17,7 @@ const parallel = (...args) => Promise.all(...args);
 
 /** @typedef {import('./SessionView/session-view.js').SessionView} SessionView*/
 /** @typedef {import('./Features/ToolBar/tool-bar.js').ToolBarFeature} ToolBarFeature*/
+/** @typedef {import('./Features/EyeGaze/eye-gaze.js').EyeGazeFeature} EyeGazeFeature*/
 /** @typedef {import('./Features/AccessControl/access-control.js').AccessControl} AccessControl*/
 /** @typedef {import('./Features/features-library.js')} FLIBMod*/
 /** @typedef {import('./Features/features-interface.js').Features} Feature*/
@@ -220,10 +221,16 @@ export class SquidlySessionElement extends ShadowElement {
         ]);
         
         if (sessionConnection !== null && sessionConnection.hasJoined) {
-            await this.initialiseFeatures()
-            this.testin();
-    
-            this.squidlyLoader.hide(0.5);
+            try {
+                await this.initialiseFeatures()
+                this.testin();
+        
+                this.squidlyLoader.hide(0.5);
+            } catch (e) {
+                console.log(e);
+                
+                this.loaderText = e+"";
+            }
         } else {
 
         }
@@ -286,11 +293,7 @@ export class SquidlySessionElement extends ShadowElement {
     }
     
     set loaderText(text) {
-        console.log(text, this.squidlyLoader);
-        
         if (this.squidlyLoader) {
-            console.log(this.squidlyLoader);
-            
             if (!this._loaderTextEl) {
                 let text = new SvgPlus("div");
                 text.styles = {
@@ -331,6 +334,11 @@ export class SquidlySessionElement extends ShadowElement {
 export class SquidlySession {
     constructor(sessionElement) {
         $$.set(this, sessionElement);
+    }
+
+     /** @return {?EyeGazeFeature} */
+     get eyeGaze(){
+        return $$.get(this).eyeGaze;
     }
 
     /** @return {?ToolBarFeature} */

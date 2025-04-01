@@ -47,6 +47,7 @@ import { getUtteranceURL, loadUtterances, speak } from "../../Utilities/text2spe
     * @property {string} displayValue the value displayed
     * @property {?string} utterance will take the value of displayValue if not included
     * @property {?string} topicUID topic id 
+    * @property {boolean} hidden
  */
 
 /**
@@ -74,24 +75,34 @@ import { getUtteranceURL, loadUtterances, speak } from "../../Utilities/text2spe
  * @type {Object.<GridSize, function>}
  */
 const GRID_SIZES = {
+    "1x1": ()=>[1,1],
     "2x1": ()=>[2,1],
     "2x2": ()=>[2,2],
+    "3x1": ()=>[3,1],
     "3x2": ()=>[3,2],
     "3x3": ()=>[3,3],
-    "4x3": ()=>[4,3]
+    "4x1": ()=>[4,1],
+    "4x2": ()=>[4,2],
+    "4x3": ()=>[4,3],
 }
-const DEFAULT_BOARD = "-OGKFfkghsukHnxnXlwq"
-const QUICK_TALK = "-OGKBtJUfonWnJijpL2O"
-
-const MAX_ITEMS = 4 * 3;
 const GITEM_TYPES = {
     "normal": "word",
     "starter": "word",
-    "topic": "topic",
-    "verb": "word",
     "noun": "word",
+    "verb": "word",
     "adjective": "word",
+    "topic": "topic",
+    "topic-normal": "topic",
+    "topic-starter": "topic",
+    "topic-noun": "topic",
+    "topic-verb": "topic",
+    "topic-adjective": "topic",
 }
+const DEFAULT_BOARD = "-OLqvyYjEIPALztTqM1N"
+const QUICK_TALK = "-OGKBtJUfonWnJijpL2O"
+
+
+
 
 let TOPICS = {};
 
@@ -202,13 +213,21 @@ function getUtt(item) {
     return  (item.utterance || item.displayValue).trim().toLowerCase()
 }
 
+
+/**
+ * @return {GItemType}
+ */
+export function isTopicItem(itemType) {
+    return itemType in GITEM_TYPES && GITEM_TYPES[itemType] === "topic";
+}
+
 /**
  * Load utterances for a given topic
  * @param {GTopic} topic
  * @return {Promise}
  */
 export async function loadTopicUtterances(topic) {
-    let allPhrases = topic.items.map(item => getUtt(item));
+    let allPhrases = topic.items.filter(i => !i.hidden).map(item => getUtt(item));
     
     await loadUtterances(allPhrases);
 }
@@ -218,9 +237,13 @@ export async function loadTopicUtterances(topic) {
  * @return {Promise<string>} url of utterance mp3 file
 */
 export async function getUtterance(item){
-    let utt = getUtt(item);
-    return await getUtteranceURL(utt);
-}
+    let url = null;
+    if (!item.hidden) {
+        let utt = getUtt(item);
+        url = await getUtteranceURL(utt);
+    }
+    return url;
+}    
 
 
 export async function getDefaultBoard() {

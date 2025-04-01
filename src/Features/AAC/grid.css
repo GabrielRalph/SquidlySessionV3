@@ -4,12 +4,16 @@ aac-board {
     --folder-color: #ffddad;
     --folder-tab-color: #d69b48;
     --word-color: #a7d2ff;
+    --word-color-dark: #5a9ce2;
     --word-starter-color: #aeef93;
+    --word-starter-color-dark: #80e157;
     --action-color:#a61f00;
     --word-noun: #d6c6ff;
+    --word-noun-dark: #8d6fd7;
+    --word-adjective-dark: #f0cf56;
     --word-adjective: #ffe792;
+    --word-verb-dark: #e36c7a;
     --word-verb: #ff9ca7;
-
     /* --color-danger: #8f53c9;
     --color-danger-light: #c091ee;
     --color-danger-lighter: #d7b9f4; */
@@ -106,27 +110,35 @@ grid-space {
 
 
     --border: 4px;
-    --tab-color: var(--word-color);
+    --tab-color: var(--word-color-dark);
     --card-color: var(--word-color);
 }
 
-.grid-icon.starter {
-    --card-color: var(--word-starter-color);
-}
-.grid-icon.noun {
-    --card-color: var(--word-noun);
-}
-.grid-icon.verb {
-    --card-color: var(--word-verb);
-}
-.grid-icon.adjective {
-    --card-color: var(--word-adjective);
-}
 .grid-icon.action {
     --card-color: var(--action-color);
     color: white;
 }
+.grid-icon.starter, .grid-icon.topic-starter {
+    --card-color: var(--word-starter-color);
+    --tab-color: var(--word-starter-color-dark);
+}
+.grid-icon.noun, .grid-icon.topic-noun {
+    --card-color: var(--word-noun);
+    --tab-color: var(--word-noun-dark);
+}
+.grid-icon.verb, .grid-icon.topic-verb {
+    --card-color: var(--word-verb);
+    --tab-color: var(--word-verb-dark);
+}
+.grid-icon.adjective, .grid-icon.topic-adjective {
+    --card-color: var(--word-adjective);
+    --tab-color: var(--word-adjective-dark);
+}
 
+.grid-icon.topic {
+    --tab-color: var(--folder-tab-color);
+    --card-color: var(--folder-color);
+}
 
 .grid-icon.topic {
     --tab-color: var(--folder-tab-color);
@@ -158,7 +170,7 @@ grid-space {
 
 .grid-icon .content .symbol {
     width: 100%;
-    height: 40%;
+    height: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -174,8 +186,9 @@ grid-space {
 
 .grid-icon .content .display-value {
     font-size: 1.2em;
-    font-weight: bold;
+    font-weight: 300;
     text-align: center;
+    max-width: 90%;
 }
 
 
