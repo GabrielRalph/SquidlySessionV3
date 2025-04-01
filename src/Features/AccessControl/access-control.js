@@ -2,6 +2,7 @@ import { SvgPlus, Vector } from "../../SvgPlus/4.js";
 import { AccessButton, getButtonGroups } from "../../Utilities/access-buttons.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { delay, relURL, WaveStateVariable } from "../../Utilities/usefull-funcs.js";
+import { addProcessListener } from "../../Utilities/webcam.js";
 import { Features } from "../features-interface.js";
 
 
@@ -97,7 +98,7 @@ class CircleLoader extends SvgPlus {
 }
 
 class ControlOverlay extends ShadowElement {
-    loaders = new WeakMap();
+    loaders = new Map();
     switchLoaders = [];
     constructor(){
         super("control-overlay");
@@ -106,6 +107,41 @@ class ControlOverlay extends ShadowElement {
         }
 
         this.createChild(CircleLoader, {}, {getCenter: () => new Vector(200,200)})
+    }
+
+    /** @param {AccessButton} b */
+    async addDwellLoader(b) {
+        b.highlight = true;
+        let sl = this.createChild(CircleLoader, {}, b);
+        this.loaders.set(b, sl)
+        b.ondisconnect = () => {
+            sl.force()
+        }
+        await sl.setGoal(true);
+        sl.remove();
+        this.loaders.delete(b);
+        if(sl.wsv.transValue == 1) {
+            b.accessClick("switch")
+        }
+        
+        b.highlight = false;
+    }
+
+    updateDwellButtons(bList) {
+        let bSet = new Set(bList);
+        for (let button of this.loaders.keys()) {
+            if (!bSet.has(button)) {
+                let loader = this.loaders.get(button);
+                loader.setGoal(false);
+            }
+        }
+        for (let button of bSet) {
+            if (!this.loaders.has(button)) {
+                this.addDwellLoader(button);
+            } else {
+                this.loaders.get(button).setGoal(true);
+            }
+        }
     }
 
 
@@ -194,6 +230,18 @@ export class AccessControl extends Features {
                 this.overlay.selectSwitch();
             }
         }
+
+        addProcessListener((data) => {
+            let {overlay} = this;
+            if (data.result) {
+                let groups = getButtonGroups();
+                /** @type {AccessButton[]} */
+                let buttons = Object.values(groups).flat();
+                
+                let selected = buttons.filter(b => b.isPointInElement(data.result.mul(overlay.clientWidth, overlay.clientHeight)));
+                overlay.updateDwellButtons(selected);
+            }
+        })
     }
 
     get isSwitching(){return this._isSwitching}

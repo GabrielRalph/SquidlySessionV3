@@ -1,111 +1,84 @@
 import {SvgPlus} from "../SvgPlus/4.js"
-import {isPageHidden} from "./usefull-funcs.js"
-
-class WaveTransition{
-  constructor(update, duration, dir){
-    let stop = false;
-    let executor = (resolve) => {
-      let t0;
-      let end = false;
-
-      let next = (t) => {
-        let dt = t - t0;
-
-        if (dt > duration) {
-          end = true;
-          dt = duration;
-        }
-
-        let theta = Math.PI * ( dt / duration  +  (dir ? 1 : 0) );
-        let progress =  ( Math.cos(theta) + 1 ) / 2;
-
-        if (update instanceof Function) update(progress);
-
-        if (!end && !stop){
-          window.requestAnimationFrame(next);
-        }else{
-          resolve(progress);
-        }
-      };
-      window.requestAnimationFrame((t) => {
-        t0 = t;
-        window.requestAnimationFrame(next);
-      });
-    }
-    this.prom = new Promise(executor)
-    this.stop = () => {stop = true;}
-  } 
-  
-}
-
+import {isPageHidden, WaveStateVariable} from "./usefull-funcs.js"
 
 export class HideShow extends SvgPlus {
-    constructor(el = "div") {
-      super(el);
-      this.shown = false;
-    }
-  
-    set _hideShowState(value){
-      this.setAttribute("hide-show", value)
-    }
-  
-      set opacity(o){
-          this.styles = {
-        "--param-t": o
+  constructor(el = "div") {
+    super(el);
+    this.transState = new WaveStateVariable(false, 0.400, (t) => {
+      
+      this.opacity = t;
+      if (t == 0) {
+        this.applyHiddenState();
+        this._shown = false;
+      } else if (t == 1) {
+        this.applyShownState();
+        this._shown = true;
       }
-      }
-  
-      set disabled(value) {
-          this.opacity = value ? 0.5 : 1;
-          this._hideShowState = value ? "disabled" : "shown"
-      }
-  
-    shownDecedents(value) {
-      let recurse = (node) => {
-        for (let child of node.children) {
-          if (SvgPlus.is(child, HideShow)) {
-            child.shown = value;
-            recurse(child);
-          }
+    });
+  }
+
+
+  applyHiddenState() {
+    this.opacity = 0;
+    this.styles = {"pointer-events": "none"}
+    this.toggleAttribute("hide", true)
+  }
+
+  applyShownState() {
+    this.opacity = 1;
+    this.styles = {"pointer-events": null}
+    this.toggleAttribute("hide", false)
+  }
+
+  /** @param {boolean} value */
+  shownDecedents(value) {
+    let recurse = (node) => {
+      for (let child of node.children) {
+        if (SvgPlus.is(child, HideShow)) {
+          child.shown = value;
+          recurse(child);
         }
       }
     }
-  
-    async show(duration = 400, hide = false) {
-      if (this._shown == !hide) return;
-      if (this._transitioning instanceof Promise) {
-        this._transitioning.stop();
-        await this._transitioning;
-      }
-      this._shown = !hide;
-      if (!hide) {
-        this.opacity = 0;
-        this._hideShowState = "shown";
-      }
-  
-      if (!isPageHidden()){
-        this._transitioning = new WaveTransition((t) => {
-          this.opacity = t;
-        }, duration, !hide);
-        await this._transitioning.prom;
-      }
-      this._transitioning = null;
-  
-      this.shown = !hide;
-    }
-      async hide(duration = 400) {
-          await this.show(duration, true);
-      }
-  
-    set shown(value) {
-      if (value) {
-              this.opacity = 1;
-        this._hideShowState = "shown";
-      } else {
-              this.opacity = 0;
-        this._hideShowState = "hidden";
-      }
-      this._shown = value;
-    }
-    get shown(){return this._shown;}
   }
+  
+  /** 
+   * @param {number} duration
+   * @param {boolean} hide
+   */
+  async show(duration = 400, hide = true) {
+    if (!isPageHidden()){
+      this.transState.duration = duration/1000;
+      this.transState.reverseDuration = duration/1000;
+      await this.transState.set(hide)
+    } else {
+      this.transState.hardSet(hide);
+    }
+  }
+
+  /** @param {number} duration */
+  async hide(duration = 400) {
+      await this.show(duration, false);
+  }
+
+    /** @param {number} o */
+  set opacity(o){
+    this.styles = {
+      "opacity": o
+    }
+  }
+  
+  /** @param {boolean} value */
+  set disabled(value) {
+      this.opacity = value ? 0.5 : 1;
+      this.toggleAttribute("disabled", value)
+  }
+  
+  /** @param {boolean} value*/
+  set shown(value) {
+    this.transState.hardSet(value);
+  }
+
+  /** @return {boolean}*/
+  get shown(){return this._shown;}
+}

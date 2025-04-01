@@ -8,7 +8,12 @@ const UPDATE_CYCLE_TIME_MS = 3 * 60 * 1000;
 window.createSession = async () => {
     let res = await callFunction("sessions-create", {startTime: 123});
     let sessionID = res.data.sid;
-    window.location = window.location.origin + "/?" + sessionID;
+    if (sessionID == null) {
+        console.log(res);
+    } else {
+        window.location = window.location.origin + "/?" + sessionID;
+    }
+    
     
 }
 

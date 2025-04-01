@@ -2,6 +2,7 @@ import { ToolBarFeature } from "./ToolBar/tool-bar.js"
 import { AccessControl } from "./AccessControl/access-control.js"
 import { AACGrid } from "./AAC/grid.js"
 import { QuizFeature } from "./Quiz/quiz.js"
+import { EyeGazeFeature } from "./EyeGaze/eye-gaze.js"
 
 
 export const FEATURES = [
@@ -54,6 +55,28 @@ export const FEATURES = [
                 type: "area",
                 area: "entireScreen",
                 index: 210,
+            }
+        ]
+    },
+
+    {
+        class: EyeGazeFeature,
+        name: "eyeGaze",
+        layers: [
+            {
+                type: "area",
+                area: "fullAspectArea",
+                index: 85,
+            },
+            {
+                type: "area",
+                area: "entireScreen",
+                index: 215,
+            },
+            {
+                type: "area",
+                area: "entireScreen",
+                index: 310,
             }
         ]
     }

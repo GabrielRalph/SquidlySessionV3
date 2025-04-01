@@ -40,9 +40,16 @@ export class ShadowElement extends SvgPlus {
         super(el);
         this.attachShadow({mode: "open"});
         this.loadStyles();
-        let root = new SvgPlus(name);
+        let root;
+        if (typeof name === "string") {
+            root = new SvgPlus(name);
+        } else if (SvgPlus.is(name, SvgPlus)) {
+            root = name;
+        }
+
         root.toggleAttribute("shadow");
-        this._root = this.shadowRoot.appendChild(root);
+        this.shadowRoot.appendChild(root);
+        this._root = root;
     }
 
     appendChild(...args) {

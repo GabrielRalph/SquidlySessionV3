@@ -227,6 +227,7 @@ export async function signOut(){
     sOut(Auth);
 }
 window.signOut = signOut
+window.signIn = signInWithEmailAndPassword
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ REALTIME DATABASE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // Get Ref using database

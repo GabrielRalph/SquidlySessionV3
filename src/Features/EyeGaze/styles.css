@@ -1,0 +1,134 @@
+
+feedback-window {
+    display: flex;
+    gap: 1em;
+    flex-direction: column;
+    padding: 1em;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+access-button {
+    font-size: 1.3em;
+    cursor: pointer;
+}
+.header {
+    color: white;
+    text-align: center;
+    display: flex;
+    gap: 1em;
+    height: 20%;
+    justify-content: space-evenly;
+}
+.header access-button {
+    background: #c11c1c;
+    border-radius: 1em;
+    width: 25%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.main {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: 1em;
+    height: 80%;
+}
+
+feedback-widget[hide] {
+    display: none;
+}
+feedback-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    width: 40%;
+    height: 75%;
+    padding: 0.5em;
+    border-radius: 2.5em 2.5em 1.5em 1.5em;
+    background-color: #f7f1e7;
+    box-shadow: inset -1px -1px 8px 3px #201d198f;
+}
+
+feedback-widget > div {
+    display: flex;
+    gap: 0.5em;
+    height: 33.333%;
+}
+
+access-button {
+    --icon-bg : red;
+    border-radius: 1em;
+    text-align: center;
+    box-shadow: inset -3px -3px 7px #090a0940, inset 6px 6px 8px #ffffff61;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    background-color: var(--icon-bg);
+    color: var(--icon-color);
+    gap: 0.5em;
+}
+
+access-button .icon {
+    height: 40%;
+}
+
+feedback-widget access-button {
+    --icon-color:rgb(0, 0, 0);
+    --icon-color-hover: rgb(255, 255, 255);
+    --icon-bg: rgb(8, 197, 8);
+    width: 100%;
+}
+access-button:hover {
+    --icon-color: var(--icon-color-hover);
+    box-shadow: inset 3px 3px 7px #090a0940, inset -6px -6px 8px #42424261;
+
+}
+
+feedback-widget access-button.test {
+    --icon-bg: rgb(235, 125, 8);
+}
+
+
+feedback-widget[invalid] access-button {
+    pointer-events: none;
+    opacity: 0.5;
+}
+/* .feedback {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    align-items: center;
+}
+.feedback[hidden]{
+    display: none;
+} */
+
+feedback-frame {
+    width: 100%;
+    height: 66.666%;
+    background:#156082;
+    border-radius:2em;
+    overflow: hidden;
+    display: flex;
+}
+
+feedback-frame svg {
+    width: 100%;
+    background-color: #121211;
+
+}
+
+feedback-frame .border {
+    fill: #156082;
+}
+
+feedback-frame .border[hit] {
+    fill: rgb(188, 13, 13)
+}
+
