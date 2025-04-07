@@ -22,7 +22,6 @@ function copyEvent(event) {
     return copyevent
 }
 
-
 class SlidePanel extends SvgPlus {
     /** Constructs a new SidePanel with the provided name.
      * @param {("side"|"top")} name determines whether it is a vertial of horizontal panel
@@ -363,7 +362,6 @@ export class SessionView extends ShadowElement {
      * @param {ShadowElement} content
      */
     setPanelContent(name, content) {
-        let panel = this.panels;
         if ((name in this.panels)) {
             let panel = this.panels[name]
             panel.content.innerHTML = "";

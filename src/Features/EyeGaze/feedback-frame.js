@@ -192,6 +192,7 @@ export class FeedbackFrame extends SvgPlus {
 
 
     set data(data) {
+        
         let {width, height, points, errorDistance, avg} = data;
         this.points = points;
         this.aspect = width / height;

@@ -7,6 +7,7 @@ import { relURL } from "../../Utilities/usefull-funcs.js";
 import { QuizResultsPage } from "./results.js";
 import { callFunction } from "../../Firebase/firebase.js";
 import { SvgPlus } from "../../SvgPlus/4.js";
+import { AccessEvent } from "../../Utilities/access-buttons.js";
 
 /** 
  * @typedef {Object} Action
@@ -510,7 +511,7 @@ class QuizWindow extends ShadowElement {
      * @param {QuizFeatureState} state
      */
     onStateValue(state) {
-        
+
         if (state == null || !state.isHome && !state.quiz) {
             state = {
                 isHome: true,
@@ -528,66 +529,6 @@ class QuizWindow extends ShadowElement {
 
 
   
-
-    // async selectQuiz(){
-    //     let quizzes  = getAllQuizes();
-    //     /** @type {Answer[]} */
-    //     let answers = quizzes.map(q => {
-    //         return {
-    //             title: q.name,
-    //             subtitle: q.ownerName,
-    //             color: "white",
-    //             correct: false,
-    //             quiz: q,
-    //         }
-    //     })
-
-        
-
-    //     const size = 9;
-    //     let questions = paginate(answers, size, {color: "empty"})
-
-    //     let i = 0;
-    //     this.quizView.answers = questions[0]
-    //     let info = this.quizView.setQuestionInfo(null, [i, questions.length]);
-    //     let input = info.input;
-    //     input.addEventListener("input", () => {
-    //         let res = search(input.value, quizzes);
-            
-    //         let ans = answers.filter((a, i) => res[i]);
-            
-    //         questions = ans.length > 0 ? paginate(ans, size, {color: "empty"}) : [[]];
-            
-    //         this.quizView.answers = questions[0];
-    //         i = 0;
-    //         info.update(i, questions.length)
-    //     })
-    //     input.setAttribute("placeholder", "Search for quizzes!")
-    //     while (true) {
-    //         let inter = await this.quizView.waitForInteraction();
-    //         let dir = 0;
-    //         switch (inter.type) {
-    //             case "back": 
-    //                 if (i > 0) dir = -1;
-    //                 break;
-
-    //             case "next": 
-    //                 if (i < questions.length - 1) dir = 1;
-    //                 break;
-
-    //             case "answer": 
-    //                 return questions[i][inter.answer].quiz
-    //         }
-    //         i+=dir;
-    //         if (dir != 0) {
-    //             info.update(i)
-    //             await this.quizView.transitionAnswers(questions[i], dir > 0)
-    //         }
-    //     }
-
-    // }
-
-
     static get usedStyleSheets(){
         return [
              relURL("/quiz.css", import.meta),
@@ -601,37 +542,45 @@ export class QuizFeature  extends Features {
         super(sesh, sdata);
         this.board = new QuizWindow(this, sdata);
         this.board.root.addEventListener("results", async () => {
-            let sid = this.sdata.sid;
-            let data = await callFunction("quizzes-report", {sid}, "australia-southeast1");
-            console.log(data);
-            let pdf = await sdata.get('pdf');
-            let a = new SvgPlus("a");
-            a.props={
-                href: "data:application/octet-stream;base64," + pdf,
-                download: "Results.pdf"
-            }
-            a.click();
+            // let sid = this.sdata.sid;
+            // let data = await callFunction("quizzes-report", {sid}, "australia-southeast1");
+            // console.log(data);
+            // let pdf = await sdata.get('pdf');
+            // let a = new SvgPlus("a");
+            // a.props={
+            //     href: "data:application/octet-stream;base64," + pdf,
+            //     download: "Results.pdf"
+            // }
+            // a.click();
             
             
         })
         this.board.quizView.addEventListener("close", () => {
             this.close();
         })
-        this.session.toolBar.addEventListener("icon-selection", (e) => {
-            let {name} = e.icon;
-            if (name === "quiz") {
-                this.open();
-            }
+        this.session.toolBar.addSelectionListener("quiz", (e) => {
+            this.open(e);
         })
     }
 
 
-    open(){
-        this.session.toolBar.toggleToolBar(false);
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    
+
+    open(e){
+        let p = this.session.toolBar.toggleToolBar(false);
         this.board.root.toggleAttribute("shown", true);
         this.session.toolBar.toolbarFixed = true;
-        this.session.accessControl.restartSwitching(false);
         this.sdata.set("open", true);
+        if (e instanceof AccessEvent) {
+            e.waitFor(Promise.all([
+                p,
+                new Promise((r) => setTimeout(r, 550))
+            ]))
+        }
     }
 
     close(){
@@ -645,7 +594,11 @@ export class QuizFeature  extends Features {
         this.sdata.set("open", false);
     }
 
-   
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    
 
     async initialise(){
         await watchQuizes();
@@ -655,10 +608,6 @@ export class QuizFeature  extends Features {
             else if (isOpen === false) this.close();
         })
 
-    }
-
-    getElements(){
-        return [this.board]
     }
 
     static get firebaseName(){

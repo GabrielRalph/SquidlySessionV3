@@ -662,7 +662,7 @@ class AACGridBoard extends ShadowElement {
             "speak": () => this.output.speak(),
             "quick": async () => {
                 await this.setTopic(this.quickTalk);
-                this.aacGrid.updateTopics(this.topicPath);
+                this.aacGrid._updateTopics(this.topicPath);
             },
 
         }
@@ -690,7 +690,7 @@ class AACGridBoard extends ShadowElement {
         }
         if (Topics.isTopicItem(item.type)) {
             await this.setTopic(item.topicUID);
-            this.aacGrid.updateTopics(this.topicPath);
+            this.aacGrid._updateTopics(this.topicPath);
         }
         // console.log(this.output.items);
     }
@@ -715,7 +715,7 @@ class AACGridBoard extends ShadowElement {
         if (this.topicPath.length > 1) {
             this.topicPath.pop();
             await this.setTopic(this.topicPath.pop());
-            this.aacGrid.updateTopics(this.topicPath);
+            this.aacGrid._updateTopics(this.topicPath);
         } else {
             const event = new Event('close');
             event.initialEvent = e.initialEvent;
@@ -754,20 +754,24 @@ export class AACGrid extends Features {
         })
 
         this.board.addEventListener("close", this.close.bind(this))
-        this.session.toolBar.addEventListener("icon-selection", (e) => {
-            let {name} = e.icon;
-            if (name === "aac") {
-                this.open();
-            }
+        this.session.toolBar.addSelectionListener("aac", (e) => {
+            this.open(e);
         })
     }
 
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-    open(){
-        this.session.toolBar.toggleToolBar(false);
+
+    open(e){
+        console.log("event - ", e);
+        if (e instanceof Event) {
+            e.waitFor(this.session.toolBar.toggleToolBar(false))
+            e.waitFor(new Promise((r) => setTimeout(r, 550)))
+        }
         this.board.root.toggleAttribute("shown", true);
         this.session.toolBar.toolbarFixed = true;
-        this.session.accessControl.restartSwitching(false);
         this.sdata.set("open", true);
     }
 
@@ -782,25 +786,28 @@ export class AACGrid extends Features {
         this.sdata.set("open", false);
     }
 
-    updateTopics(path){
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    _updateTopics(path){
         // console.log("updating", path);
         this.sdata.set("topics", path);
     }
 
-    async loadAndSetTopics(id) {
+    async _loadAndSetTopics(id) {
         await Topics.getTopicCC(id);
         this.board.setTopic(id);
     }
 
-    async initialiseQuickTalk(){
+    async _initialiseQuickTalk(){
         let id = (await Topics.getQuickTalk())[0]
         this.board.quickTalk = id
     }
 
     async initialise(){
         let {sdata} = this;
-        
-        let quickTalkProm = this.initialiseQuickTalk();
+        let quickTalkProm = this._initialiseQuickTalk();
 
         // Get the current topic
         let topics = await sdata.get("topics");
@@ -833,10 +840,6 @@ export class AACGrid extends Features {
             quickTalkProm
         ]);
 
-    }
-
-    getElements(){
-        return [this.board]
     }
 
     static get firebaseName(){

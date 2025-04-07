@@ -1,6 +1,5 @@
-import { FirebaseFrame } from "../Firebase/firebase-frame.js";
-import { SessionDataFrame } from "../squidly-session.js";
 import { ShadowElement } from "../Utilities/shadow-element.js";
+import { PublicProxy } from "../Utilities/usefull-funcs.js";
 
 /**
  * @typedef {import("../squidly-session.js").SquidlySession} SquidlySession
@@ -10,7 +9,6 @@ import { ShadowElement } from "../Utilities/shadow-element.js";
  * @callback EventCallback
  * @param {Event} event - ...
 */
-
 export class Features {
     /** @type {Object.<string, [EventCallback]>} */
     eventListeners = {}
@@ -105,4 +103,37 @@ export class Features {
      */
     static async loadResources(){
     }
+
+    /**
+     * @override
+     * @return {string[]}
+     */
+    static get privatePropertyNames() { return []}
 }
+
+const PrivateProperties = {
+    dispatchEvent: true,
+    sdata: true,
+    initialise: true,
+}
+export function createFeatureProxy(feature, f) {
+    let privateProps = {};
+
+    // Global private properties
+    for (let key in PrivateProperties) privateProps[key] = true;
+
+    // If the static property "privatePropertyNames" returns 
+    // an array of strings make properties with those strings private.
+    if (Array.isArray(f.class.privatePropertyNames)) {
+        for (let val of f.class.privatePropertyNames) {
+            if (typeof val === "string") privateProps[val] = true;
+        }
+    }
+    // Make layer elements private 
+    if (typeof f.layers === "object" && f.layers !== null) {
+        for (let key in f.layers) privateProps[key] = true;
+    }
+    
+    return new PublicProxy(feature, privateProps);
+}
+

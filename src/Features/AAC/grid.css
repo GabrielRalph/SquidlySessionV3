@@ -146,7 +146,8 @@ grid-space {
 }
 
 .grid-icon[i-hidden] {
-    opacity: 0.5;
+    opacity: 0;
+    pointer-events: none;
 }
 
 

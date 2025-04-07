@@ -1,26 +1,53 @@
 import { SvgPlus, Vector } from "../SvgPlus/4.js";
 
-
-export class AccessClickEvent extends Event {
-
+export class AccessEvent extends Event {
     /** @type {?("click"|"dwell"|"switch")} */
     clickMode = null;
 
-    /** @param {?Event} oldEvent  */ 
+    /** @type {?AccessClickEvent} oldEvent  */ 
     initialEvent = null
 
-    /** 
+    /** @type {Promise[]} */
+    eventPromises = [];
+
+     /** 
      * @param {?("click"|"dwell"|"switch"|AccessClickEvent)} mode
      * @param {Event} oldEvent
      * */
-    constructor(mode, oldEvent) {
-        super("access-click");
+     constructor(eventName, mode) {
+        super(eventName, {cancelable: true});
+        let oldEvent = this;
         if (mode instanceof AccessClickEvent) {
-            oldEvent = mode.initialEvent
+            if (mode.initialEvent instanceof AccessClickEvent) {
+                mode = mode.initialEvent;
+            }
+            oldEvent = mode;
             mode = mode.clickMode;
         }
         this.clickMode = mode;
         this.initialEvent = oldEvent;
+    }
+
+    async waitFor(promise, stopImmediatePropagation = false) {
+        if (stopImmediatePropagation) {
+            this.stopImmediatePropagation()
+        }
+        
+        let e = this.initialEvent;
+
+        e.eventPromises.push(promise);
+
+        await promise;
+    }
+
+    async waitAll(){
+        return await Promise.all(this.initialEvent.eventPromises);
+    }
+}
+
+export class AccessClickEvent extends AccessEvent {
+    constructor(mode) {
+        super("access-click", mode)
     }
 }
 
@@ -73,6 +100,24 @@ class AccessButtonsLookupTable {
         }
         return newGroups;
     }
+}
+
+function checkClickable(root, element, center){
+    let clickable = false;
+    try {
+        let els = root.elementsFromPoint(center.x, center.y);
+        while (els[0].hasAttribute("access-transparent")) els.shift();
+        let el = els[0]
+        do {
+            if (el === element) {
+                clickable = true;
+                break;
+            }
+        } while (el = (el.parentNode || el.host));
+    } catch (e) {
+        clickable = false;
+    }
+    return clickable
 }
 
 // Private variables
@@ -148,8 +193,10 @@ class AccessButtonRoot extends HTMLElement {
      * @param {?("click"|"dwell"|"switch")} mode
      * @param {Event} oldEvent
      * */
-    accessClick(mode, oldEvent) {
-        this.dispatchEvent(new AccessClickEvent(mode, oldEvent))
+    async accessClick(mode) {
+        const event = new AccessClickEvent(mode)
+        this.dispatchEvent(event);
+        await Promise.all(event.eventPromises);
     }
 
     /** 
@@ -221,23 +268,7 @@ class AccessButtonRoot extends HTMLElement {
 customElements.define("access-button", AccessButtonRoot);
 
 
-function checkClickable(root, element, center){
-    let clickable = false;
-    try {
-        let els = root.elementsFromPoint(center.x, center.y);
-        while (els[0].hasAttribute("access-transparent")) els.shift();
-        let el = els[0]
-        do {
-            if (el === element) {
-                clickable = true;
-                break;
-            }
-        } while (el = (el.parentNode || el.host));
-    } catch (e) {
-        clickable = false;
-    }
-    return clickable
-}
+
 
 /**
  * @extends {AccessButtonRoot}

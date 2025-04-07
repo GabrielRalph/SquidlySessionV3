@@ -2,10 +2,10 @@
 import {SvgPlus, Vector} from "../../SvgPlus/4.js"
 import {ShadowElement} from "../../Utilities/shadow-element.js"
 import { Icon } from "../../Utilities/Icons/icons.js";
-import { relURL, WaveStateVariable } from "../../Utilities/usefull-funcs.js";
+import { delay, relURL, WaveStateVariable } from "../../Utilities/usefull-funcs.js";
 import { Features } from "../features-interface.js";
 import { SessionView } from "../../SessionView/session-view.js";
-import { AccessButton } from "../../Utilities/access-buttons.js";
+import { AccessButton, AccessClickEvent } from "../../Utilities/access-buttons.js";
 
 /**
  * @typedef {Object} IconsDescription
@@ -214,7 +214,7 @@ function parse_icons(icons, changeCallback) {
 }
 
 
-class IconSelectionEvent extends Event {
+class IconSelectionEvent extends AccessClickEvent {
     /**
      * @param {IconsDescription} icon
      * @param {[number]} path
@@ -222,11 +222,10 @@ class IconSelectionEvent extends Event {
      *                       icon description object.
      * @param {string} clickType 
      */
-    constructor(icon, path, clickType = "click", safe = false){
-        super("icon-selection", {cancelable: true});
+    constructor(oldEvent, icon, path, safe = false){
+        super(oldEvent);
         this.icon = safe ? icon.setter : icon;
         this.iconPath = path;
-        this.clickType = clickType;
     }
 }
 
@@ -414,7 +413,7 @@ class ToolBarRing extends ShadowElement {
 
         // otherwise dispatch the click event.
         } else {
-            this.dispatchEvent(new IconSelectionEvent(this.icons[i], [...this.iconPath, i]))
+            this.dispatchEvent(new IconSelectionEvent("click", this.icons[i], [...this.iconPath, i]))
         }
     }
 
@@ -463,8 +462,8 @@ class ToolBarRing extends ShadowElement {
             // Create a respective tool bar icon.
             let iconButton = this.ringIcons.createChild(ToolBarRingIcon, {
                 events: {
-                    "access-click": () => {
-                        this.dispatchEvent(new IconSelectionEvent(icon, [...this.iconPath, idx], "switch"))
+                    "access-click": (e) => {
+                        this.dispatchEvent(new IconSelectionEvent(e, icon, [...this.iconPath, idx]))
                     }
                 },
             }, icon, i * 2 * PI / icons.length - PI / 2);
@@ -473,9 +472,11 @@ class ToolBarRing extends ShadowElement {
         
         // Create cancel buttons
         let button = this.ringIcons.createChild(AccessButton, {class: "cancel", events: {
-            "access-click": () => {
-                this.toggle(false);
-                this.tools.toggleToolBar(true);
+            "access-click": (e) => {
+                e.waitFor(Promise.all([
+                    this.toggle(false),
+                    this.tools.toggleToolBar(true)
+                ]));
             }
         }}, "toolbar-ring")
         this.cancelIcon = button.createChild(Icon, {}, "close");
@@ -564,7 +565,7 @@ class ToolBar extends ShadowElement {
             let path = [i];
             this.createChild(ToolBarIcon, {
                 events: {
-                    "access-click": (e) => this.dispatchEvent(new IconSelectionEvent(icon, path, e.clickMode)),
+                    "access-click": (e) => this.dispatchEvent(new IconSelectionEvent(e, icon, path)),
                 }
             }, icon);
             i++;
@@ -627,6 +628,11 @@ class GestureRecogniser {
 
 
 export class ToolBarFeature extends Features {
+    selectionListeners = {};
+
+    mouseY = null;
+    eyeY = null;
+
     /** @param {import("../features-interface.js").SquidlySession} session */
     constructor(session){
         super(session);
@@ -635,14 +641,14 @@ export class ToolBarFeature extends Features {
         let toolBarRing = new ToolBarRing(this);
 
         let [icons, iconsEditor] = parse_icons(ICONS_SMALL, () => {
-            this.toolBarArea.icons = icons;
-            if (this.fullAspectArea.shown) {
-                let i = this.fullAspectArea.iconPath[0];
+            this.toolBar.icons = icons;
+            if (this.toolBarRing.shown) {
+                let i = this.toolBarRing.iconPath[0];
                 
                 if (icons[i].icons.length > 0) {
-                    this.fullAspectArea.icons = icons[i].icons
+                    this.toolBarRing.icons = icons[i].icons
                 } else {
-                    this.fullAspectArea.toggle(false);
+                    this.toolBarRing.toggle(false);
                 }
             }
         })
@@ -651,41 +657,42 @@ export class ToolBarFeature extends Features {
 
         toolBar.icons = icons;
 
-        this.addEventListener("icon-selection", (event) => {
-            toolBarRing.toggle(false);
-            if (event.clickType == "switch") {
-                this.toggleToolBar(true);
-            }
-        })
+        // Icon selection events
         let iselect = (e) => {
+            console.log("ToolBar access-click", e);
+            
+            // Icon was selected that has a sub selection.
             if (Array.isArray(e.icon.icons) && e.icon.icons.length > 0) {
+
+                let proms = []
                 // If it was a switch click hide the toolbar.
-                if (e.clickType == "switch") {
-                    session.togglePanel("toolBarArea", false);
+                if (e.clickMode == "switch") {
+                    proms.push(session.togglePanel("toolBarArea", false));
                 }
+
+                // Show subselection ring icons
                 toolBarRing.iconPath = e.iconPath;
                 toolBarRing.icons = e.icon.icons;
-                toolBarRing.toggle(true);
+                proms.push(toolBarRing.toggle(true));
                 
+                e.waitFor(Promise.all(proms))
+
+            // Icon was a final selection so dispatch an event 
+            // for other apps to use.
             } else {
-                this.dispatchEvent(new IconSelectionEvent(e.icon, e.iconPath, e.clickType, true));
+                this._dispatchIconSelectionEvent(e);
             }
         }
-        toolBar.addEventListener("icon-selection", iselect);
-        toolBarRing.addEventListener("icon-selection", iselect);
+        toolBar.addEventListener("access-click", iselect);
+        toolBarRing.addEventListener("access-click", iselect);
 
+        // Events regarding bringing up the toolbar.
         toolBarRing.addEventListener("sv-mousemove", (e) => {
-            if (!this.toolbarFixed) {
-                let [pos, size] = toolBarRing.bbox;
-                let [pos2, size2] = toolBar.bbox;
-                let yMin = pos.add(size).sub(size2).y;
-                session.togglePanel("toolBarArea", e.y > yMin);
-            }
+            this.mouseY = e.y;
         })
 
         toolBarRing.addEventListener("sv-mouseleave", (e) => {
-            if (!this.toolbarFixed)
-                session.togglePanel("toolBarArea", false);
+            this.mouseY = null;
         })
 
         let gestures = new GestureRecogniser();
@@ -697,22 +704,40 @@ export class ToolBarFeature extends Features {
                 session.togglePanel("toolBarArea", start.y > end.y);
             }
         })
+
         toolBarRing.addEventListener("sv-touchmove", (e) => {
             if (!this.toolbarFixed)
                 gestures.addTouchEvent(e);
         })
         
-
-        this.toolBarArea = toolBar;
-        this.fullAspectArea = toolBarRing
+        this.toolBar = toolBar;
+        this.toolBarRing = toolBarRing
     }
 
-    /** Sets an icons properties at a given path
+     
+    
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ METHODS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+   
+    addSelectionListener(name, cb) {
+        if (cb instanceof Function) {
+            if (!(name in this.selectionListeners)) {
+                this.selectionListeners[name] = new Set();
+            }
+            this.selectionListeners[name].add(cb)
+        }
+    }
+
+
+     /** Sets an icons properties at a given path
      * 
      * @param {string} path e.g. share/files/notification
      * @param {number|string|bool} value e.g. "3"
      */
-    setIcon(path, value) {
+     setIcon(path, value) {
         let icons = this.icons;
         path = path.split("/");
         while (path.length > 1) {
@@ -727,30 +752,103 @@ export class ToolBarFeature extends Features {
         if (key in icons) icons[key] = value;
     }
 
-    /** Can also be used to set icon properties
-     * @return {Object.<string, IconsDescriptionObject>} 
-     * */
-    get icons(){
-        return this._iconsEditor;
-    }
-
     async toggleToolBar(bool) {
         await this.session.togglePanel("toolBarArea", bool);
     }
 
     async toggleRingBar(bool) {
-        await this.fullAspectArea.toggle(bool);
+        await this.toolBarRing.toggle(bool);
     }
 
     fixToolbar(isFixed) {
         this.toolbarFixed = isFixed;
     }
 
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SET/GETTERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-    getElements() {
-        return [this.toolBarArea, this.fullAspectArea];
+
+    set toolbarFixed(bool){
+        // try {
+        //     throw new Error("toolbar fixed set " + bool);
+        // } catch (e) {
+        //     console.log(e);
+        // }
+        this._toolbarFixed = bool
+    }
+    get toolbarFixed(){
+        return this._toolbarFixed;
+    }
+
+
+    /** Can also be used to set icon properties
+     * @return {Object.<string, IconsDescriptionObject>} 
+     * */
+    get icons(){
+        return this._iconsEditor;
     }
     
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ METHODS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    _dispatchIconSelectionEvent(e){
+        const event = new IconSelectionEvent(e, e.icon, e.iconPath, true);
+        // this.toggleRingBar(false)
+        event.waitFor(this.toggleRingBar(false));
+        // Create icon selection event
+        console.log('Here');
+        
+        if (e.icon.name in this.selectionListeners) {
+            let listeners = this.selectionListeners[e.icon.name];
+            for (let listener of listeners) {
+                listener(event);
+                if (e.cancelBubble) {
+                    return;
+                }
+            }
+        }
+        this.dispatchEvent(event);
+    }
+   
+    initialise(){
+        // Events regarding bringing up the toolbar.
+        this.session.eyeGaze.addEyeDataListener((v, bbox) => {
+            let eyeY = null;
+            if (v instanceof Vector && v.y < 1) {
+                eyeY = v.y * bbox[1].y;
+            }
+            this.eyeY = eyeY;
+        })
+
+        this._start();
+
+    }
+
+
+    async _start(){
+        while (true) {
+            // console.log(this.toolbarFixed);
+            if (!this.toolbarFixed) {
+                
+                let [pos, size] = this.toolBarRing.bbox;
+                let [pos2, size2] = this.toolBar.bbox;
+                let yMin = pos.add(size).sub(size2).y;
+                let isEye = this.eyeY == null ? false : this.eyeY > yMin;
+                let isMouse = this.mouseY == null ? false : this.mouseY > yMin;
+                session.togglePanel("toolBarArea", isEye || isMouse);
+            }
+            await delay();
+        }
+    }
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+   
     static async loadResources(){
         await ToolBar.loadStyleSheets();
     }

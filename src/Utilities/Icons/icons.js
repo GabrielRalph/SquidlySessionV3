@@ -64,6 +64,7 @@ const DEFAULT_ICON_STYLE = `
 export function isIconName(name) {
     return name in IconsParsed;
 }
+
 export class Icon extends SvgPlus {
     /**
      * @param {IconName} name
@@ -78,6 +79,16 @@ export class Icon extends SvgPlus {
             attributeFilter: ["name"], 
             subtree: false
         }, () => {this.name = this.getAttribute("name")});
+        let rs = new ResizeObserver(() => {
+            let [pos, size] = this.svgBBox;
+            let a = size.x * size.y;
+            if (a > 1e-5) {
+                this.squareViewBox();
+                rs.disconnect();
+            }
+            
+        })
+        rs.observe(this);
     }
 
 
@@ -85,7 +96,7 @@ export class Icon extends SvgPlus {
         this.styles = {
             opacity: 0,
         }
-        window.requestAnimationFrame(() => {
+        // window.requestAnimationFrame(() => {
             let [pos, size] = this.svgBBox;
             let maxDim = Math.max(size.x, size.y);
             let newSize = new Vector(maxDim/0.9);
@@ -97,7 +108,7 @@ export class Icon extends SvgPlus {
             this.styles = {
                 opacity: null,
             }
-        })
+        // })
     }
     
 
@@ -105,6 +116,9 @@ export class Icon extends SvgPlus {
      * @param {IconName} name
      */
     set name(name){
+        if (name === this._name) return;
+        this._name = name;
+        
         if (name in IconsParsed) {
             let ws = IconsParsed[name].ws;
             this.styles = {

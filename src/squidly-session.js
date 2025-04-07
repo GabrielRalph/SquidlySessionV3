@@ -1,9 +1,10 @@
+import { createFeatureProxy } from "./Features/features-interface.js";
 import { FirebaseFrame } from "./Firebase/firebase-frame.js";
 import * as FB from "./Firebase/firebase.js";
 import { ERROR_CODES, SessionConnection } from "./Firebase/session-connection.js";
-import { SvgPlus } from "./SvgPlus/4.js";
+import { SvgPlus, Vector } from "./SvgPlus/4.js";
 import { ShadowElement } from "./Utilities/shadow-element.js";
-import { delay, getQueryKey, WaveStateVariable } from "./Utilities/usefull-funcs.js";
+import { delay, getQueryKey, PublicProxy, WaveStateVariable } from "./Utilities/usefull-funcs.js";
 
 /** @param {() => Promise[]} */
 async function series(arr) {
@@ -17,7 +18,10 @@ const parallel = (...args) => Promise.all(...args);
 
 /** @typedef {import('./SessionView/session-view.js').SessionView} SessionView*/
 /** @typedef {import('./Features/ToolBar/tool-bar.js').ToolBarFeature} ToolBarFeature*/
+/** @typedef {import('./Features/Cursors/cursors.js').Cursors} Cursors*/
+/** @typedef {import('./Features/features-interface.js').Features} Feature*/
 /** @typedef {import('./Features/EyeGaze/eye-gaze.js').EyeGazeFeature} EyeGazeFeature*/
+/** @typedef {import('./Features/Notifications/notifications.js').Notifications} Notifications*/
 /** @typedef {import('./Features/AccessControl/access-control.js').AccessControl} AccessControl*/
 /** @typedef {import('./Features/features-library.js')} FLIBMod*/
 /** @typedef {import('./Features/features-interface.js').Features} Feature*/
@@ -35,32 +39,6 @@ let SessionView;
 let Features;
 
 const $$ = new WeakMap();
-
-
-export class SessionDataFrame extends FirebaseFrame {
-    constructor(firebaseName) {
-        if (sessionConnection == null || !sessionConnection.hasJoined) {
-            throw "Session not connected";
-        }
-        super(`session-data/${sessionConnection.sid}/${firebaseName}`);
-    }
-
-    get isHost(){
-        if (sessionConnection == null) {
-            return null
-        } else {
-            return sessionConnection.isHost;
-        }
-    }
-
-    get sid(){
-        if (sessionConnection == null) {
-            return null
-        } else {
-            return sessionConnection.sid;
-        }
-    }
-}
 
 async function loadResources() {
     console.log("loading resources");
@@ -91,6 +69,37 @@ async function initialiseFirebaseUser(){
     
 }
 
+class FeatureInitialiserError extends Error {
+    constructor(feature, e) {
+        super(feature.__proto__.constructor.name + '.initialise()\n\t' + e.message)
+    }
+}
+
+export class SessionDataFrame extends FirebaseFrame {
+    constructor(firebaseName) {
+        if (sessionConnection == null || !sessionConnection.hasJoined) {
+            throw "Session not connected";
+        }
+        super(`session-data/${sessionConnection.sid}/${firebaseName}`);
+    }
+
+    get isHost(){
+        if (sessionConnection == null) {
+            return null
+        } else {
+            return sessionConnection.isHost;
+        }
+    }
+
+    get sid(){
+        if (sessionConnection == null) {
+            return null
+        } else {
+            return sessionConnection.sid;
+        }
+    }
+}
+
 export class SquidlySessionElement extends ShadowElement {
     /** @type {SessionView} */
     sessionView = null;
@@ -100,6 +109,13 @@ export class SquidlySessionElement extends ShadowElement {
 
     /** @type {AccessControl} */
     accessControl = null;
+
+    /** @type {Notifications} */
+    notifications = null;
+
+    /** @type {number} */
+    sharedAspectRatio = 1;
+
 
     constructor(el) {
         if (instanceCount !== 0) {
@@ -130,7 +146,6 @@ export class SquidlySessionElement extends ShadowElement {
     }
 
     async initialiseFeatures() {
-        
         let makeFeature = (featureInfo) => {
             let {firebaseName} = featureInfo.class;
             let sDataFrame = new SessionDataFrame(firebaseName);
@@ -138,19 +153,27 @@ export class SquidlySessionElement extends ShadowElement {
             /** @type {Feature} */
             let feature = new featureInfo.class(this.squidlySession, sDataFrame);
 
-            let elements = feature.getElements();
-
             // Attach feature elements to their corresponding areas on the session view.
-            for (let i = 0; i < featureInfo.layers.length; i++) {
-                let layer = featureInfo.layers[i]
-                let func = layer.type == "panel" ? "setPanelContent" : "addScreenArea";
-                
-                let res = this.sessionView[func](layer.area, elements[i]);
-
-                if (layer.index) {
-                    res.styles = {"z-index": layer.index}
+            if (typeof featureInfo.layers === "object" && featureInfo.layers !== null) {
+                for (let key in featureInfo.layers) {
+                    let layer = featureInfo.layers[key]
+                    let func = layer.type == "panel" ? "setPanelContent" : "addScreenArea";
+    
+                    let element = feature[key];
+                    if (!element) {
+                        console.warn(`The feature element "${key}" is missing`)
+                    } else if (!SvgPlus.is(element, ShadowElement)) {
+                        console.warn(`The feature element "${key}" is not a shadow element.`)
+                    } else {
+                        let res = this.sessionView[func](layer.area, element);
+                        if (layer.index) {
+                            res.styles = {"z-index": layer.index}
+                        }
+                    }
                 }
             }
+
+            this[featureInfo.name + "Public"] = createFeatureProxy(feature, featureInfo);
             this[featureInfo.name] = feature;
 
             return feature;
@@ -160,11 +183,16 @@ export class SquidlySessionElement extends ShadowElement {
         let features = Features.FEATURES.map(makeFeature);
 
         // Initialise all features.
-        await Promise.all(features.map(feature => feature.initialise()));
+        await Promise.all(features.map(async feature => {
+            try { await feature.initialise() }
+            catch (e) {
+                throw new FeatureInitialiserError(feature, e)
+            }
+        }));
     }
 
     async initialiseSessionConnection(){
-        let error = false;
+        let error = [false, ""];
         if (sessionConnection === null) {
             let key = getQueryKey();
             if (key == null) {
@@ -174,12 +202,15 @@ export class SquidlySessionElement extends ShadowElement {
             }
         }
         
-        if (error === false && sessionConnection !== null) {
+        if (error[0] === false && sessionConnection !== null) {
             error = await sessionConnection.join();
         }
         
-        if (error !== false) {
-            switch (error) {
+        
+
+       let [code] = error;
+        if (code !== false) {
+            switch (code) {
                 case ERROR_CODES.NO_SESSION:
                     this.loaderText = `The session you are trying to connect no longer exists.`
                     break;
@@ -204,11 +235,8 @@ export class SquidlySessionElement extends ShadowElement {
                     break;
                 default:
                     console.log(error);
-                    
-                    this.loaderText = `An unexpected error occured please refresh and try again.`
+                    this.loaderText = `An unexpected error occured please refresh and try again. </br> ${error}`
             }
-            console.log(error);
-            
         }
     }
 
@@ -222,9 +250,10 @@ export class SquidlySessionElement extends ShadowElement {
         
         if (sessionConnection !== null && sessionConnection.hasJoined) {
             try {
-                await this.initialiseFeatures()
-                this.testin();
-        
+                await Promise.all([
+                    this.initialiseFeatures(),
+                    this.initialiseFixedAspect()
+                ]);
                 this.squidlyLoader.hide(0.5);
             } catch (e) {
                 console.log(e);
@@ -241,6 +270,46 @@ export class SquidlySessionElement extends ShadowElement {
 
 
 
+    }
+
+    async initialiseFixedAspect(){
+        let blank = new ShadowElement("dummy-element");
+        let sdata = new SessionDataFrame("shared-aspect-ratio");
+        
+        // Watch for resize changes in the full aspect area
+        let observer = new ResizeObserver(() => {
+            // If the size changes broadcast the new size to the 
+            // database
+            let me = sessionConnection.isHost ? "host" : "participant";
+            let size = blank.bbox[1];
+            sdata.set(me, {x: size.x, y: size.y});
+        })
+        observer.observe(blank);
+
+        sdata.onValue(null, (val) => {
+            if (val !== null) {
+                let size = null;
+                if ("participant" in val) {
+                    size = new Vector(val.participant);
+                } else if ("host" in val) {
+                    size = new Vector(val.host);
+                }
+
+                if (size !== null) {
+                    let aspect = 1;
+                    if (size.x > 1e-3 && size.y > 1e-3) {
+                        aspect = size.x / size.y
+                    }
+                    this.sharedAspectRatio = aspect;
+                    this.sessionView.styles = {
+                        "--aspect-ratio": aspect
+                    }
+                }
+            }
+        })
+
+        let area = this.sessionView.addScreenArea("fullAspectArea", blank);
+        area.styles = {"z-index": -1};
     }
 
     async testFR() {
@@ -287,11 +356,11 @@ export class SquidlySessionElement extends ShadowElement {
         })
     }
 
-
     get squidlyLoader(){
         return document.querySelector("squidly-loader")
     }
     
+    /** @param {String} text */
     set loaderText(text) {
         if (this.squidlyLoader) {
             if (!this._loaderTextEl) {
@@ -318,10 +387,7 @@ export class SquidlySessionElement extends ShadowElement {
             this._loaderTextEl.innerHTML = text
         }
     }
-    
-
   
-
     /** 
      * @param {import("./SessionView/session-view.js").HideableElement} name
      * @param {boolean} isShown 
@@ -336,25 +402,41 @@ export class SquidlySession {
         $$.set(this, sessionElement);
     }
 
+    /** @return {number} */
+    get sharedAspectRatio(){
+        return $$.get(this).sharedAspectRatio;
+    }
+
      /** @return {?EyeGazeFeature} */
      get eyeGaze(){
-        return $$.get(this).eyeGaze;
+        return $$.get(this).eyeGazePublic;
     }
 
     /** @return {?ToolBarFeature} */
     get toolBar(){
-        return $$.get(this).toolBar;
+        return $$.get(this).toolBarPublic;
     }
 
     /** @return {?AccessControl} */
     get accessControl(){
-        return $$.get(this).accessControl;
+        return $$.get(this).accessControlPublic;
+    }
+
+     /** @return {?Cursors} */
+     get cursors(){
+        return $$.get(this).cursorsPublic;
+    }
+
+    /** @return {?Notifications} */
+    get notifications(){
+        return $$.get(this).notificationsPublic;
     }
 
     /** @return {boolean} */
     get isHost(){
         return sessionConnection.isHost;
     }
+
 
     /**
      * @param {boolean} bool
@@ -371,6 +453,5 @@ export class SquidlySession {
         await $$.get(this).togglePanel(name, isShown);
     }
 }
-
 
 SvgPlus.defineHTMLElement(SquidlySessionElement)

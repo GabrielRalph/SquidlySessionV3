@@ -349,7 +349,7 @@ const defaultCalibration = makeCSeq({
 			type: "zigzag",
 			scanTime: 2.5,
 			pulseTime: 1,
-			size: 5,
+			size: 7,
 		},
 	]
 });

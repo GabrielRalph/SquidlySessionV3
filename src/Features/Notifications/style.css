@@ -1,0 +1,34 @@
+notification-panel {
+    --y-offset: 0;
+    --margin: 0.5em;
+    --border: 3px;
+    --tool-bar-size: calc(var(--tool-bar-area-height) - 2* var(--margin) - 2* var(--border));
+    --tool-bar-width: calc(var(--inner-width) - 2* var(--margin) - 2* var(--border));
+    --icon-size: min(calc(0.5* var(--tool-bar-size)), calc(var(--tool-bar-width) / 8));
+}
+.notification {
+    font-size: calc(var(--icon-size) / 3);
+    --y-position: 1;
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, calc((var(--y-offset) - var(--y-position))* 4em));
+    height: 2em;
+    border-radius: 1em;
+    background-image: linear-gradient(to bottom, hsl(271deg 52% 56% / 90%), hsl(271deg 46% 39% / 90%));
+    color: white;
+    line-height: 2em;
+    padding: 0.5em 1em;
+    margin-top: 1em;
+    pointer-events: all;
+    white-space: pre;
+    box-shadow: inset 0px 0px 6px var(--panel-dark-color), inset 0px 9px 6px -8px #ffffff;
+    text-shadow: -1px 1px 1px rgb(0 0 0), 0px -2px 3px rgb(204 198 198 / 38%);
+}
+
+.notification[type="error"] {
+    background-image: linear-gradient(to bottom, hsl(0deg 100% 50% / 90%), hsl(0deg 100% 30% / 90%));
+}
+
+.notification[type="success"] {
+    background-image: linear-gradient(to bottom, hsl(120deg 100% 50% / 90%), hsl(120deg 100% 30% / 90%));
+}

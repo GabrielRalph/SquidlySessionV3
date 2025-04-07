@@ -1,6 +1,6 @@
 
 session-view {
-    --s-unit: hypot(1vh, 1vh);
+    --s-unit: hypot(1vh, 1vw);
     font-size: calc(1.5 * var(--s-unit));
     
     /* Colors */
@@ -44,7 +44,7 @@ session-view {
     --bottom-panel-height: 2em;
 
     /* ~~~~~~~~~~~~~ TOOL BAR AREA ~~~~~~~~~~~~~~~ */
-    --tool-bar-area-height: 8em;
+    --tool-bar-area-height: 20vh;
 
 
     --panel-slider-size: 0.7em;
@@ -219,7 +219,6 @@ main-screen {
     right: var(--side-screen-extent);
     bottom: var(--bottom-panel-extent);
 }
-
 main-screen.preview {
     --preview-color: #00A79D;
 }
@@ -247,7 +246,6 @@ popup-area {
 popup-area.preview {
     --preview-color: #7DC242;
 }
-
 
 tool-bar-area {
     --height: var(--tool-bar-area-height);

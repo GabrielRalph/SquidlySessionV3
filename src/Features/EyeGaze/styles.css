@@ -132,3 +132,49 @@ feedback-frame .border[hit] {
     fill: rgb(188, 13, 13)
 }
 
+
+test-screen {
+    background: #121211;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+test-screen .dot > circle.big {
+    stroke: white;
+    stroke-dasharray: 7px 7px;
+    fill: none;
+    stroke-width: 2px;
+}
+
+test-screen .dot > circle.small {
+    stroke: white;
+    fill: none;
+    stroke-width: 2px;
+}
+test-screen .dot > circle.proximity {
+    stroke: white;
+    fill: none;
+}
+
+test-screen .close {
+    border: 2px solid white;
+    border-radius: 1em;
+    width: 20%;
+    height: 20%;
+    position: absolute;
+    background: transparent;
+    bottom: 1em;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: unset;
+}
+
+access-button.rest {
+    position: absolute;
+    top: 3px;
+    bottom: 3px; 
+    left: 3px;
+    right: 3px;
+    pointer-events: all;
+}

@@ -122,6 +122,26 @@ export async function transition(callBack, duration) {
   }
 }
 
+export function argmin(arr) {
+  let mini = 0;
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] < arr[mini]) {
+      mini = i;
+    }
+  }
+  return mini;
+}
+
+export function argmax(arr) {
+  let maxi = 0;
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i] > arr[maxi]) {
+      maxi = i;
+    }
+  }
+  return maxi;
+}
+
 export function lurp4(x, y, tl, tr, bl, br) {
 	let xt = tl.mul(1-x).add(tr.mul(x));
 	let xb = bl.mul(1-x).add(br.mul(x));
@@ -163,6 +183,7 @@ export async function delay(time){
     }
   })
 }
+
 export function relURL(url, meta) {
   let root = meta.url;
   url = url.replace(/^\.\//, "/");
@@ -315,5 +336,53 @@ export class PromiseChain {
           this.head = item.next;
       }
       return res;
+  }
+}
+
+class PrivacyError extends Error{
+  constructor(message) {
+    super(message);
+    this.stack = this.stack.replace(/\sat\s+Object.set[^\n]+\n/, "")
+  }
+}
+class ProxyClass {
+  constructor(...args) {
+      return new Proxy(...args)
+  }
+}
+export class PublicProxy extends ProxyClass {
+  constructor(instance, restrict) {
+    if (typeof restrict !== "object" || restrict == null) restrict = {}
+    let isPrivate = (prop) => {
+      return prop[0] == "_" ||
+              prop in restrict || 
+              prop[0] == "$"
+    }
+    super(instance, {
+      get: (target, prop, receiver) => {
+        if (prop in target) {
+          let isF = target[prop] instanceof Function
+          if (isPrivate(prop)) {
+            throw new PrivacyError(`Failed to ${isF ? "call" : "get"} ${prop} as it's a private ${isF ? "function" : "property"}.`)
+          } else {
+            return isF ? instance[prop].bind(instance) : target[prop];
+          }
+        } else {
+          throw new PrivacyError(`No property or function ${prop}.`)
+        }
+      },
+      set: (target, prop, receiver) => {
+        if (prop in instance) {
+          if (isPrivate(prop)) {
+            throw new PrivacyError(`Failed to set ${prop} as it's a private ${target[prop] instanceof Function ? "function" : "property"}.`)
+          } else {
+            instance[prop] = receiver;
+          }
+        } else {
+          throw new PrivacyError(`No property or function ${prop}.`)
+        }
+        return true
+      }
+    })
   }
 }

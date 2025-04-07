@@ -89,7 +89,7 @@ export class SessionConnection extends FirebaseFrame {
         this.isJoining = true;
 
         let start = false;
-        let error = false
+        let error = [false, ""]
         let isActive = await this.get("active");
         let host = await this.get("hostUID");
         let isHost = host === getUID();

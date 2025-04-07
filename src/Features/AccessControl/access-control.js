@@ -109,8 +109,11 @@ class ControlOverlay extends ShadowElement {
         this.createChild(CircleLoader, {}, {getCenter: () => new Vector(200,200)})
     }
 
-    /** @param {AccessButton} b */
-    async addDwellLoader(b) {
+    /** 
+     * @param {AccessButton} b 
+     * @param {AccessControl} accessControl
+     * */
+    async addDwellLoader(b, accessControl) {
         b.highlight = true;
         let sl = this.createChild(CircleLoader, {}, b);
         this.loaders.set(b, sl)
@@ -121,13 +124,13 @@ class ControlOverlay extends ShadowElement {
         sl.remove();
         this.loaders.delete(b);
         if(sl.wsv.transValue == 1) {
-            b.accessClick("switch")
+            accessControl._dwellClick(b);
         }
         
         b.highlight = false;
     }
 
-    updateDwellButtons(bList) {
+    updateDwellButtons(bList, accessControl) {
         let bSet = new Set(bList);
         for (let button of this.loaders.keys()) {
             if (!bSet.has(button)) {
@@ -137,13 +140,12 @@ class ControlOverlay extends ShadowElement {
         }
         for (let button of bSet) {
             if (!this.loaders.has(button)) {
-                this.addDwellLoader(button);
+                this.addDwellLoader(button, accessControl);
             } else {
                 this.loaders.get(button).setGoal(true);
             }
         }
     }
-
 
     /**
      * @param {AccessButton|[AccessButton]} buttons
@@ -215,13 +217,12 @@ export class AccessControl extends Features {
     constructor(sesh) {
         super(sesh);
         this.overlay = new ControlOverlay();
-        this.session.toolBar.addEventListener("icon-selection", async (e) => {
-            if (e.icon.key == "switch") {
-                if (this.isSwitching) {
-                    this.endSwitching();
-                } else {
-                    this.startSwitching();
-                }
+        this.session.toolBar.addSelectionListener("switch", async (e) => {
+            await e.waitAll()
+            if (this.isSwitching) {
+                this.endSwitching();
+            } else {
+                this.startSwitching();
             }
         })
 
@@ -231,18 +232,12 @@ export class AccessControl extends Features {
             }
         }
 
-        addProcessListener((data) => {
-            let {overlay} = this;
-            if (data.result) {
-                let groups = getButtonGroups();
-                /** @type {AccessButton[]} */
-                let buttons = Object.values(groups).flat();
-                
-                let selected = buttons.filter(b => b.isPointInElement(data.result.mul(overlay.clientWidth, overlay.clientHeight)));
-                overlay.updateDwellButtons(selected);
-            }
-        })
     }
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
 
     get isSwitching(){return this._isSwitching}
 
@@ -253,11 +248,14 @@ export class AccessControl extends Features {
             this.startSwitching(showToolbar);
         }
     }
+
     /** @param {boolean} showToolBar whether to show the toolbar when switching begins */
     async startSwitching(showToolBar = true) {
         // If switching is already in process return
         if (this._isSwitching) return;
 
+        console.log("starting switching");
+        
         // Fix the toolbar, hide the mouse cursor 
         // and bring up the toolbar.
         this._isSwitching = true;
@@ -273,29 +271,17 @@ export class AccessControl extends Features {
         // the switching process.
         let switchingPromiseFunction = async () => {
             /** @type {?(string|AccessButton)} */
-            let selectedButton = "init";
+            let selectedButton = null;
             do {
                 /** @type {AccessButton[]} */
                 let selectedGroup = null;
                 /** @type {string} */
                 let selectedGroupName = null;
 
-                // Wait for a set amount of time for UI transition to occur.
-                if (selectedButton) {
-                    for (let i = 0; i < this.maxTransitionTimeMS / 50; i++) {
-                        if (!quit) {
-                            await delay(50);
-                        } else {
-                            break;
-                        }
-                    }
-                } 
-                selectedButton = null;
-                
-
                 // Get the clickable access button groups
                 let groups = getButtonGroups();
                 let keys = Object.keys(groups);
+                
                 
                 // If there is more than one group of access buttons
                 if (keys.length > 1) {
@@ -338,9 +324,6 @@ export class AccessControl extends Features {
                 } else {
                     quit = true;
                 }
-
-                
-                
                 
                 // If the switching has not been ended and there is a selected group.
                 if (!quit && selectedGroup != null) {
@@ -364,12 +347,12 @@ export class AccessControl extends Features {
                     // toolbar if that button was on the toolbar, otherwise show
                     // the toolbar.
                     if (selectedButton instanceof Element) {
-                        selectedButton.accessClick("switch");
+                        await selectedButton.accessClick("switch");
+                        selectedButton = null;
                     }
                 }
+
                 
-                
-    
             // If the switching has not ended repeat the entire process.
             } while (!quit);
         }
@@ -394,10 +377,40 @@ export class AccessControl extends Features {
         this.overlay.hideMouse = false;
         this._isSwitching = false;
     }
+
     async endSwitching(){}
 
-    getElements(){
-        return [this.overlay];
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+
+    async _dwellClick(b) {
+        this._clickingButton = true;
+        await b.accessClick("dwell");
+        this._clickingButton = false;
+    }
+
+    _onEyeData(v) {
+        if (v instanceof Vector && !this._clickingButton) {
+            let {overlay} = this;
+            let groups = getButtonGroups();
+            /** @type {AccessButton[]} */
+            let buttons = Object.values(groups).flat();
+
+            v.x = v.x < 0 ? 0 : (v.x > 1 ? 1 : v.x);
+            v.y = v.y < 0 ? 0 : (v.y > 1 ? 1 : v.y);
+            v = v.mul(overlay.clientWidth, overlay.clientHeight);
+            
+            let selected = buttons.filter(b => b.isPointInElement(v));
+            overlay.updateDwellButtons(selected, this);
+        } else {
+            this.overlay.updateDwellButtons([], this);
+        }
+    }
+
+    initialise(){
+        this.session.eyeGaze.addEyeDataListener(this._onEyeData.bind(this))
     }
 
     static async loadResources(){
