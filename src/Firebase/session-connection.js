@@ -108,7 +108,7 @@ export class SessionConnection extends FirebaseFrame {
                 if (errors.length === 0) {
                     start = true;
                 } else {
-                    error = errors[0];
+                    error = errors;
                 }
             } else {
                 // session has not started and participant requesting

@@ -121,7 +121,11 @@ export class Cursors extends Features {
     get me() {return this.sdata.isHost ? "host" : "participant"}
 
     get referenceBBox() {
-        return this[this._referenceArea].bbox;
+        if (this._referenceArea in this) {
+            return this[this._referenceArea].bbox;
+        } else {
+            return [new Vector, new Vector]
+        }
     }
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

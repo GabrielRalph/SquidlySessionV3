@@ -40,33 +40,47 @@ let Features;
 
 const $$ = new WeakMap();
 
-async function loadResources() {
-    console.log("loading resources");
+// async function loadResources() {
+//     console.log("loading resources");
     
-    let a = async () => {
-        SessionView = (await import("./SessionView/session-view.js")).SessionView
-        await SessionView.loadStyleSheets();
-    }
-    let b = async () => {
-        Features = (await import("./Features/features-library.js"))
-        await Features.loadResources();
-    }
+//     let a = async () => {
+        
+//     }
+//     let b = async () => {
+//         
+//         await Features.loadResources();
+//     }
 
-    await parallel([a(), b()]);
+//     await parallel([a(), b()]);
+// }
+
+const LoadState = {}
+function logState(){
+    let sum = Object.values(LoadState).reduce((a,b)=>a+b)/20;
+    let maxstr = Math.max(...Object.keys(LoadState).map(a=>a.length));
+    let hue = sum * 97;
+    let str = `%c LOAD STATE ${Math.round(sum*100)}%\n\t` +Object.keys(LoadState).map(k => `${k.padStart(maxstr)}: ${"".padStart((LoadState[k]+1)*3, LoadState[k]==2?"-":"~")}`).join("\n\t");
+        console.log(str, `background:hsl(${hue}deg, 100%, 90%); color:hsl(${hue}deg, 100%, 30%)`);
+}
+function setLoadState(str, state) {
+
+    LoadState[str] = state;
+    logState();
 }
 
 async function initialiseFirebaseUser(){
+    setLoadState("firebase", 0);
     return new Promise((r) => {
         FB.addAuthChangeListener((user) => {
             if (user == null) {
                 FB.signInAnonymously();
             } else {
+                setLoadState("firebase", 2);
                 r()
             }
         })
         FB.initialise();
     })
-    
 }
 
 class FeatureInitialiserError extends Error {
@@ -117,6 +131,8 @@ export class SquidlySessionElement extends ShadowElement {
     sharedAspectRatio = 1;
 
 
+
+
     constructor(el) {
         if (instanceCount !== 0) {
             throw "There can only be one instance of the squidly session element per document"
@@ -128,8 +144,11 @@ export class SquidlySessionElement extends ShadowElement {
     }
 
     async initialiseSessionView(){
-        console.log("initialising session view");
-        
+        setLoadState("sessionView", 0);
+        SessionView = (await import("./SessionView/session-view.js")).SessionView;
+        setLoadState("sessionView", 1);
+        await SessionView.loadStyleSheets();
+
         // Create session view 
         this.sessionView = this.createChild(SessionView, {styles: {
             position: "absolute",
@@ -142,10 +161,20 @@ export class SquidlySessionElement extends ShadowElement {
             "z-index": 1,
             overflow: "hidden"
         }});
+        
         window.sv = this.sessionView
+        setLoadState("sessionView", 2);
     }
 
     async initialiseFeatures() {
+        Features = (await import("./Features/features-library.js"))
+
+        await Promise.all(Features.FEATURES.map(async f => {
+            setLoadState(f.name, 0);
+            await f.class.loadResources()
+            setLoadState(f.name, 1);
+        }))
+
         let makeFeature = (featureInfo) => {
             let {firebaseName} = featureInfo.class;
             let sDataFrame = new SessionDataFrame(firebaseName);
@@ -176,16 +205,18 @@ export class SquidlySessionElement extends ShadowElement {
             this[featureInfo.name + "Public"] = createFeatureProxy(feature, featureInfo);
             this[featureInfo.name] = feature;
 
-            return feature;
+            return [feature, featureInfo];
         }
 
         // Instantiate all features.
         let features = Features.FEATURES.map(makeFeature);
 
         // Initialise all features.
-        await Promise.all(features.map(async feature => {
-            try { await feature.initialise() }
-            catch (e) {
+        await Promise.all(features.map(async ([feature, info]) => {
+            try { 
+                await feature.initialise() 
+                setLoadState(info.name, 2);
+            } catch (e) {
                 throw new FeatureInitialiserError(feature, e)
             }
         }));
@@ -193,6 +224,7 @@ export class SquidlySessionElement extends ShadowElement {
 
     async initialiseSessionConnection(){
         let error = [false, ""];
+        setLoadState("connection", 0)
         if (sessionConnection === null) {
             let key = getQueryKey();
             if (key == null) {
@@ -206,8 +238,6 @@ export class SquidlySessionElement extends ShadowElement {
             error = await sessionConnection.join();
         }
         
-        
-
        let [code] = error;
         if (code !== false) {
             switch (code) {
@@ -237,16 +267,20 @@ export class SquidlySessionElement extends ShadowElement {
                     console.log(error);
                     this.loaderText = `An unexpected error occured please refresh and try again. </br> ${error}`
             }
+        } else {
+            setLoadState("connection", 2);
         }
     }
 
     async onconnect(){
         await parallel([
             // Load resources -> initialise session view
-            series([loadResources,  this.initialiseSessionView.bind(this)]),
+            this.initialiseSessionView(),
+
             // Initialise firebase -> Connect to FB session
             series([initialiseFirebaseUser,  this.initialiseSessionConnection.bind(this)])   
         ]);
+
         
         if (sessionConnection !== null && sessionConnection.hasJoined) {
             try {

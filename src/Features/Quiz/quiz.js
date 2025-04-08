@@ -285,8 +285,6 @@ class SQuizView extends QuizView {
     }
 
     showHome() {
-        console.log("showing home");
-        
         this.isHome = true;
         this.locked = false;
         this.info.content = "input";

@@ -86,7 +86,6 @@ class FeedbackWindow extends ShadowElement {
 
     setData(data, findx = 1) {
         let key = "feedback"+findx
-        // console.log(data.points instanceof FaceLandmarks);
         
         if (typeof data !== "object" || data == null) {
             this[key].toggleAttribute("hide", true);
@@ -384,9 +383,7 @@ export class EyeGazeFeature extends Features {
     closeCalibration(e){
         this.feedbackShown = false;
         this.sdata.set("feedback-open", false)
-        console.log("setting started");
         this.session.toolBar.toolbarFixed = false;
-        console.log("setting complete");
 
         let p = this.feedbackWindow.root.hide()
 
@@ -400,9 +397,7 @@ export class EyeGazeFeature extends Features {
         this.feedbackShown = true;
         this.sdata.set("feedback-open", true)
         let p1 = this.session.toolBar.toggleToolBar(false);
-        console.log("setting started");
         this.session.toolBar.toolbarFixed = true;
-        console.log("setting complete");
         
         this.session.accessControl.restartSwitching(false);
         
@@ -517,7 +512,6 @@ export class EyeGazeFeature extends Features {
 
     async _beginCalibrationSequence(bool){
         if (bool) {
-            console.log("calibrate");
             
             this.session.toolBar.toggleToolBar(false);
             this.session.toolBar.toolbarFixed = true;
@@ -571,8 +565,6 @@ export class EyeGazeFeature extends Features {
 
 
         this.sdata.onValue(`disabled/${me}`, (val) => {
-            console.log(val);
-            
             this.disableEyeData(val)
         });
 

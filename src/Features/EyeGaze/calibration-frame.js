@@ -217,6 +217,48 @@ const CSeqs = {
 			super(ncs);
 		}
 	}, 
+	scanY: class CSGrid extends CSList{
+		constructor(cs) {
+			let {size, scanTime, pulseTime} = cs;
+			let ncs = {
+				type: "scanX",
+				sequences: new Array(size).fill(0).flatMap((_,i) => {
+					let x = i / (size - 1);
+					return [
+						{
+							x: x,
+							y: 0,
+							direction: "in",
+							time: pulseTime,
+							type: "fade",
+						},
+						{
+							startX: x, 
+							endX: x,
+							startY: 0, 
+							endY: 1,
+							time: scanTime,
+							type:"move"
+						},
+						{
+							x: x,
+							y: 1,
+							time: pulseTime,
+							type: "pulse"
+						},
+						{
+							x: x,
+							y: 1,
+							direction: "out",
+							time: pulseTime,
+							type: "fade",
+						},
+					]
+				})
+			}
+			super(ncs);
+		}
+	}, 
 	zigzag: class CSGrid extends CSList{
 		constructor(cs) {
 			let {size, scanTime, pulseTime} = cs;
@@ -286,6 +328,7 @@ const CSeqs = {
 			super(ncs);
 		}
 	}, 
+
 	message: class CSMessage extends CSList {
 		constructor(cs) {
 			let {time, message, isCount} = cs;
@@ -346,8 +389,14 @@ const defaultCalibration = makeCSeq({
 			message: "<span style = 'white-space:pre'>Follow the targets. Relax, it's okay to blink.</span></br></br>Press Esc to cancel at any time."
 		},
 		{
-			type: "zigzag",
-			scanTime: 2.5,
+			type: "scanX",
+			scanTime: 3,
+			pulseTime: 0.75,
+			size: 5,
+		},
+		{
+			type: "scanY",
+			scanTime: 3,
 			pulseTime: 0.75,
 			size: 5,
 		},
