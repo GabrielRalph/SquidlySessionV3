@@ -478,9 +478,12 @@ export class EyeGazeFeature extends Features {
                 v.x = v.x < 0 ? 0 : (v.x > 1 ? 1 : v.x);
                 v.y = v.y < 0 ? 0 : (v.y > 1 ? 1 : v.y);
             }
-            let me = this.sdata.isHost ? "host" : "participant";
-            this.session.cursors.updateCursorPosition(me + "-eyes", v, bbox)
-            
+            try {
+                let me = this.sdata.isHost ? "host" : "participant";
+                this.session.cursors.updateCursorPosition(me + "-eyes", v, bbox)
+            } catch (e) {
+
+            }
             // Update the eye data listeners
             for (let cb of this.eyeDataListeners) {
                 let v = null;
