@@ -1,5 +1,6 @@
 import vision from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0"
 import {Vector, Vector3} from "./vector3.js"
+import { relURL } from "../../../../Utilities/usefull-funcs.js";
 const {FaceLandmarker, FilesetResolver} = vision;
 
 /**
@@ -198,7 +199,7 @@ export async function load() {
   );
   FaceMesh = await FaceLandmarker.createFromOptions(filesetResolver, {
     baseOptions: {
-      modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+      modelAssetPath: relURL("./face_landmarker.task", import.meta),
       delegate: "GPU"
     },
     outputFaceBlendshapes: true,
