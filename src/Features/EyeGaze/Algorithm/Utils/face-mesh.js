@@ -190,6 +190,8 @@ let FaceMesh = false;
 // Load's model
 export async function load() {
   if (FaceMesh !== false) return;
+  console.log("Loading Face Mesh");
+  
   // Read more `CopyWebpackPlugin`, copy wasm set from "https://cdn.skypack.dev/node_modules" to `/wasm`
   const filesetResolver = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
@@ -203,6 +205,7 @@ export async function load() {
     runningMode,
     numFaces: 1
   });
+  console.log("Loaded Face Mesh");
 }
 
 /** Get face points from video
