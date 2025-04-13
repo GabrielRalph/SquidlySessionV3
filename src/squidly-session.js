@@ -1,4 +1,4 @@
-import { createFeatureProxy } from "./Features/features-interface.js";
+import { createFeatureProxy, OccupiableWindow } from "./Features/features-interface.js";
 import { FirebaseFrame } from "./Firebase/firebase-frame.js";
 import * as FB from "./Firebase/firebase.js";
 import { ERROR_CODES, SessionConnection } from "./Firebase/session-connection.js";
@@ -130,8 +130,17 @@ export class SquidlySessionElement extends ShadowElement {
     /** @type {number} */
     sharedAspectRatio = 1;
 
+    /** @type {SessionDataFrame} */
+    sdata = null;
 
+    /** @type {Object.<string, OccupiableWindow>} */
+    occupiables = {};
 
+    /** @type {string} */
+    occupier = null
+
+    /** @type {OccupiableWindow} */
+    currentOccupier = null;
 
     constructor(el) {
         if (instanceCount !== 0) {
@@ -142,6 +151,54 @@ export class SquidlySessionElement extends ShadowElement {
         this.squidlySession = new SquidlySession(this);
         window.session = this.squidlySession;
     }
+
+
+    async onconnect(){
+        await parallel([
+            // Load resources -> initialise session view
+            this.initialiseSessionView(),
+
+            // Initialise firebase -> Connect to FB session
+            series([initialiseFirebaseUser,  this.initialiseSessionConnection.bind(this)])   
+        ]);
+        
+        if (sessionConnection !== null && sessionConnection.hasJoined) {
+            this.sdata = new SessionDataFrame("session-main")
+            try {
+                await Promise.all([
+                    this.initialiseFixedAspect(),
+                    this.initialiseFeatures()
+                ]);
+                await this.initialiseWindowManager();
+                this.squidlyLoader.hide(0.5);
+            } catch (e) {
+                console.log(e);
+                this.loaderText = e+"";
+            }
+        } else {
+
+        }
+    }
+
+
+    async openWindow(name){
+        if (name != this.occupier) {
+            let nextOccupier = name in this.occupiables ? this.occupiables[name] : null;
+            name = name in this.occupiables ? name : null;
+
+            let proms = Promise.all([
+                this.currentOccupier instanceof Element ? this.currentOccupier.close() : null,
+                nextOccupier != null ? nextOccupier.open() : null,
+                nextOccupier != null && nextOccupier.fixToolBarWhenOpen ? this.toolBar.toggleToolBar(false) : null
+            ]);
+            this.toolBar.toolbarFixed = nextOccupier?.fixToolBarWhenOpen
+            this.occupier = name;
+            this.currentOccupier = nextOccupier;
+            this.sdata.set("occupier", name);
+            await proms;
+        }
+    }
+
 
     async initialiseSessionView(){
         setLoadState("sessionView", 0);
@@ -183,6 +240,7 @@ export class SquidlySessionElement extends ShadowElement {
             let feature = new featureInfo.class(this.squidlySession, sDataFrame);
 
             // Attach feature elements to their corresponding areas on the session view.
+            let occupiables = []
             if (typeof featureInfo.layers === "object" && featureInfo.layers !== null) {
                 for (let key in featureInfo.layers) {
                     let layer = featureInfo.layers[key]
@@ -198,12 +256,24 @@ export class SquidlySessionElement extends ShadowElement {
                         if (layer.index) {
                             res.styles = {"z-index": layer.index}
                         }
+                        if (SvgPlus.is(element, OccupiableWindow)) {
+                            occupiables.push([element, key])
+                        }
                     }
                 }
             }
 
-            this[featureInfo.name + "Public"] = createFeatureProxy(feature, featureInfo);
-            this[featureInfo.name] = feature;
+            let {name} = featureInfo;
+            if (occupiables.length == 1) {
+                this.occupiables[name] = occupiables[0][0];
+            } else {
+                for (let [element, key] of occupiables) {
+                    this.occupiables[name+"/"+key] = element
+                }
+            }
+
+            this[name + "Public"] = createFeatureProxy(feature, featureInfo);
+            this[name] = feature;
 
             return [feature, featureInfo];
         }
@@ -272,55 +342,20 @@ export class SquidlySessionElement extends ShadowElement {
         }
     }
 
-    async onconnect(){
-        await parallel([
-            // Load resources -> initialise session view
-            this.initialiseSessionView(),
-
-            // Initialise firebase -> Connect to FB session
-            series([initialiseFirebaseUser,  this.initialiseSessionConnection.bind(this)])   
-        ]);
-
-        
-        if (sessionConnection !== null && sessionConnection.hasJoined) {
-            try {
-                await Promise.all([
-                    this.initialiseFeatures(),
-                    this.initialiseFixedAspect()
-                ]);
-                this.squidlyLoader.hide(0.5);
-            } catch (e) {
-                console.log(e);
-                
-                this.loaderText = e+"";
-            }
-        } else {
-
-        }
-
-        // await Promise.all([
-            // TODO: Setup WebRTC
-        // ])
-
-
-
-    }
-
     async initialiseFixedAspect(){
         let blank = new ShadowElement("dummy-element");
-        let sdata = new SessionDataFrame("shared-aspect-ratio");
-        
+       
         // Watch for resize changes in the full aspect area
         let observer = new ResizeObserver(() => {
             // If the size changes broadcast the new size to the 
             // database
             let me = sessionConnection.isHost ? "host" : "participant";
             let size = blank.bbox[1];
-            sdata.set(me, {x: size.x, y: size.y});
+            this.sdata.set(`aspect/${me}`, {x: size.x, y: size.y});
         })
         observer.observe(blank);
 
-        sdata.onValue(null, (val) => {
+        this.sdata.onValue("aspect", (val) => {
             if (val !== null) {
                 let size = null;
                 if ("participant" in val) {
@@ -345,6 +380,15 @@ export class SquidlySessionElement extends ShadowElement {
         let area = this.sessionView.addScreenArea("fullAspectArea", blank);
         area.styles = {"z-index": -1};
     }
+
+    async initialiseWindowManager(){
+        return new Promise((r) => {
+            this.sdata.onValue("occupier", async (name) => {
+                await this.openWindow(name);
+                r();
+            })
+        })
+    }   
 
     async testFR() {
         
@@ -469,6 +513,11 @@ export class SquidlySession {
     /** @return {boolean} */
     get isHost(){
         return sessionConnection.isHost;
+    }
+
+
+    async openWindow(name) {
+        await $$.get(this).openWindow(name);
     }
 
 

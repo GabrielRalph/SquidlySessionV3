@@ -14,8 +14,14 @@ export class AccessEvent extends Event {
      * @param {?("click"|"dwell"|"switch"|AccessClickEvent)} mode
      * @param {Event} oldEvent
      * */
-     constructor(eventName, mode) {
-        super(eventName, {cancelable: true});
+     constructor(eventName, mode, config) {
+        const Config = {cancelable: true}
+        if (typeof config === "object" && config !== null) {
+            for (let key of config) {
+                Config[key] = config[key]
+            }
+        }
+        super(eventName, Config);
         let oldEvent = this;
         if (mode instanceof AccessClickEvent) {
             if (mode.initialEvent instanceof AccessClickEvent) {

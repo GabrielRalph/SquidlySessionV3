@@ -1,4 +1,4 @@
-import { AccessButton } from "../../Utilities/access-buttons.js";
+import { AccessButton, AccessEvent } from "../../Utilities/access-buttons.js";
 import { getSummary } from "./quizzes.js";
 import { SvgPlus } from "../../SvgPlus/4.js";
 import { MarkdownElement } from "./markdown.js";
@@ -194,9 +194,9 @@ export class Answers extends SvgPlus {
             let j = i;
             let groudIndex = n in index_2_group ? index_2_group[n](i) : i;
             let el = this.createChild(QuizIcon, {events: {
-                "access-click": () => {
+                "access-click": (e) => {
                     this.selectAnswer(j);
-                    const event = new Event("answer", {bubbles: true});
+                    const event = new AccessEvent("answer", e, {bubbles: true});
                     event.answer = answer;
                     event.answerIndex = j;
                     this.dispatchEvent(event);
@@ -331,16 +331,16 @@ export class QuizView extends SvgPlus {
         this.close = this.createChild(QuizIcon, {
             colorf: "red",
             events: {
-                "access-click": () => {
-                    if (this.onInteraction instanceof Function) this.onInteraction("close");
+                "access-click": (e) => {
+                    if (this.onInteraction instanceof Function) this.onInteraction("close", null, e);
             }
         }}, {title: "Close", image: "close"}, "controls");
 
         this.back = this.createChild(QuizIcon, {
             colorf: "light-blue",
             events: {
-                "access-click": () => {
-                    if (this.onInteraction instanceof Function) this.onInteraction("back");
+                "access-click": (e) => {
+                    if (this.onInteraction instanceof Function) this.onInteraction("back", null, e);
             }
         }}, {title: "Back", image: "back"}, "controls")
 
@@ -350,14 +350,14 @@ export class QuizView extends SvgPlus {
             colorf: "light-blue",
             events: {
                 "access-click": () => {
-                    if (this.onInteraction instanceof Function) this.onInteraction("next");
+                    if (this.onInteraction instanceof Function) this.onInteraction("next", null, e);
             }
         }}, {title: "Next", image: "next"}, "controls")
 
 
         this.main = this.createChild("div", {class: "main-quiz", events: {
             "answer": (e) => {
-                if (this.onInteraction instanceof Function) this.onInteraction("answer", e.answerIndex);
+                if (this.onInteraction instanceof Function) this.onInteraction("answer", e.answerIndex, e);
             }
         }})
     }
@@ -400,119 +400,6 @@ export class QuizView extends SvgPlus {
     set selectedAnswers(selected){
         return this.answerBoard.selected = selected;
     }
-
-    // /**
-    //  * @param {?Question}
-    //  * @param {number[]} 
-    //  * 
-    //  * @return {QuestionInfo}
-    //  */
-    // setQuestionInfo(...args) {
-    //     this.info.innerHTML = "";
-    //     this.questionIndex = args[1][0];
-    //     return this.info.createChild(QuestionInfo, {}, ...args)
-    // }
-
-    // async waitForInteraction(){
-    //     let t0 = performance.now();
-    //     let [type, answer] = await new Promise((r) => {
-    //         this.onInteraction = (...args) => r(args)
-    //     })
-    //     let duration = performance.now() - t0;
-    //     return {type, duration, answer}
-    // }
-
-    // showQuiz(quiz) {
-    //     let {questions} = quiz;
-    //     let i = 0;
-    //     this.answers = questions[i];
-    //     this.setQuestionInfo(questions[i], [i, questions.length]);
-
-    //     this.onInteraction = (type, answer) => {
-    //         if (type == "next") {
-    //             if (i < questions.length-1) i++;
-    //             this.transitionAnswers(questions[i], true)
-    //         } else if (type == "back") {
-    //             if (i > 0) i--;
-    //             this.transitionAnswers(questions[i], false)
-    //         }
-    //     }
-    // }
-
-    // /** @param {Quiz} quiz */
-    // async loadAndStartQuiz(quiz){
-    //     let {questions} = quiz;
-    //     let actions = [];
-    //     let choosen = new Array(questions.length).fill(0).map(a=>[]);
-    //     // load images and display initial message
-    //     this.answers = [{title: quiz.name, subtitle: "Click here to begin", color: "white"}]
-
-    //     this.setQuestionInfo({image: null, question: "Get ready to begin"}, [-1, questions.length])
-    //     // wait for click
-    //     let r = await this.waitForInteraction();
-    //     if (r.type == "back" || r.type == "close") {
-    //         return null;
-    //     }
-        
-
-    //     let i = 0;
-    //     let dir = true;
-    //     while (i < questions.length) {
-    //         if (dir !== null) {
-    
-    //             this.setQuestionInfo(questions[i], [i, questions.length])
-    
-    //             // display question
-    //             await this.transitionAnswers(questions[i].answers, dir, choosen[i]);
-
-    //             this.next.header = i == questions.length-1 ? "Submit" : "Next"
-    //         }
-
-    //         let response = await this.waitForInteraction();
-    //         response.question = i;
-    //         switch (response.type) {
-    //             case "next":
-    //                 i++;
-    //                 dir = true;
-    //                 break;
-    //             case "answer": 
-    //                 dir = null;
-    //                 choosen[i] = this.answerBoard.selected;
-    //                 break;
-    //             case "back":
-    //                 if (i > 0) {
-    //                     i--;
-    //                     dir = false;
-    //                 } else {
-    //                     dir = null;
-    //                 }
-    //                 break;
-    //             case "close":
-    //                 return null;
-                    
-    //         }
-    //         response.answer = this.answerBoard.selected;
-    //         actions.push(response);
-    //     }
-
-    //     this.next.header = "Next"
-
-    //     let results = createResults(quiz, choosen, actions);
-    //     let [summary] = await Promise.all([
-    //         getSummary(results.csv),
-    //         this.transitionAnswers([{
-    //             title: `Your scored \n${results.total}/${quiz.questions.length}  \n${Math.round(100 * results.total / quiz.questions.length)}%`,
-    //             subtitle: "Click here to download the comprehensive results.",
-    //             color: "white"
-    //         }], true)
-    //     ])
-    //     results.summary = summary.data.result;
-
-    //     while ((await this.waitForInteraction()).type != "close");
-    //     console.log(results);
-        
-    //     return results;        
-    // }
 
 
     /** @param {Answer[]} answers*/

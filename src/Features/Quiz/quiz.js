@@ -1,7 +1,7 @@
 
 import {Answers, QuizView} from "./quiz-view.js"
 import { ShadowElement } from "../../Utilities/shadow-element.js";
-import { Features } from "../features-interface.js";
+import { Features, OccupiableWindow } from "../features-interface.js";
 import { getAllQuizes, watchQuizes } from "./quizzes.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
 import { QuizResultsPage } from "./results.js";
@@ -159,7 +159,7 @@ class SQuizView extends QuizView {
     
 
 
-    async onInteraction(type, value) {
+    async onInteraction(type, value, e) {
         value = typeof value === "number" ? value : null;
         const action = {
             isHome: this.isHome,
@@ -200,7 +200,7 @@ class SQuizView extends QuizView {
         } else if (type == "close") {
 
             if (this.isHome) {
-                this.dispatchEvent(new Event("close"))
+                this.dispatchEvent(new AccessEvent("close", e))
 
             } else {
                 valid = true;
@@ -461,7 +461,7 @@ function deserialise_action(action) {
 }
 
 
-class QuizWindow extends ShadowElement {
+class QuizWindow extends OccupiableWindow {
     /** @type {import("../features-interface.js").SessionDataFrame} */
     sdata = null;
 
@@ -501,8 +501,6 @@ class QuizWindow extends ShadowElement {
                 r();
             } )
         })
-
-
     }
 
     /**
@@ -526,7 +524,18 @@ class QuizWindow extends ShadowElement {
     }
 
 
-  
+    async open(e){
+        this.root.toggleAttribute("shown", true);
+        await new Promise((r) => setTimeout(r, 550))
+    }
+
+    async close(){
+        this.root.toggleAttribute("shown", false);
+        await new Promise((r) => setTimeout(r, 550))
+    }
+
+
+    static get fixToolBarWhenOpen() {return true}
     static get usedStyleSheets(){
         return [
              relURL("/quiz.css", import.meta),
@@ -553,44 +562,14 @@ export class QuizFeature  extends Features {
             
             
         })
-        this.board.quizView.addEventListener("close", () => {
-            this.close();
+        this.board.quizView.addEventListener("close", (e) => {
+            e.waitFor(this.session.openWindow("default"))
         })
         this.session.toolBar.addSelectionListener("quiz", (e) => {
-            this.open(e);
+            e.waitFor(this.session.openWindow("quiz"));
         })
     }
 
-
-
-    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-    
-
-    open(e){
-        let p = this.session.toolBar.toggleToolBar(false);
-        this.board.root.toggleAttribute("shown", true);
-        this.session.toolBar.toolbarFixed = true;
-        this.sdata.set("open", true);
-        if (e instanceof AccessEvent) {
-            e.waitFor(Promise.all([
-                p,
-                new Promise((r) => setTimeout(r, 550))
-            ]))
-        }
-    }
-
-    close(){
-        this.board.root.toggleAttribute("shown", false);
-        if (this.session.accessControl.isSwitching) {
-            this.session.accessControl.restartSwitching();
-            this.session.toolBar.toggleToolBar(true);
-        } else {
-            this.session.toolBar.toolbarFixed = false;
-        }
-        this.sdata.set("open", false);
-    }
 
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -601,11 +580,6 @@ export class QuizFeature  extends Features {
     async initialise(){
         await watchQuizes();
         await this.board.initialise();
-        this.sdata.onValue("open", (isOpen) => {
-            if (isOpen === true) this.open();
-            else if (isOpen === false) this.close();
-        })
-
     }
 
     static get firebaseName(){

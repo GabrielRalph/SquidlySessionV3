@@ -66,7 +66,8 @@ const ICONS_SMALL = [
                 color: "danger"
             },
             {
-                name: "eye"
+                name: "eye",
+                key: "eye"
             },
             {
                 name: "switch"
@@ -659,7 +660,7 @@ export class ToolBarFeature extends Features {
 
         // Icon selection events
         let iselect = (e) => {
-            console.log("ToolBar access-click", e);
+            // console.log("ToolBar access-click", e);
             
             // Icon was selected that has a sub selection.
             if (Array.isArray(e.icon.icons) && e.icon.icons.length > 0) {
@@ -752,32 +753,11 @@ export class ToolBarFeature extends Features {
         if (key in icons) icons[key] = value;
     }
 
-    async toggleToolBar(bool) {
-        await this.session.togglePanel("toolBarArea", bool);
-    }
-
-    async toggleRingBar(bool) {
-        await this.toolBarRing.toggle(bool);
-    }
-
-    fixToolbar(isFixed) {
-        this.toolbarFixed = isFixed;
-    }
-
+   
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SET/GETTERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-    set toolbarFixed(bool){
-        // try {
-        //     throw new Error("toolbar fixed set " + bool);
-        // } catch (e) {
-        //     console.log(e);
-        // }
-        this._toolbarFixed = bool
-    }
-    get toolbarFixed(){
-        return this._toolbarFixed;
-    }
+   
 
 
     /** Can also be used to set icon properties
@@ -793,16 +773,34 @@ export class ToolBarFeature extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ METHODS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    set toolbarFixed(bool){
+        this._toolbarFixed = bool
+    }
+    get toolbarFixed(){
+        return this._toolbarFixed;
+    }
+
+    async toggleToolBar(bool) {
+        await this.session.togglePanel("toolBarArea", bool);
+    }
+
+    async toggleRingBar(bool) {
+        await this.toolBarRing.toggle(bool);
+    }
+
+    fixToolbar(isFixed) {
+        this.toolbarFixed = isFixed;
+    }
 
     _dispatchIconSelectionEvent(e){
         const event = new IconSelectionEvent(e, e.icon, e.iconPath, true);
         // this.toggleRingBar(false)
         event.waitFor(this.toggleRingBar(false));
         // Create icon selection event
-        console.log('Here');
         
-        if (e.icon.name in this.selectionListeners) {
-            let listeners = this.selectionListeners[e.icon.name];
+        let key = e.icon.key || e.icon.name;
+        if (key in this.selectionListeners) {
+            let listeners = this.selectionListeners[key];
             for (let listener of listeners) {
                 listener(event);
                 if (e.cancelBubble) {
@@ -827,7 +825,6 @@ export class ToolBarFeature extends Features {
 
     }
 
-
     async _start(){
         while (true) {
             // console.log(this.toolbarFixed);
@@ -848,7 +845,9 @@ export class ToolBarFeature extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-   
+    static get privatePropertyNames() {
+        return ["toolbarFixed", "fixToolBar", "toggleRingBar", "toggleToolBar"]
+    }
     static async loadResources(){
         await ToolBar.loadStyleSheets();
     }

@@ -6,7 +6,7 @@ import { POINTERS, SvgResize } from "../../Utilities/svg-resize.js";
 import { delay, relURL } from "../../Utilities/usefull-funcs.js";
 import { Features } from "../features-interface.js";
 
-
+const MAXTIME = 5000;
 
 class Cursor extends HideShow {
     cursorIcon = null;
@@ -43,16 +43,17 @@ class Cursor extends HideShow {
     }
 }
 
-
 function getDefaultCursorProperties() {
     return {
         class: "simple",
         size: 20,
     }
 }
+
 export class Cursors extends Features {
     cursorLibrary = {};
     referenceArea = "entireScreen";
+    cursorTimeouts = {};
     constructor(session, sDataFrame){
         super(session, sDataFrame);
         this.cursorsPanel = new ShadowElement("cursors-panel");
@@ -92,7 +93,8 @@ export class Cursors extends Features {
            this._updatePosition(null, name)
         } else {
             let relFixed = this.rel_bbox2rel_ref(position, bbox);
-            this.sdata.set(`positions/${name}`, {x: relFixed.x, y: relFixed.y});
+            relFixed.timeStamp = new Date().getTime()
+            this.sdata.set(`positions/${name}`, {x: relFixed.x, y: relFixed.y, timeStamp: relFixed.timeStamp});
             this._updatePosition(relFixed, name)
         }
     }
@@ -167,7 +169,12 @@ export class Cursors extends Features {
     }
 
     _updatePosition(pos, name) {
+        if (pos !== null && new Date().getTime() - pos.timeStamp > MAXTIME) {
+            pos = null;
+        }
+
         if (pos !== null) {
+            clearTimeout(this.cursorTimeouts[name]);
             pos = new Vector(pos);
             pos = this.rel_ref2rel_entire(pos);
             if (!(name in this.cursorLibrary) || !this.cursorLibrary[name].icon) {
@@ -175,6 +182,13 @@ export class Cursors extends Features {
             }
             this.cursorLibrary[name].icon.position = new Vector(pos);
             this.cursorLibrary[name].icon.show();
+            this.cursorTimeouts[name] = setTimeout(() => {
+                this._updatePosition(null,name);
+            }, MAXTIME)
+
+            const event = new Event(name);
+            event.screenPos = pos;
+            this.dispatchEvent(event)
         } else if (name in this.cursorLibrary && this.cursorLibrary[name].icon) {
             this.cursorLibrary[name].icon.hide();
         }

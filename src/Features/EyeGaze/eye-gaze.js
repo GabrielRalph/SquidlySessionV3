@@ -6,7 +6,7 @@ import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { SvgResize } from "../../Utilities/svg-resize.js";
 import { relURL, isExactSame, dotGrid, argmin, TransitionVariable } from "../../Utilities/usefull-funcs.js";
 import { addProcessListener, getStream, isOn, isProcessing, startProcessing, startWebcam, stopProcessing } from "../../Utilities/webcam.js";
-import { Features } from "../features-interface.js";
+import { Features, OccupiableWindow } from "../features-interface.js";
 import { FaceLandmarks, load } from "./Algorithm/Utils/face-mesh.js";
 import { CalibrationFrame } from "./calibration-frame.js";
 import { FeedbackFrame } from "./feedback-frame.js";
@@ -39,7 +39,7 @@ class FeedbackWidget extends SvgPlus {
     }
 }
 
-class FeedbackWindow extends ShadowElement {
+class FeedbackWindow extends OccupiableWindow {
     /**@type {HideShow} */
     // root = null;
 
@@ -51,7 +51,11 @@ class FeedbackWindow extends ShadowElement {
 
     /**@type {CalibrationFrame} */
     main = null; 
-    constructor() {
+
+    /**@type {EyeGazeFeature} */
+    eyeGazeFeature = null; 
+
+    constructor(eyeGaze) {
         let root = new HideShow("feedback-window");
         root.applyShownState = () => {
             root.styles = {
@@ -60,6 +64,7 @@ class FeedbackWindow extends ShadowElement {
             }
         }
         super("feedback-window", root);
+        this.eyeGazeFeature = eyeGaze;
 
         let head = this.createChild("div", {class: "header"});
         head.createChild("h1", {content: "Get in to view to </br> start the calibration"});
@@ -84,6 +89,20 @@ class FeedbackWindow extends ShadowElement {
         }});
     }
 
+    async open(){
+        this.eyeGazeFeature.toggleEyeGazeProcess(true);
+        this.eyeGazeFeature.feedbackShown = true;
+        this.eyeGazeFeature.mode = MODES.feedback;
+        await this.root.show(400);
+
+    }
+
+    async close(){
+        this.eyeGazeFeature.feedbackShown = false;
+        this.eyeGazeFeature.mode = 0;
+        await this.root.hide(400);
+    }
+
     setData(data, findx = 1) {
         let key = "feedback"+findx
         
@@ -101,6 +120,7 @@ class FeedbackWindow extends ShadowElement {
         }
     }
 
+    static get fixToolBarWhenOpen() {return true}
     static get usedStyleSheets() {
         return [relURL("./styles.css", import.meta)]
     }
@@ -131,7 +151,7 @@ class TestScreen extends ShadowElement {
 
         let b = this.createChild(AccessButton, {
             events: {
-                "access-click": () => this.dispatchEvent(new Event("close"))
+                "access-click": (e) => this.dispatchEvent(new AccessEvent("close", e))
             },
             class: "close",
         }, "test-close");
@@ -310,49 +330,45 @@ export class EyeGazeFeature extends Features {
         super(session, sdata);
 
         this.testScreen = new TestScreen();
-        this.feedbackWindow = new FeedbackWindow();
+        this.feedbackWindow = new FeedbackWindow(this);
         this.calibrationWindow = new CalibrationScreenArea();
         this.restButton = new RestButton();
 
         this.calibrationFrame = this.calibrationWindow.calibrationFrame;
 
         this.feedbackWindow.events = {
-            "exit": this.closeCalibration.bind(this),
+            "exit": (e) => e.waitFor(this.session.openWindow("default")),
             "calibrate1": (e) => this.startCalibration(false, e),
             "calibrate2": (e) => this.startCalibration(true, e),
-            "test1": (e) => this._showTestScreen(1, e),
-            "test2": (e) => this._showTestScreen(2, e),
+            "test1": (e) => e.waitFor(this._showTestScreen(this.me)),
+            "test2": (e) => e.waitFor(this._showTestScreen(this.them)),
         }
 
         this.addEyeDataListener((p) => {
             if (this.eyeDataDisabled) p = null;
-            this.testScreen.setEyeData(p, 1);
-
+            this.testScreen.setEyeData(p, this.me);
          })
 
 
         this.testScreen.events = {
-            "close": this._closeTestScreen.bind(this),
+            "close": (e) => e.waitFor(this._showTestScreen(null)),
         }
         
         this.session.toolBar.addSelectionListener("calibrate", (e) => {
-            this.openCalibration(e);
+            e.waitFor(this.session.openWindow("eyeGaze"));
         })
+
         this.session.toolBar.addSelectionListener("eye", (e) => {
-            let bool = !this.eyeDataDisabled;
-            this.disableEyeData(bool, e);
-            this.sdata.set(`disabled/participant`, bool)
-            this.sdata.set(`disabled/host`, bool)
+            let bool = !this.isProcessing;
+        
+            this.sdata.set(`on/participant`, bool);
+            this.sdata.set(`on/host`, bool);
         })
 
         this.restButton.button.addEventListener("access-click", (e) => {
             let bool = !this.eyeDataDisabled;
             this.disableEyeData(bool, e)
-            
-
         })
-
-        this.feedbackWindow.ondblclick = () => stopProcessing();
 
         this.restWatcher = new TransitionVariable(0, 1, (v) => {
             this.session.togglePanel("bottomPanel", v==1)
@@ -362,7 +378,6 @@ export class EyeGazeFeature extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-    
     addEyeDataListener(cb) {
         if (cb instanceof Function) {
             this.eyeDataListeners.add(cb)
@@ -375,44 +390,17 @@ export class EyeGazeFeature extends Features {
             this.eyeDataDisabled = bool
             this.sdata.set(`disabled/${me}`, bool)
         }
-        // if (e instanceof AccessButton) {
-        //     e.waitFor(p)
-        // }
     }
 
-    closeCalibration(e){
-        this.feedbackShown = false;
-        this.sdata.set("feedback-open", false)
-        this.session.toolBar.toolbarFixed = false;
-
-        let p = this.feedbackWindow.root.hide()
-
-        if (e instanceof AccessEvent) {
-            e.waitFor(p)
+    toggleEyeGazeProcess(bool) {
+        if (bool !== this.isProcessing) {
+            this.session.toolBar.setIcon("access/eye/name", bool ? "eye" : "noeye")
+            this._isProcessing = bool;
+            this.sdata.set(`on/${this.me}`, bool);
+            if (bool) startProcessing();
+            else stopProcessing();
         }
-        this.mode = 0;
-    }
-
-    async openCalibration(e){
-        this.feedbackShown = true;
-        this.sdata.set("feedback-open", true)
-        let p1 = this.session.toolBar.toggleToolBar(false);
-        this.session.toolBar.toolbarFixed = true;
-        
-        this.session.accessControl.restartSwitching(false);
-        
-        if (!isProcessing()) {
-            startProcessing();
-        }
-
-        let proms = Promise.all([this.feedbackWindow.root.show(400), p1]);
-        if (e instanceof Event) {
-            await e.waitFor(proms)
-        } else {
-            await proms
-        }
-        this.mode = MODES.feedback
-    }
+    }   
 
     startCalibration(forOther, e) {
         let isHost = this.sdata.isHost;
@@ -421,30 +409,38 @@ export class EyeGazeFeature extends Features {
         if (e instanceof AccessEvent) e.waitFor(p);
     }
 
+    get isProcessing() {
+        return this._isProcessing;
+    }
+
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     
 
-    _showTestScreen(user, e){
-        this._testScreenShown = true;
-        this.sdata.set("test-screen", true)
-        let p = this.testScreen.showFor(user);
-        this.session.cursors.updateReferenceArea("entireScreen");
-        if (e instanceof AccessEvent) {
-            e.waitFor(p);
+    async _showTestScreen(user){
+        if (this.testScreen.shownUser !== user) {
+            if (user == null) {
+                this.session.cursors.updateReferenceArea("fullAspectArea");
+                this.testScreen.shownUser = null;
+                await this.testScreen.hide();
+            } else {
+                this.session.cursors.updateReferenceArea("entireScreen");
+                await this.testScreen.showFor(user);
+            }
+            this.sdata.set("test-screen", user)
         }
     }
 
-    _closeTestScreen(e){
-        this.sdata.set("test-screen", false)
-        this._testScreenShown = false;
-        this.session.cursors.updateReferenceArea("fullAspectArea");
-        if (e instanceof AccessEvent)
-            e.waitFor(this.testScreen.hide());
-        else this.testScreen.hide();
+    // _closeTestScreen(e){
+    //     this.sdata.set("test-screen", false)
+    //     this._testScreenShown = false;
+        
+    //     if (e instanceof AccessEvent)
+    //         e.waitFor(this.testScreen.hide());
+    //     else this.testScreen.hide();
 
-    }
+    // }
 
     _onRemoteFaceMeshData(data) {
         if (data != null && this.mode === MODES.feedback) {
@@ -453,16 +449,13 @@ export class EyeGazeFeature extends Features {
     }
 
     _onEyeData(data){
-        // If there is a gaze position
-        if (data.result) {
+        // If there is a gaze position and the user isn't calibrating
+        if (data.result && !this._calibrating) {
             
             let eyeP = data.result.clone();
 
             // Update all the eyeData listeners
             let bbox = this.calibrationFrame.bbox;
-
-            // Update test screen eye data
-            // this.testScreen.setEyeData(data, 1);
 
             // Update rest watcher
             this.restWatcher.set(eyeP.y > 1 ? 1 : 0)
@@ -511,11 +504,13 @@ export class EyeGazeFeature extends Features {
     }
 
     async _beginCalibrationSequence(bool){
+        if (this._calibrating) return;
+
         if (bool) {
-            
-            this.session.toolBar.toggleToolBar(false);
-            this.session.toolBar.toolbarFixed = true;
+            this._calibration = true;
             this.session.accessControl.endSwitching(true);
+            
+
             let [validation] = await Promise.all([
                 this.calibrationFrame.calibrate(),
                 this.calibrationFrame.show()
@@ -525,6 +520,7 @@ export class EyeGazeFeature extends Features {
             if (validation?.validation?.mse) {
                 mse = validation.validation.mse;
             }
+
             let me = this.sdata.isHost ? "host": "participant";
             await this.sdata.set(`validation/${me}`, mse);
             this.sdata.set(`calibrating/${me}`, false)
@@ -532,6 +528,8 @@ export class EyeGazeFeature extends Features {
             if (mse) {  
                 this.session.notifications.notify(`Calibration completed with score of ${Math.round((1 - 2 * mse) * 100)}%`, "success");
             }
+
+            this._calibrating = false;
         }
     }
 
@@ -552,17 +550,22 @@ export class EyeGazeFeature extends Features {
             text: "participant"
         })
 
-
         addProcessListener(this._onEyeData.bind(this));
 
-        let me = this.sdata.isHost ? "host": "participant";
-        let them = this.sdata.isHost ? "participant": "host";
+        const {me, them} = this;
+        this.session.cursors.addEventListener(them+"-eyes", (e) => {
+            this.testScreen.setEyeData(e.screenPos, them);
+        })
+        
+        this.sdata.onValue(`on/${me}`, (bool) => {
+            this.toggleEyeGazeProcess(bool);
+
+        })
         
         // feedback data from the other user
         this.sdata.onValue(`feedback/${them}`, (str) => {
             this._onRemoteFaceMeshData(deserialiseFaceMeshData(str));
         });
-
 
         this.sdata.onValue(`disabled/${me}`, (val) => {
             this.disableEyeData(val)
@@ -590,20 +593,17 @@ export class EyeGazeFeature extends Features {
 
         // Opening and closing the test window 
         this.sdata.onValue("test-screen", (val) => {
-            if (val !== this._testScreenShown) {
-                if  (val) this._showTestScreen()
-                else this._closeTestScreen();
-            }
+            this._showTestScreen(val);
         })
-
-        // Opening and closing the calibration (feedback) window.
-        this.sdata.onValue(`feedback-open`, (val) => {
-            if (val !== this.feedbackShown) {
-                if (val) this.openCalibration();
-                else this.closeCalibration();
-            }
-        });
     }
+
+    get me() {
+        return this.sdata.isHost ? "host": "participant"
+    } 
+    get them() {
+        return this.sdata.isHost ? "participant": "host";
+    }
+
 
     static get firebaseName(){
         return "eye-gaze";

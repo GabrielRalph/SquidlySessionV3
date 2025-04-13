@@ -184,6 +184,13 @@ grid-space {
     height: 100%;
     max-width: 100%;
 }
+.symbol .bg-img {
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
 
 .grid-icon .content .display-value {
     font-size: 1.2em;
@@ -259,7 +266,7 @@ aac-output .text-line {
 
 aac-output-icon {
     height: calc(var(--height) * 0.8);
-    width: var(--icon-width);
+    min-width: var(--icon-width);
     display: flex; 
     flex-direction: column;
     align-items: center;
@@ -276,5 +283,5 @@ aac-output-icon .symbol img
 
 aac-output-icon .symbol {
     width: 100%;
-    max-height: calc(100% - 2em);
+    height: 100%;
 }

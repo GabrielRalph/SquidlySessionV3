@@ -111,11 +111,32 @@ export class Features {
     static get privatePropertyNames() { return []}
 }
 
+export class OccupiableWindow extends ShadowElement {
+    async open() {
+        
+    }
+
+    async close() {
+
+    }
+
+    get fixToolBarWhenOpen(){
+        return this["__+"].fixToolBarWhenOpen;
+    }
+
+    static get fixToolBarWhenOpen() {
+        return false;
+    }
+}
+
 const PrivateProperties = {
     dispatchEvent: true,
     sdata: true,
     initialise: true,
+    open: true,
+    close: true,
 }
+
 export function createFeatureProxy(feature, f) {
     let privateProps = {};
 

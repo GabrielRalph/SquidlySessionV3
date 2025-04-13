@@ -4,11 +4,11 @@
  * @typedef {import("./topics.js").GItem} GItem
  */
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
-import { AccessButton, AccessClickEvent } from "../../Utilities/access-buttons.js";
+import { AccessButton, AccessClickEvent, AccessEvent } from "../../Utilities/access-buttons.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { relURL, isExactSame } from "../../Utilities/usefull-funcs.js";
-import { Features } from "../features-interface.js";
+import { Features, OccupiableWindow } from "../features-interface.js";
 import * as Topics from "./topics.js"
 
 
@@ -114,20 +114,30 @@ const MAKE_CARD_ICON = {
 
 /** A GridIconSymbol represents the image from a grid icon. */
 export class GridIconSymbol extends SvgPlus{
-    constructor(symbol){
+    constructor(symbol, useBackgroundImg = false){
         super("div");
         this.class = "symbol";
 
         this.isLoaded = false;
         if (typeof symbol == "object" && symbol !== null && "url" in symbol && typeof symbol.url === "string") {
             // Create image and add load event.
-            this.createChild("img", {
-                events: {
-                    load: () => this.dispatchEvent(new Event("load")),
-                    error: () => this.dispatchEvent(new Event("load")),
-                },
-                src: symbol.url
-            });
+            if (useBackgroundImg) {
+                this.createChild("div", {
+                    class: "bg-img",
+                    style: {
+                        "background-image": `url(${symbol.url})`
+                    }
+                });
+                this.isLoaded = true;
+            } else {
+                this.createChild("img", {
+                    events: {
+                        load: () => this.dispatchEvent(new Event("load")),
+                        error: () => this.dispatchEvent(new Event("load")),
+                    },
+                    src: symbol.url
+                });
+            }
         } else if (typeof symbol === "string") {
             this.createChild(Icon, {}, symbol)
         } else {
@@ -451,8 +461,20 @@ class AACOutputIcon extends SvgPlus {
     constructor(item) {
         super("aac-output-icon");
         this.class = item.type;
-        this.createChild(GridIconSymbol, {}, item.symbol);
-        this.createChild("div", {content: item.displayValue});
+        let v = item.displayValue
+        if (item.symbol) {
+            this.createChild(GridIconSymbol, {}, item.symbol, true);
+        }
+        let text = this.createChild("div", {content: v});
+
+        window.requestAnimationFrame(() => {
+            let tsize = text.bbox[1];
+            let size = this.bbox[1];
+            if (tsize.x > size.x) {
+                let i = Math.floor(v.length/2)
+                text.textContent = v.slice(0,i) + "- " + v.slice(i)
+            }            
+        })
     }
 }
 
@@ -534,7 +556,6 @@ class AACOutput extends SvgPlus {
     }
 
     async speak(){
-        // console.log("speaking");
         await Promise.all(this.items.map(i => speakUtterance(i)))
     }
 }
@@ -575,7 +596,7 @@ const ActionsTemplate = [
         key: "quick"
     },
 ]
-class AACGridBoard extends ShadowElement {
+class AACGridBoard extends OccupiableWindow {
     cols = 5;
     rows = 4;
     init = true;
@@ -619,6 +640,7 @@ class AACGridBoard extends ShadowElement {
             }
         })
 
+        
         // Build Action buttons
         this.actionButtons = {};
         for (let action of ActionsTemplate) {
@@ -628,8 +650,7 @@ class AACGridBoard extends ShadowElement {
             if (col < 0) col += this.cols;
             let cell = this.createChild(GridSpace, {events: {
                 "access-click": (e) => {
-                    const event = new Event(key);
-                    event.initialEvent = e;
+                    const event = new AccessEvent(key, e);
                     this.root.dispatchEvent(event);
                 },
             }}, row, col);
@@ -664,8 +685,17 @@ class AACGridBoard extends ShadowElement {
                 await this.setTopic(this.quickTalk);
                 this.aacGrid._updateTopics(this.topicPath);
             },
-
         }
+    }
+
+    async open(){
+        this.root.toggleAttribute("shown", true);
+        await new Promise((r) => setTimeout(r, 550))
+    }
+
+    async close(){
+        this.root.toggleAttribute("shown", false);
+        await new Promise((r) => setTimeout(r, 550))
     }
 
 
@@ -717,8 +747,7 @@ class AACGridBoard extends ShadowElement {
             await this.setTopic(this.topicPath.pop());
             this.aacGrid._updateTopics(this.topicPath);
         } else {
-            const event = new Event('close');
-            event.initialEvent = e.initialEvent;
+            const event = new AccessEvent('close', e);
             this.dispatchEvent(event)
         }
     }
@@ -741,7 +770,7 @@ class AACGridBoard extends ShadowElement {
         }
     }
     
-
+    static get fixToolBarWhenOpen() {return true}
     static get usedStyleSheets() {return [relURL("grid.css", import.meta)]}
 }
 
@@ -753,39 +782,15 @@ export class AACGrid extends Features {
             sdata.set("output", this.board.output.items);
         })
 
-        this.board.addEventListener("close", this.close.bind(this))
+        this.board.addEventListener("close", (e) => {
+            e.waitFor(this.session.openWindow("default"));
+        })
+
         this.session.toolBar.addSelectionListener("aac", (e) => {
-            this.open(e);
+            e.waitFor(this.session.openWindow("aacGrid"));
         })
     }
-
-    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-
-    open(e){
-        console.log("event - ", e);
-        if (e instanceof Event) {
-            e.waitFor(this.session.toolBar.toggleToolBar(false))
-            e.waitFor(new Promise((r) => setTimeout(r, 550)))
-        }
-        this.board.root.toggleAttribute("shown", true);
-        this.session.toolBar.toolbarFixed = true;
-        this.sdata.set("open", true);
-    }
-
-    close(){
-        this.board.root.toggleAttribute("shown", false);
-        if (this.session.accessControl.isSwitching) {
-            this.session.accessControl.restartSwitching();
-            this.session.toolBar.toggleToolBar(true);
-        } else {
-            this.session.toolBar.toolbarFixed = false;
-        }
-        this.sdata.set("open", false);
-    }
-
+  
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -830,16 +835,10 @@ export class AACGrid extends Features {
             this.board.output.items = items;
         })
 
-        sdata.onValue("open", (isOpen) => {
-            if (isOpen === true) this.open();
-            else if (isOpen === false) this.close();
-        })
-
         await Promise.all([
             this.board.currentGrid.waitForLoad(),
             quickTalkProm
         ]);
-
     }
 
     static get firebaseName(){
