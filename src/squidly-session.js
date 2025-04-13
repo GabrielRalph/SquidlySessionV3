@@ -112,6 +112,9 @@ export class SessionDataFrame extends FirebaseFrame {
             return sessionConnection.sid;
         }
     }
+
+    get me() { return this.isHost ? "host": "participant" } 
+    get them() { return this.isHost ? "participant": "host"; }
 }
 
 export class SquidlySessionElement extends ShadowElement {

@@ -392,13 +392,13 @@ const defaultCalibration = makeCSeq({
 			type: "scanX",
 			scanTime: 3,
 			pulseTime: 0.75,
-			size: 5,
+			size: 3,
 		},
 		{
 			type: "scanY",
 			scanTime: 3,
 			pulseTime: 0.75,
-			size: 5,
+			size: 3,
 		},
 	]
 });

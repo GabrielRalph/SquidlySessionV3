@@ -82,17 +82,26 @@ function cap(y, min, max) {
     return y < min ? min : (y > max ? max : y)
 }
 
+const prec_v = 1e4;
+const prec_d = 10;
+const total = 478;
 export class FaceLandmarks extends Array {
   /**
    * @param {{x:Number, y:Number, z:Number}[]} points
    */
-  constructor(points, aspect) {
+  constructor(points, width = 0, height = 0) {
+    if (!Array.isArray(points)) {
+      points = new Array(total).fill(0).map(()=>{return {x:0,y:0,z:0}})
+    }
     super(points.length);
+
     points.forEach((v,i) => {
       this[i] = v;
     });
 
-    this.aspect = aspect;
+    this.width = width;
+    this.height = height;
+    this.aspect = width/height;
   }
 
 
@@ -172,6 +181,86 @@ export class FaceLandmarks extends Array {
     }
   }
 
+  /**
+   * @param {FaceMesh.FaceLandmarks} facePoints
+   */
+  averageDistance(facePoints){
+    let diff = null
+    if (facePoints instanceof FaceLandmarks) {
+      diff = 0;
+      this.forEach(({x,y,z}, i) =>{
+        let b = facePoints[i];
+        diff+= (((b.x - x)**2 + (b.y - y)**2 + (b.z - z)**2)**0.5);
+      })
+      diff /= facePoints.length;
+    }
+    return diff;
+  }
+
+
+  /**
+   * @param {number[]} usedPoints
+   * 
+   * @return {string}
+   *  */
+  serialise(usedPoints = null) {
+    if (!usedPoints) {
+      usedPoints = new Array(this.length).fill(0).map((_, i)=>i)
+    }
+    let pointsFlat = usedPoints.flatMap((i) => [this[i].x,this[i].y,this[i].z]).map(v => Math.round(v * prec_v));
+    let u16 = new Int16Array(pointsFlat.length + 2);
+    u16[0] = Math.round(this.width * prec_d);
+    u16[1] = Math.round(this.height * prec_d);
+    pointsFlat.forEach((e, i) => {
+        u16[i+2] = e;
+    });
+    let u8 = new Uint8Array(u16.buffer);
+    let str = "";
+    for (let i = 0; i < u8.length; i++) {
+        str += String.fromCharCode(u8[i]);
+    }
+
+    return str;
+  }
+
+  /** 
+   * @param {string} str
+   * @param {number[]} usedPoints 
+   * 
+   * @return {FaceLandmarks}
+   * */
+  static deserialise(str, usedPoints = null) {
+    if (!usedPoints) {
+      usedPoints = new Array(total).fill(0).map((_, i)=>i)
+    }
+
+    let points = null;
+    if (typeof str === "string" && str.length == (usedPoints.length * 3 * 2 + 4 )) {
+      
+      //String to int8
+      let u8 = new Uint8Array(str.length);
+      for (let i = 0; i < str.length; i++){
+          u8[i] = str.charCodeAt(i);
+      } 
+          
+      let u16 = new Int16Array(u8.buffer);
+      let width = u16[0]/prec_d;
+      let height = u16[1]/prec_d;
+  
+      points = new Array(total);
+      for (let i = 0; i < usedPoints.length; i++) {
+          points[usedPoints[i]] = {
+              x: u16[i*3+2]/prec_v,
+              y: u16[i*3+3]/prec_v,
+              z: u16[i*3+4]/prec_v,
+          }
+      }
+      points = new FaceLandmarks(points, width, height);
+    }
+
+    return points;
+  }
+
   static get borderWidthRatio() {return border_ratio}
 }
 
@@ -180,9 +269,11 @@ export class FaceLandmarks extends Array {
  */
 function getFacePoints(prediction, width, height) {
   let data = null;
-  try{
-    data = new FaceLandmarks(prediction.faceLandmarks[0], width/height);
-  } catch(e){}
+  if (prediction.faceLandmarks.length == 0) {
+    data = new FaceLandmarks();
+  } else {
+    data = new FaceLandmarks(prediction.faceLandmarks[0], width, height);
+  }
   return data;
 }
 

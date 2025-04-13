@@ -28,11 +28,6 @@ function processFrame(input) {
 
   let position = predictScreenPosition(points);
 
-  input.errorDistance = checkFaceFromCalibration(points);
-  if (sstats != null) {
-    input.avg = sstats.avg;
-  }
-
   return position;
 }
 
@@ -42,6 +37,7 @@ function processFrame(input) {
 function getSampleStats(facePoints) {
   let n = facePoints.length;
   let m = facePoints[0].length;
+  let {width, height} = facePoints[0];
 
   let sum = new Array(m).fill(0).map(() => {return {x:0,y:0,z:0}});
   for (let i = 0; i < n; i++) {
@@ -52,13 +48,12 @@ function getSampleStats(facePoints) {
     }
   }
 
-
   let avg = sum.map(v => {
       let nv = {};
       for (let k in v) nv[k] = v[k] / facePoints.length;
       return nv;
   });
-  avg = new FaceMesh.FaceLandmarks(avg);
+  avg = new FaceMesh.FaceLandmarks(avg, width, height);
 
 
   let avgErr = new Array(m).fill(0);
@@ -73,24 +68,10 @@ function getSampleStats(facePoints) {
   return {avg, avgErr}
 }
 
-/**
- * @param {FaceMesh.FaceLandmarks} facePoints
- */
-function checkFaceFromCalibration(facePoints) {
-  let diff = null
-  if (sstats) {
-    diff = 0;
-    sstats.avg.forEach(({x,y,z}, i) =>{
-      let b = facePoints[i];
-      diff+= (((b.x - x)**2 + (b.y - y)**2 + (b.z - z)**2)**0.5);
-    })
-    diff /= facePoints.length;
-  }
-  return diff;
-}
+
 
 let sstats = null;
-export function trainModel(sampleRate = 0.9){
+export async function trainModel(sampleRate = 0.9){
   Webcam.stopProcessing();
 
   let stats = null;
@@ -98,7 +79,7 @@ export function trainModel(sampleRate = 0.9){
   try{
     let mClass = ModelLibrary.getModel(SelectedModel);
     Model = new mClass();
-    stats = Model.trainAndValidate(SampleData, sampleRate);
+    stats = await Model.trainAndValidate(SampleData, sampleRate);
     Model.saveToStorage();
   } catch (e) {
     console.log("training error", e);
@@ -107,8 +88,9 @@ export function trainModel(sampleRate = 0.9){
   SampleData = [];
   if (stats == null) throw new Error("Training Error.")
   else {
-    stats.sstats=sstats;    
+    stats.sampleStats=sstats;    
   }
+  
   return stats;
 }
 
