@@ -130,6 +130,7 @@ export class GridIconSymbol extends SvgPlus{
                 });
                 this.isLoaded = true;
             } else {
+                this.isLoaded = true;
                 this.createChild("img", {
                     events: {
                         load: () => this.dispatchEvent(new Event("load")),
