@@ -17,7 +17,7 @@ export class AccessEvent extends Event {
      constructor(eventName, mode, config) {
         const Config = {cancelable: true}
         if (typeof config === "object" && config !== null) {
-            for (let key of config) {
+            for (let key in config) {
                 Config[key] = config[key]
             }
         }
