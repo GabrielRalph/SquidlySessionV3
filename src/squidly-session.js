@@ -173,6 +173,7 @@ export class SquidlySessionElement extends ShadowElement {
             series([initialiseFirebaseUser,  this.initialiseSessionConnection.bind(this)])   
         ]);
         
+        window.sessionConnection = sessionConnection;
         if (sessionConnection !== null && sessionConnection.hasJoined) {
             this.sdata = new SessionDataFrame("session-main")
             try {

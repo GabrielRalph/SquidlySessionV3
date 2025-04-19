@@ -135,9 +135,13 @@ export function hasTopic(id) {
  * @return {Promise<Object.<string, GTopic>>}
  */
 export async function getTopics(topics) {
-    let gtopics = await Promise.all(topics.map(topic => getTopic(topic)));
     let topicsById = {};
-    topics.forEach((id, i) => topicsById[id] = gtopics[i])
+    try {
+        let gtopics = await Promise.all(topics.map(topic => getTopic(topic)));
+        topics.forEach((id, i) => topicsById[id] = gtopics[i])
+    } catch (e) {
+        console.warn(e);
+    }
     return topicsById;
 }
 

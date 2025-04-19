@@ -58,16 +58,21 @@ export class RTCSignaler {
         const {fb} = this;
 
         this._removeListeners();
-        
+
+        fb.set(`${fb.me}/descriptions`, null);
+        fb.set(`${fb.me}/candidates`, null);
+
         let descriptionRef = `${fb.them}/descriptions`
         this.descriptionListener = fb.onChildAdded(descriptionRef, (description, key) => {
             this._dispatchEvent("description", new RTCSessionDescription(description));
+            
             fb.set(descriptionRef + "/" + key, null);
         });
     
         let candidateRef = `${fb.them}/candidates`;
         this.candidateListener = fb.onChildAdded(candidateRef, (candidate, key) => {
             this._dispatchEvent("candidate", new RTCIceCandidate(candidate));
+
             fb.set(candidateRef + "/" + key, null);
         })
 

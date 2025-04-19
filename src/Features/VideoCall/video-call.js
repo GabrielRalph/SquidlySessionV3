@@ -123,10 +123,11 @@ export class VideoCall extends Features {
      */
     async _updateMutedState(type, bool, user, setDB = true) {
         if (user in this.muteState && type in this.muteState[user]) {
-            if (typeof bool !== "boolean" && user == this.me) {
-                bool = !this.presets[user + '-' + type];
+            if (typeof bool !== "boolean" && user == this.sdata.me) {
+                bool = this.presets[user + '-' + type];
                 setDB = true;
             }
+            
 
             if (this.muteState[user][type] != bool) {
                 if (setDB) await this.sdata.set(`${user}/${type}`, bool);
