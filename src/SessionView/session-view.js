@@ -22,6 +22,11 @@ function copyEvent(event) {
     return copyevent
 }
 
+function isTouch(e) {
+    if (Window.TouchEvent) return e instanceof TouchEvent
+    else return "touches" in e;
+}
+
 class SlidePanel extends SvgPlus {
     /** Constructs a new SidePanel with the provided name.
      * @param {("side"|"top")} name determines whether it is a vertial of horizontal panel
@@ -113,7 +118,7 @@ class SlidePanel extends SvgPlus {
 
         // If called by a touch event then retreive the touch position
         let v;
-        if (start instanceof TouchEvent) {
+        if (isTouch(start)) {
             let t1 = start.changedTouches[0];
             let {clientX, clientY} = t1;
             v = new Vector(clientX, clientY);
@@ -139,7 +144,7 @@ class SlidePanel extends SvgPlus {
             i++;
 
             // If it is a touch event retreive the touch position
-            if (e instanceof TouchEvent) {
+            if (isTouch(e)) {
                 let t1 = e.changedTouches[0];
                 let {clientX, clientY} = t1;
                 e = new Vector(clientX, clientY);
@@ -337,8 +342,6 @@ export class SessionView extends ShadowElement {
         })
 
     }
-
-
 
 
     getElementsAtPoints(points) {

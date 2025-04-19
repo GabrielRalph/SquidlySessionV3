@@ -183,6 +183,7 @@ export class SquidlySessionElement extends ShadowElement {
         }
     }
 
+    panelMode = "sidePanel"
 
     async openWindow(name){
         if (name != this.occupier) {
@@ -192,7 +193,8 @@ export class SquidlySessionElement extends ShadowElement {
             let proms = Promise.all([
                 this.currentOccupier instanceof Element ? this.currentOccupier.close() : null,
                 nextOccupier != null ? nextOccupier.open() : null,
-                nextOccupier != null && nextOccupier.fixToolBarWhenOpen ? this.toolBar.toggleToolBar(false) : null
+                nextOccupier != null && nextOccupier.fixToolBarWhenOpen ? this.toolBar.toggleToolBar(false) : null,
+                nextOccupier != null ? this.togglePanel(this.panelMode, true) : this.togglePanel(this.panelMode, false)
             ]);
             this.toolBar.toolbarFixed = nextOccupier?.fixToolBarWhenOpen
             this.occupier = name;

@@ -256,7 +256,7 @@ tool-bar-area {
     left: 0;
     height: var(--tool-bar-area-height);
     transform: translateY(calc((1 - var(--tool-bar-area-extension-p)) * 100%));
-    z-index: 200;
+    z-index: 250;
 }
 tool-bar-area.preview {
     --preview-color: #e95aa25f;

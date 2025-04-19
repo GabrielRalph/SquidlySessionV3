@@ -81,10 +81,29 @@ export class FirebaseFrame {
      * @param {String} path same as with get.
      * @return {String} returns the key to push a new value.
      */
-    push(path) {
+    push(path, value) {
       if (hasJoined) {
         let pr = push(this.appRef(path));
         return pr.key;
+        
+      } else {
+        throw "Session has not connected"
+      }
+    }
+
+
+    /** pushSet, gets a new push key for the path at the database
+     *  and sets the location to the given value.
+     * 
+     * @param {String} path same as with get.
+     * @param {Object|string|number|null} value value to set
+     * 
+     * @return {Promise<void>} returns the key to push a new value.
+     */
+    async pushSet(path, value) {
+      if (hasJoined) {
+        let pr = push(this.appRef(path));
+        await set(pr, value);
       } else {
         throw "Session has not connected"
       }

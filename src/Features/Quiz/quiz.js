@@ -204,7 +204,7 @@ class SQuizView extends QuizView {
 
             } else {
                 valid = true;
-                if (await this.promt("Are you sure you want to exit?", "Exit", "Cancel")) {
+                if (await this.promt("Are you sure you want to close?", "Close", "Cancel")) {
                     this.closeQuiz();
                 }
             }
@@ -373,7 +373,7 @@ class SQuizView extends QuizView {
                 this.next.header = !isHome && i == this.max-1 && !this.locked ? "Submit" : "Next";
                 this.next.toggleAttribute("disable", i == (this.max-(isHome ? 1 : 0)));
                 this.back.toggleAttribute("disable", i <= 0);
-                this.close.header = isHome ? "Close" : "Exit"
+                this.close.header = isHome ? "Exit" : "Close"
 
                 if (i == -1) {
                     this.showQuizStart();

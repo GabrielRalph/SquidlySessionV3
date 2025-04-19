@@ -5,6 +5,7 @@ import { QuizFeature } from "./Quiz/quiz.js"
 import { EyeGazeFeature } from "./EyeGaze/eye-gaze.js"
 import { Notifications } from "./Notifications/notifications.js"
 import { Cursors } from "./Cursors/cursors.js"
+import { VideoCall } from "./VideoCall/video-call.js"
 
 export const FEATURES = [
     {
@@ -17,9 +18,9 @@ export const FEATURES = [
             },
             toolBarRing: {
                 type: "area",
-                area: "fullAspectArea",
+                area: "mainScreen",
                 mode: "overlay",
-                index: 90,
+                index: 220,
             }
         },
     },
@@ -46,13 +47,30 @@ export const FEATURES = [
                 area: "fullAspectArea",
                 index: 80,
                 mode: "occupy",
-                fix: {
-                    toolbar: true
-                }
             }
         }
     },
 
+
+    {
+        class: VideoCall,
+        name: "videoCall",
+        layers: {
+            topPanelWidget: {
+                type: "panel",
+                area: "top",
+            },
+            sidePanelWidget: {
+                type: "panel",
+                area: "side",
+            },
+            mainAreaWidget: {
+                type: "area",
+                area: "fullAspectArea",
+                index: 70,
+            }
+        }
+    },
 
     {
         class: QuizFeature,
@@ -64,9 +82,6 @@ export const FEATURES = [
                 index: 80,
                 mode: "occupy",
                 name: "main",
-                fix: {
-                    toolbar: true
-                }
             }
         }
     },
@@ -132,7 +147,7 @@ export const FEATURES = [
             testScreen: { // Test window
                 type: "area",
                 area: "entireScreen",
-                index: 100,
+                index: 215,
                 mode: "overlay",
             },
             restButton: { // Rest Button
