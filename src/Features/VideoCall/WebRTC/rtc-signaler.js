@@ -72,7 +72,7 @@ export class RTCSignaler {
         })
 
         return await new Promise((r) => {
-            this.restartListener = fb.onValue(`restart-connection/${fb.them}`, (val) => {
+            this.restartListener = fb.onValue(`${fb.them}/restart-connection`, (val) => {
                 console.log("%c Time since restart: "+val, "color: red")
                 let time = new Date().getTime();
                 if (time - val < RESTART_TIME) {
@@ -86,7 +86,7 @@ export class RTCSignaler {
     }
 
     async restart(){
-        await this.fb.set(`restart-connection/${this.fb.me}`, new Date().getTime())
+        await this.fb.set(`${this.fb.me}/restart-connection`, new Date().getTime())
     }
 
     _removeListeners(){

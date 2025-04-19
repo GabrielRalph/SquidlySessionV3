@@ -18,6 +18,30 @@ function rtc_l1_log(str) {
   console.log("%c" + str, 'color: #00a3fd; background:rgb(34, 37, 39); padding: 0.5em;');
 }
 
+function preferOpus(description) {
+    // const sdp = description.sdp;
+    // const sdpLines = sdp.split('\r\n');
+    // const mLineIndex = sdpLines.findIndex(line => line.startsWith('m=audio'));
+
+    // if (mLineIndex === -1) return sdp;
+
+    // const opusPayload = sdpLines.find(line => line.includes('opus/48000'))?.match(/:(\d+) opus\/48000/);
+    // if (!opusPayload) return sdp;
+
+    // const payload = opusPayload[1];
+    // const mLine = sdpLines[mLineIndex].split(' ');
+    // const newMLine = [mLine[0], mLine[1], mLine[2], payload, ...mLine.slice(3).filter(p => p !== payload)];
+    // sdpLines[mLineIndex] = newMLine.join(' ');
+
+    // const sdpMod = sdpLines.join('\r\n');
+
+    // return new RTCSessionDescription({
+    //     type: description.type,
+    //     sdp: sdpMod
+    // })
+    return description;
+}
+
 let GlobalCount = 0;
 class WebRTCConnection {
 
@@ -143,6 +167,7 @@ class WebRTCConnection {
         }
     }
     
+
     updateHandler(){
         const {sessionState, RemoteContentStatus, isStatusReady, RemoteStream} = this;
         // Session is open and has now started
@@ -197,9 +222,10 @@ class WebRTCConnection {
       rtc_base_log("negotiation needed " );
       try {
         this.makingOffer = true;
+    
         await this.PC.setLocalDescription();
         rtc_base_log("description --> " + this.PC.localDescription.type);
-        this.Signaler.send(this.PC.localDescription);
+        this.Signaler.send(preferOpus(this.PC.localDescription));
       } catch (err) {
         console.error(err);
       } finally {
@@ -313,7 +339,7 @@ class WebRTCConnection {
               if (description.type === "offer") {
                 await PC.setLocalDescription();
                 rtc_base_log("description --> " + PC.localDescription.type);
-                Signaler.send(PC.localDescription)
+                Signaler.send(preferOpus(PC.localDescription))
               }
             } catch (e) {
             }
@@ -433,4 +459,15 @@ export function muteTrack(type, bool) {
         bool = null;
     }
     return bool;
+}
+
+export function checkOpus(){
+    const audioReceiver = CurrentConnection.PC.getReceivers().find(r => r.track.kind === 'audio');
+    if (audioReceiver) {
+        const codecs = audioReceiver.getParameters().codecs;
+        console.log("Codecs in use:", codecs);
+
+        const isUsingOpus = codecs.some(codec => codec.mimeType === 'audio/opus');
+        console.log("Is using Opus?", isUsingOpus);
+    }
 }

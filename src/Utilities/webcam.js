@@ -6,7 +6,10 @@ const camParams2 = {
     },
     audio: {
       noiseSuppression: true,
-      echoCancellation: true
+      echoCancellation: true,
+      autoGainControl: true,
+      sampleRate: 48000,
+      channelCount: 1,
     },
   };
   const camParams1 = {

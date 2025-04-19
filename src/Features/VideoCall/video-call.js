@@ -1,5 +1,6 @@
 import { getStream, startWebcam } from "../../Utilities/webcam.js";
 import { Features } from "../features-interface.js";
+import { getHostPresets } from "./presets.js";
 import { RTCSignaler } from "./WebRTC/rtc-signaler.js";
 import * as WebRTC from "./WebRTC/webrtc-base.js"
 import { VideoPanelWidget } from "./widgets.js";
@@ -56,6 +57,7 @@ export class VideoCall extends Features {
         this.sidePanelWidget = new VideoPanelWidget();
         this.mainAreaWidget = new VideoPanelWidget();
         this._setWidgetEvents();
+     
     }
 
 
@@ -71,6 +73,11 @@ export class VideoCall extends Features {
         }
     }
 
+    _setWidgetUserName(name, user) {
+        this._allWidgets.forEach(w => {
+            w[user].userName = name;
+        })
+    }
 
     _setWidgetEvents() {
         this._allWidgets.forEach(w => {
@@ -115,9 +122,14 @@ export class VideoCall extends Features {
      * @param {("host"|"participant")} user
      */
     async _updateMutedState(type, bool, user, setDB = true) {
-        if (user in this.muteState && type in this.muteState[user] && typeof bool === "boolean") {
+        if (user in this.muteState && type in this.muteState[user]) {
+            if (typeof bool !== "boolean") {
+                bool = !this.presets[user + '-' + type];
+                setDB = true;
+            }
+
             if (this.muteState[user][type] != bool) {
-                if (setDB) await this.sdata.set(`${type}/${user}`, bool);
+                if (setDB) await this.sdata.set(`${user}/${type}`, bool);
             }
             this.muteState[user][type] = bool;
 
@@ -139,16 +151,16 @@ export class VideoCall extends Features {
     _setUpListeners(){
         const {sdata} = this;
         const {me, them} = sdata;
-        sdata.onValue(`audio/${me}`, (value) => {
-            this._updateMutedState('audio', value, me, false)
+        sdata.onValue(`${me}/audio`, (value) => {
+            this._updateMutedState('audio', value, me, false);
         })
-        sdata.onValue(`video/${me}`, (value) => {
+        sdata.onValue(`${me}/video`, (value) => {
             this._updateMutedState('video', value, me, false)
         })
-        sdata.onValue(`audio/${them}`, (value) => {
+        sdata.onValue(`${them}/audio`, (value) => {
             this._updateMutedState('audio', value, them, false)
         })
-        sdata.onValue(`video/${them}`, (value) => {
+        sdata.onValue(`${them}/video`, (value) => {
             this._updateMutedState('video', value, them, false)
         })
     }
@@ -159,7 +171,12 @@ export class VideoCall extends Features {
         WebRTC.on("state", this._onWebRTCState.bind(this));
         WebRTC.on("data", this._onWebRTCData.bind(this));
         if (await startWebcam()) {
-
+            let presets = await getHostPresets(this.sdata.hostUID);
+            this.presets = presets;
+            
+            let name = (presets.name || "host") + (presets.pronouns ? ` (${presets.pronouns})` : "")
+            this._setWidgetUserName(name, "host");
+            
             let stream = getStream(2);// get new stream from webcam
     
             let signaler = new RTCSignaler(this.sdata);

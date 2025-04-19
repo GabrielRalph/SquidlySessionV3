@@ -113,6 +113,14 @@ export class SessionDataFrame extends FirebaseFrame {
         }
     }
 
+    get hostUID(){
+        if (sessionConnection == null) {
+            return null;
+        } else {
+            return sessionConnection.hostUID;
+        }
+    }
+
     get me() { return this.isHost ? "host": "participant" } 
     get them() { return this.isHost ? "participant": "host"; }
 }

@@ -34,6 +34,7 @@ export const ERROR_CODES = {
 export class SessionConnection extends FirebaseFrame {
     hasJoined = false;
     isJoining = false;
+    hostUID = null;
 
     /** @type {string} */
     sid;
