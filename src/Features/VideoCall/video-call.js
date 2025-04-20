@@ -37,8 +37,7 @@ function getDefaulIceServers(){
     ]}
 }
 
-
-    
+const DATA_DELIMITER = ":::"
 export class VideoCall extends Features {
     muteState = {
         host: {
@@ -58,6 +57,34 @@ export class VideoCall extends Features {
         this.mainAreaWidget = new VideoPanelWidget();
         this._setWidgetEvents();
      
+    }
+
+
+    /**
+     * Sends data across the webrtc data channel. A path must 
+     * be specified in order to route data to the correct location.
+     * 
+     * @param {string} path 
+     * @param {Object|string|number|boolean} data
+     */
+    async sendData(path, data) {
+        if (typeof path === "string" && path.length > 0) {
+            let dataString = null;
+            switch (typeof data) {
+                case "object": dataString = 'J' + JSON.stringify(a); break;
+                case "number": dataString = 'N' + data; break;
+                case "boolean": dataString = 'B' + (data ? 1 : 0); break;
+                case "string": dataString = 'S' + data; break;
+                default:
+                    console.warn(`Cannot send ${typeof data} accross webrtc data channel.`);
+                    break;
+            }
+            
+            if (dataString !== null) {
+                let fullString = path + ":::" + dataString;
+                WebRTC.send(fullString);
+            }
+        }
     }
 
 
@@ -113,7 +140,30 @@ export class VideoCall extends Features {
     }
 
     _onWebRTCData(data) {
+        let resData = null;
+        let path = null;
+        
+        try {
+            let match = data.match(DATA_DELIMITER);
+            path = data.slice(0, match.index);
+            let type = data[match.index + DATA_DELIMITER.length];
+            let dataString = data.slice(match.index + DATA_DELIMITER.length + 1);
+            
+            switch (type) {
+                case "J": resData = JSON.parse(dataString); break;
+                case "N": resData = Number(dataString); break;
+                case "B": resData = dataString === "1"; break;
+                case "S": resData = dataString;
+            }
+        } catch (e) {
+            console.warn("Error parsing data from webrtc channel", e)
+        }
 
+        if (path != null) {
+            const event = new Event(path);
+            event.data = resData;
+            this.dispatchEvent(event);
+        }
     }
 
     /**
@@ -203,7 +253,6 @@ export class VideoCall extends Features {
     get _allWidgets(){
         return [this.topPanelWidget, this.sidePanelWidget, this.mainAreaWidget]
     }
-
 
     static get firebaseName(){
         return "video-call"

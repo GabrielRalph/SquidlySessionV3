@@ -1,8 +1,22 @@
-import { PromiseChain } from "./usefull-funcs.js";
-import * as FB from "../Firebase/firebase.js";
+import { PromiseChain } from "../../Utilities/usefull-funcs.js";
+import * as FB from "../../Firebase/firebase.js";
+import { Features } from "../features-interface.js";
 
 let UTTERANCES = {};
 let VOICE_NAME = "charles";
+const MY_VOICES = {
+    margaret: true,
+    jane: true,
+    peter: true,
+    charles: true,
+    sarah: true,
+    lachlan: true,
+    jeffrey: true,
+    theo: true,
+    lucy: true,
+    holly: true,
+    default: true
+}
 
 const synth = window.speechSynthesis;
 const speachQueue = new PromiseChain()
@@ -68,7 +82,7 @@ async function playUtteranceDefault(phrase) {
  * @param {string}  utterance
  * @return {Promise<string>} url of utterance mp3 file
 */
-export async function getUtteranceURL(utterance){
+async function getUtteranceURL(utterance){
     const utt = parseUtterance(utterance);
     let url = null;
 
@@ -83,7 +97,8 @@ export async function getUtteranceURL(utterance){
 
 
 /** @param {string} voiceName */
-export async function changeVoice(voiceName) {
+async function changeVoice(voiceName) {
+
     const old = VOICE_NAME in UTTERANCES ? UTTERANCES[VOICE_NAME] : {};
     const oldPhrases = Object.keys(old);
 
@@ -100,20 +115,19 @@ export async function changeVoice(voiceName) {
 /**
  * Load utterances for a given topic
  * @param {string[]} utterances
+ * @param {string} voiceName
  * @return {Promise<void>}
  */
-export async function loadUtterances(utterances){
-    if (!(VOICE_NAME in UTTERANCES)) UTTERANCES[VOICE_NAME] = {};
-    const uttLib = UTTERANCES[VOICE_NAME]
-
-    
+async function loadUtterances(utterances, voiceName = VOICE_NAME){
+    if (!(voiceName in UTTERANCES)) UTTERANCES[voiceName] = {};
+    const uttLib = UTTERANCES[voiceName]
 
     const phrases = utterances.map(parseUtterance).filter(p => !(p in uttLib));
 
     if (phrases.length > 0) {
         let data;
-        if (VOICE_NAME !== "default") {
-            const prom = FB.callFunction("utterances-get", {phrases, voiceName: VOICE_NAME});
+        if (voiceName !== "default") {
+            const prom = FB.callFunction("utterances-get", {phrases, voiceName});
             
             // Store promise 
             phrases.forEach(p => uttLib[p] = prom);
@@ -135,8 +149,78 @@ export async function loadUtterances(utterances){
 /**
  * @param {string}
  */
-export async function speak(utterance) {
-    
+async function speak(utterance) {
     await speachQueue.addPromise(() => playUtterance(utterance))
 }
 
+class InvalidUtterance extends Error {
+    constructor(){
+        super("Text2Speech: Utterance must be string")
+    }
+}
+
+export class Text2Speech extends Features {
+    constructor(session, sdata) {
+        super(session, sdata);
+    }
+
+    /** Loads an utterance if not already loaded, stores it
+     *  and returns the url to the audio file.
+     * @param {string}  utterance
+     * @return {Promise<string>} url of utterance mp3 file
+    */
+    async getUtteranceURL(utterance) {
+        return await getUtteranceURL(utterance);
+    }
+
+    /** Changes the speeking voice.
+     *  @param {string} voiceName 
+     * */
+    async changeVoice(voiceName){
+        if (!(voiceName in MY_VOICES)) {
+            throw "Invalid voice name";
+        }
+        await changeVoice(voiceName);
+        console.log("voice changed to " + voiceName);
+        
+    }
+
+    /**
+     * Loads a list of utterances and stores them for 
+     * later use.
+     * @param {string[]} utterances
+     * @return {Promise<void>}
+     */
+    async loadUtterances(utterances) {
+        if (Array.isArray(utterances)) {
+            utterances = utterances.filter(u => typeof u === "string");
+            return await loadUtterances(utterances);
+        }
+    }
+
+    /**
+     * Speaks a given utterance, if broadcast is set
+     * true the speach will be broadcast to the other 
+     * user in the session and spoken on their end as well.
+     */
+    async speak(utterance, broadcast = true) {
+        utterance = parseUtterance(utterance);
+
+        const {videoCall} = this.session;
+        if (broadcast && videoCall) {
+            videoCall.sendData("t2s", utterance)
+        }
+
+        await speak(utterance);
+    }
+
+
+    async initialise(){
+        this.session.videoCall.addEventListener("t2s", (e) => {
+            const {data} = e;
+            if (typeof data === "string") {
+                this.speak(data, false);
+            }
+        })
+    }
+}

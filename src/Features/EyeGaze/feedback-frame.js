@@ -8,6 +8,7 @@ import { OccupiableWindow } from "../features-interface.js";
 import { FaceLandmarks } from "./Algorithm/Utils/face-mesh.js";
 
 const used_points = [...new Set([152,10,389,162,473,468,33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154,153,145,144,163,7,362, 398, 384, 385, 386, 387, 388, 263, 249, 390,373, 374, 380, 381, 382,61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146,10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109])]
+const MaxTimeTillFade = 4000;
 
 function getEyePath(points,w, h, path = left_eye_outline, mode = true) {
     if (mode) {
@@ -280,7 +281,10 @@ export class FeedbackWindow extends OccupiableWindow {
     /** @type {import("../features-interface.js").SessionDataFrame} */
     sdata = null;
 
-    constructor(sdata) {
+    /** @type {import("../features-interface.js").SquidlySession} */
+    session = null;
+
+    constructor(session, sdata) {
         let root = new HideShow("feedback-window");
         root.applyShownState = () => {
             root.styles = {
@@ -290,6 +294,7 @@ export class FeedbackWindow extends OccupiableWindow {
         }
         super("feedback-window", root);
         this.sdata = sdata;
+        this.session = session;
 
         // Create header and close icon
         let head = this.createChild("div", {class: "header"});
@@ -320,15 +325,24 @@ export class FeedbackWindow extends OccupiableWindow {
 
         addProcessListener(this._onProcess.bind(this));
         
-        sdata.onValue(`feedback-points/${sdata.them}`, (str) => {
-            let points = FaceLandmarks.deserialise(str, used_points);
+        let hideTimeOut = null;
+        this.session.videoCall.addEventListener("facepoints", (e) => {
+            let {data} = e;
+            let points = FaceLandmarks.deserialise(data, used_points);
             this._setFacePoints(points, sdata.them);
+            clearTimeout(hideTimeOut);
+            hideTimeOut = setTimeout(() => {
+                this._setFacePoints(null, sdata.them);
+            }, MaxTimeTillFade)
         });
+
+        // sdata.onValue(`feedback-points/${sdata.them}`, (str) => {
+            
+        // });
 
         sdata.onValue(`onion/${sdata.them}`, (str) => {
             let onion = FaceLandmarks.deserialise(str, used_points);
             this[sdata.them].onion = onion;
-
         })
 
         sdata.onValue(`onion/${sdata.me}`, (str) => {
@@ -370,8 +384,9 @@ export class FeedbackWindow extends OccupiableWindow {
                 str = points.serialise(used_points);
             }
 
-            this._setFacePoints(points, sdata.me)
-            sdata.set(`feedback-points/${sdata.me}`, str);
+            this._setFacePoints(points, sdata.me);
+            this.session.videoCall.sendData("facepoints", str);
+            // sdata.set(`feedback-points/${sdata.me}`, str);
         }
     }
 

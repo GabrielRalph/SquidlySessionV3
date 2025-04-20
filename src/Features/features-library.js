@@ -6,8 +6,13 @@ import { EyeGazeFeature } from "./EyeGaze/eye-gaze.js"
 import { Notifications } from "./Notifications/notifications.js"
 import { Cursors } from "./Cursors/cursors.js"
 import { VideoCall } from "./VideoCall/video-call.js"
+import { Text2Speech } from "./Text2Speech/text2speech.js"
 
 export const FEATURES = [
+    {
+        class: Text2Speech,
+        name: "text2speech"
+    },
     {
         class: ToolBarFeature,
         name: "toolBar",

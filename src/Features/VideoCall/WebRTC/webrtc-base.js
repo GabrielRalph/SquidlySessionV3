@@ -7,7 +7,7 @@ const MinTimeTillRestart = 5000; // 5 seconds
 
 /* Log Functions
     */
-window.show_rtc_base = true;
+window.show_rtc_base = false;
 function rtc_base_log(str) {
     if (window.show_rtc_base) {
       console.log("%c\t" + str, 'color: #bada55; background:rgb(26, 28, 27); padding: 0.5em;');
@@ -431,7 +431,7 @@ export function on(key, cb) {
 }
 
 export function send(data) {
-    if (CurrentConnection !== null) {
+    if (CurrentConnection !== null && CurrentConnection.sessionState === "open") {
         if (typeof data === "object" && data !== null) {
             data = JSON.stringify(data);
             CurrentConnection.sendMessage("J"+data);

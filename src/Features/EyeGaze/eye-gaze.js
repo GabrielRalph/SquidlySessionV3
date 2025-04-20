@@ -136,7 +136,7 @@ class RestAccessButton extends AccessButton {
 class RestButton extends ShadowElement {
     constructor() {
         super("rest-button");
-        this.button = this.createChild(RestAccessButton, {class: "rest", content: "Rest"})
+        this.button = this.createChild(RestAccessButton, {class: "rest", content: "rest"})
     }
     static get usedStyleSheets() {
         return [relURL("./styles.css", import.meta)]
@@ -216,7 +216,7 @@ export class EyeGazeFeature extends Features {
         super(session, sdata);
 
         this.testScreen = new TestScreen();
-        this.feedbackWindow = new FeedbackWindow(sdata);
+        this.feedbackWindow = new FeedbackWindow(session, sdata);
         this.calibrationWindow = new CalibrationScreenArea();
         this.restButton = new RestButton();
 
@@ -259,7 +259,7 @@ export class EyeGazeFeature extends Features {
         })
 
         this.restWatcher = new TransitionVariable(0, 1, (v) => {
-            this.session.togglePanel("bottomPanel", v==1)
+            this.session.toggleRestBar(v==1)
         })
     }
 
@@ -286,7 +286,11 @@ export class EyeGazeFeature extends Features {
             this._isProcessing = bool;
             this.sdata.set(`on/${this.me}`, bool);
             if (bool) startProcessing();
-            else stopProcessing();
+            else {
+                stopProcessing();
+                this.restWatcher.set(false);
+                this.session.cursors.updateCursorPosition(this.me + "-eyes", null);
+            }
         }
     }   
 

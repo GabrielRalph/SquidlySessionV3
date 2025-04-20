@@ -21,6 +21,8 @@ const parallel = (...args) => Promise.all(...args);
 /** @typedef {import('./Features/Cursors/cursors.js').Cursors} Cursors*/
 /** @typedef {import('./Features/features-interface.js').Features} Feature*/
 /** @typedef {import('./Features/EyeGaze/eye-gaze.js').EyeGazeFeature} EyeGazeFeature*/
+/** @typedef {import('./Features/VideoCall/video-call.js').VideoCall} VideoCall*/
+/** @typedef {import('./Features/Text2Speech/text2speech.js').Text2Speech} Text2Speech*/
 /** @typedef {import('./Features/Notifications/notifications.js').Notifications} Notifications*/
 /** @typedef {import('./Features/AccessControl/access-control.js').AccessControl} AccessControl*/
 /** @typedef {import('./Features/features-library.js')} FLIBMod*/
@@ -509,6 +511,16 @@ export class SquidlySession {
         return $$.get(this).toolBarPublic;
     }
 
+     /** @return {?VideoCall} */
+     get videoCall(){
+        return $$.get(this).videoCallPublic;
+    }
+
+    /** @return {?Text2Speech} */
+    get text2speech(){
+        return $$.get(this).text2speechPublic;
+    }
+
     /** @return {?AccessControl} */
     get accessControl(){
         return $$.get(this).accessControlPublic;
@@ -548,6 +560,10 @@ export class SquidlySession {
      * */
     async togglePanel(name, isShown) {
         await $$.get(this).togglePanel(name, isShown);
+    }
+
+    async toggleRestBar(isShown) {
+        await $$.get(this).togglePanel("bottomPanel", isShown);
     }
 }
 

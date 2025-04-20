@@ -208,17 +208,18 @@ export class VideoPanelWidget extends ShadowElement {
     constructor() {
         super("video-panel-widget");
         this.stack = this.createChild("div", {class: "stack"})
-        this.host = this.stack.createChild(VideoDisplay, {events: {
-            aspect: this.updateLayout.bind(this),
-            mute: (e) => this.dispatchEvent(new MuteEvent(e.track, "host")),
-        }});
-        this.host.userName = "host";
 
         this.participant = this.stack.createChild(VideoDisplay, {events: {
             aspect: this.updateLayout.bind(this),
             mute: (e) => this.dispatchEvent(new MuteEvent(e.track, "participant")),
         }});
         this.participant.userName = "participant";
+        
+        this.host = this.stack.createChild(VideoDisplay, {events: {
+            aspect: this.updateLayout.bind(this),
+            mute: (e) => this.dispatchEvent(new MuteEvent(e.track, "host")),
+        }});
+        this.host.userName = "host";
 
 
         let robs = new ResizeObserver(() => {

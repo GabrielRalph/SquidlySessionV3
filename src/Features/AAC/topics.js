@@ -8,7 +8,6 @@
  */
 
 import * as FB from "../../Firebase/firebase.js";
-import { getUtteranceURL, loadUtterances, speak } from "../../Utilities/text2speech.js";
 
 /**
  * @typedef {Object} UploadResults
@@ -18,6 +17,8 @@ import { getUtteranceURL, loadUtterances, speak } from "../../Utilities/text2spe
  * @property {string} url
  * @property {IconInfo[]} similar
  */
+
+/** @typedef {import('../Text2Speech/text2speech.js').Text2Speech} Text2Speech*/
 
 /**
  * @typedef {Object} DeleteResults
@@ -102,8 +103,8 @@ const DEFAULT_BOARD = "-OLqvyYjEIPALztTqM1N"
 const QUICK_TALK = "-OGKBtJUfonWnJijpL2O"
 
 
-
-
+/**@type {Text2Speech} */
+let Text2Speech = null;
 let TOPICS = {};
 
 /**
@@ -225,6 +226,7 @@ export function isTopicItem(itemType) {
     return itemType in GITEM_TYPES && GITEM_TYPES[itemType] === "topic";
 }
 
+
 /**
  * Load utterances for a given topic
  * @param {GTopic} topic
@@ -232,29 +234,30 @@ export function isTopicItem(itemType) {
  */
 export async function loadTopicUtterances(topic) {
     let allPhrases = topic.items.filter(i => !i.hidden).map(item => getUtt(item));
-    
-    await loadUtterances(allPhrases);
+    if (Text2Speech) {
+        await Text2Speech.loadUtterances(allPhrases);
+    }
 }
 
 /** 
  * @param {GItem}  item
  * @return {Promise<string>} url of utterance mp3 file
 */
-export async function getUtterance(item){
+export async function getUtterance(item, text2speech){
     let url = null;
-    if (!item.hidden) {
+    if (Text2Speech && !item.hidden) {
         let utt = getUtt(item);
-        url = await getUtteranceURL(utt);
+        url = await Text2Speech.getUtteranceURL(utt);
     }
     return url;
 }    
-
 
 export async function getDefaultBoard() {
     let topicsDefault = await getTopicCC(DEFAULT_BOARD);
     
     return [DEFAULT_BOARD, topicsDefault]
 }
+
 export async function getQuickTalk() {
     let quickTalk = await getTopic(QUICK_TALK);
     return [QUICK_TALK, quickTalk]
@@ -262,34 +265,11 @@ export async function getQuickTalk() {
 
 
 export async function speakUtterance(item){
-    await speak(getUtt(item))
+    if (Text2Speech) {
+        await Text2Speech.speak(getUtt(item))
+    }
 }
-// /**
-//  * @param {string} sid
-//  * @param {string[]} topicsToGet;
-//  * @return {Promise<Object.<string, GTopic>>}
-//  */
-// export async function getSessionTopics(sid, topicsToGet = []) {
-//     let topicsToFetch = []
-//     for (let key of topicsToGet) {
-//         if (!(key in TOPICS)) topicsToFetch.push(key);
-//     }
 
-//     let data = {sid, filter: topicsToGet};
-
-//     let res = await FB.callFunction("gridTopics-getSessionTopics", data);
-//     console.log(res);
-    
-
-//     let topics = res.data.results;
-//     for (let key in topics) {
-//         TOPICS[key] = topics;
-//     }
-
-//     topics = {};
-//     for (let key of topicsToGet) {
-//         topics[key] = TOPICS[key];
-//     }
-
-//     return topics;
-// }
+export function setText2SpeechModule(text2speech) {
+    Text2Speech = text2speech;
+}

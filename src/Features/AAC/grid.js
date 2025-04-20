@@ -813,6 +813,8 @@ export class AACGrid extends Features {
 
     async initialise(){
         let {sdata} = this;
+        Topics.setText2SpeechModule(this.session.text2speech);
+        
         let quickTalkProm = this._initialiseQuickTalk();
 
         // Get the current topic

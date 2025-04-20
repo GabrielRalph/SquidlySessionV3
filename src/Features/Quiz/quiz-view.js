@@ -4,7 +4,7 @@ import { SvgPlus } from "../../SvgPlus/4.js";
 import { MarkdownElement } from "./markdown.js";
 import { Icon, isIconName } from "../../Utilities/Icons/icons.js";
 import { PromiseChain } from "../../Utilities/usefull-funcs.js";
-import { loadUtterances, speak } from "../../Utilities/text2speech.js";
+
 /**
  * @typedef {import("./quizzes.js").Answer} Answer
  * @typedef {import("./quizzes.js").Question} Question
@@ -92,11 +92,13 @@ const COLORS = [
     "dark-purple"
 ]
 let III = 0;
+let Text2Speech = {speak: ()=>null, loadUtterances: () => null};
 
 class QuizIcon extends AccessButton {
     /** @param {Answer} icon */
-    constructor(icon, group) {
+    constructor(icon, group, speakOnClick = true) {
         super("quiz-" + group);
+        this.speakOnClick = speakOnClick;
 
         if (icon.color) this.setAttribute("color", icon.color)
         let {title, subtitle, image} = icon;
@@ -111,9 +113,11 @@ class QuizIcon extends AccessButton {
 
         this.image = image;
 
-        this.addEventListener("access-click", () => {
-            speak(this.headerText);
-        })
+        if (this.speakOnClick) {
+            this.addEventListener("access-click", () => {
+                Text2Speech.speak(this.headerText);
+            })
+        }
     }
 
 
@@ -123,7 +127,7 @@ class QuizIcon extends AccessButton {
         this.titleEl.toggleAttribute("hide", !shown)
         this.titleEl.typeset(text, false);
         this.headerText = text;
-        loadUtterances([text]);
+        if (this.speakOnClick) Text2Speech.loadUtterances([text]);
     }
 
     /** @param {?string} text*/
@@ -334,7 +338,7 @@ export class QuizView extends SvgPlus {
                 "access-click": (e) => {
                     if (this.onInteraction instanceof Function) this.onInteraction("close", null, e);
             }
-        }}, {title: "Close", image: "close"}, "controls");
+        }}, {title: "Close", image: "close"}, "controls", false);
 
         this.back = this.createChild(QuizIcon, {
             colorf: "light-blue",
@@ -342,7 +346,7 @@ export class QuizView extends SvgPlus {
                 "access-click": (e) => {
                     if (this.onInteraction instanceof Function) this.onInteraction("back", null, e);
             }
-        }}, {title: "Back", image: "back"}, "controls")
+        }}, {title: "Back", image: "back"}, "controls", false)
 
         this.info = this.createChild("div", {class: "quiz-info"}).createChild(QuestionInfo);
 
@@ -352,7 +356,7 @@ export class QuizView extends SvgPlus {
                 "access-click": () => {
                     if (this.onInteraction instanceof Function) this.onInteraction("next", null, e);
             }
-        }}, {title: "Next", image: "next"}, "controls")
+        }}, {title: "Next", image: "next"}, "controls", false)
 
 
         this.main = this.createChild("div", {class: "main-quiz", events: {
@@ -372,12 +376,12 @@ export class QuizView extends SvgPlus {
                 "access-click": () => {
                     resolve(true)
                 }
-            }}, {title: true_text, color:"white"}, "prompt");
+            }}, {title: true_text, color:"white"}, "prompt", false);
             r.createChild(QuizIcon, {events: {
                 "access-click": () => {
                     resolve(false)
                 }
-            }}, {title: false_text, color:"white"}, "prompt");
+            }}, {title: false_text, color:"white"}, "prompt", false);
         })
 
         p.remove();
@@ -471,4 +475,8 @@ export class QuizView extends SvgPlus {
             await run(next);
         }
     }
+}
+
+export function setSpeech2TextModule(text2speech) {
+    Text2Speech = text2speech;
 }
