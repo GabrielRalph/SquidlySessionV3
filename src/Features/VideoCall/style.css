@@ -1,10 +1,9 @@
 video-panel-widget {
-    background: rgb(24, 24, 24);
     display: flex;
-    background: rgb(34 33 33);
+    --bg-color: rgb(34 33 33);
+    background: var(--bg-color);
     width: 100%;
-    height: calc(100% - 1px);
-    border-bottom: 1px solid #5b5b5b;
+    height: 100%;
     justify-content: center;
     align-items: center;
 }
@@ -25,7 +24,6 @@ video-display {
     pointer-events: all;
 }
 
-
 video-display video {
     border-radius: var(--br);
     width: 100%;
@@ -35,6 +33,44 @@ video-display video {
 video-display:not(:hover) .top-left {
     opacity: 0;
     pointer-events: none;
+}
+.border-overlay {
+    --br: 2px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border: var(--br) solid var(--bg-color);
+    pointer-events: none;
+}
+.video-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    opacity: 0;
+}
+.overlay-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    --min-dim: min(var(--width), var(--height));
+    --size: calc(var(--min-dim) * 0.7);
+    width: var(--size);
+    height: var(--size);
+    border-radius: var(--size);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url('data:image/svg+xml,<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 256 256"><!-- Generator: Adobe Illustrator 29.4.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 152) --><path d="M24.77,256c0-69.4,46.22-125.66,103.23-125.66s103.23,56.26,103.23,125.66"/><ellipse cx="128" cy="62.64" rx="46.42" ry="45.2"/></svg>');
+}
+video-display[disabled] .video-overlay {
+    background-color: #ffffff38;
+    opacity: 1;
 }
 
 .top-left {

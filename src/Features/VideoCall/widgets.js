@@ -22,15 +22,9 @@ class VideoDisplay extends HideShow {
         }
         this.video = this.createChild("video", {autoplay: true, playsinline: true});
 
-        // this.buttons = this.createChild("div", {
-        //     styles: {
-        //         position: "absolute",
-        //         top: 0, 
-        //         left: 0,
-        //         gap: "0px",
-        //         display: "flex",
-        //     }
-        // })
+        this.videoOverlay = this.createChild("div", {class: "video-overlay"})
+        this.overlayImage = this.videoOverlay.createChild("div", {class: "overlay-image"});
+        this.createChild("div", {class: "border-overlay"});
 
         this.topLeft = this.createChild("div", {
             class: "icon-slot top-left",
@@ -70,6 +64,7 @@ class VideoDisplay extends HideShow {
             }
         });
 
+
     }
 
     applyHiddenState() {
@@ -92,9 +87,11 @@ class VideoDisplay extends HideShow {
      * @param {boolean} value
      */
     set video_muted(value) {
+        this.toggleAttribute("disabled", false);
         if (value === false) {
             this.setIcon("videoMute", "video", () => this.update("video"));
         } else if (value === true) {
+            this.toggleAttribute("disabled", true);
             this.setIcon("videoMute", "novideo", () => this.update("video"));
         } else {
             this.setIcon("videoMute", null);
@@ -160,6 +157,12 @@ class VideoDisplay extends HideShow {
         })
     }
 
+    set userImage(url) {
+        this.overlayImage.styles = {
+            "background-image": `url("${url}")`
+        }
+    }
+
   
     /** @param {boolean} bool*/
     set hide(bool){
@@ -214,7 +217,7 @@ export class VideoPanelWidget extends ShadowElement {
             mute: (e) => this.dispatchEvent(new MuteEvent(e.track, "participant")),
         }});
         this.participant.userName = "participant";
-        
+
         this.host = this.stack.createChild(VideoDisplay, {events: {
             aspect: this.updateLayout.bind(this),
             mute: (e) => this.dispatchEvent(new MuteEvent(e.track, "host")),

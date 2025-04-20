@@ -298,7 +298,7 @@ export class FeedbackWindow extends OccupiableWindow {
 
         // Create header and close icon
         let head = this.createChild("div", {class: "header"});
-        head.createChild("h1", {content: "Get in to view to </br> start the calibration"});
+        head.createChild("h1", {content: "Get into view to </br> start the calibration"});
         let b = head.createChild(AccessButton, {
             events: {
                 "access-click": (e) => this.dispatchEvent(new AccessEvent("exit", e))

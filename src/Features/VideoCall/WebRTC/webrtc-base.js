@@ -72,10 +72,11 @@ class WebRTCConnection {
 
     /** @type {RTCDataChannel?} */
     SendChannel = null;
+
     
-    sessionState = "closed";
     makingOffer = false;
     ignoreOffer = false;
+    sessionState = "closed";
     
     EventListeners = {};
     LastConfig = null;
@@ -149,6 +150,16 @@ class WebRTCConnection {
         return video && audio && data_send == "open" && data_receive == "open" && ice_state == "connected";
     }
 
+    get isDataChannelReady(){
+        const {recv, sent, data_send, data_receive} = this.RemoteContentStatus;
+        return recv && sent && data_send == "open" && data_receive == "open";
+    }
+
+    // get sessionState(){
+    //     const {sent, recv} = this.RemoteContentStatus;
+    //     return (this.isStatusReady && sent && recv) ? "open" : "closed";
+    // }
+
     logState(){
         let {RemoteContentStatus: {video, audio, data_send, data_receive, ice_state, sent, recv}} = this;
         let cc = (val) => `color: ${val ? "green" : "red"}; background:rgb(39, 39, 34); padding: 0.5em;`
@@ -172,15 +183,13 @@ class WebRTCConnection {
         const {sessionState, RemoteContentStatus, isStatusReady, RemoteStream} = this;
         // Session is open and has now started
         // Send message to remote caller telling them we are open
-        if (sessionState == "closed" && isStatusReady) {
+        if (!RemoteContentStatus.sent && isStatusReady) {
             this.sendMessage("A");
             RemoteContentStatus.sent = true;
     
         // Session has closed
         } else if (sessionState == "open" && !isStatusReady) {
             this.sessionState = "closed";
-            RemoteContentStatus.sent = false;
-            RemoteContentStatus.recv = false;
             rtc_l1_log("closed");
         }
     
@@ -239,7 +248,7 @@ class WebRTCConnection {
           PC.restartIce();
         } else if (PC.iceConnectionState == "connected"){
         } else if (PC.iceConnectionState === "disconnected") {
-            this.closeMessageChannel();
+            this.closeSendMessageChannel();
         }
         RemoteContentStatus.ice_state = PC.iceConnectionState;
         this.updateHandler();
@@ -274,11 +283,22 @@ class WebRTCConnection {
         this.SendChannel.onclose = this.handleSendChannelStatusChange.bind(this);
     }
 
-    closeMessageChannel(){
+    closeSendMessageChannel(){
         if (this.SendChannel) {
             this.SendChannel.close();
         }
+        this.RemoteContentStatus.recv = false;
+        this.RemoteContentStatus.send = false;
         this.SendChannel = null;
+    }
+
+    closeReceiveMessageChannel(){
+        if (this.ReceiveChannel) {
+            this.ReceiveChannel.close();
+        }
+        this.RemoteContentStatus.recv = false;
+        this.RemoteContentStatus.send = false;
+        this.ReceiveChannel = null;
     }
     
     /* Send message sends a message accros the data channel*/
@@ -301,7 +321,11 @@ class WebRTCConnection {
     handleReceiveChannelStatusChange(event) {
         const {RemoteContentStatus, ReceiveChannel} = this;
         if (ReceiveChannel) {
-            RemoteContentStatus.data_receive = ReceiveChannel.readyState
+            const state = ReceiveChannel.readyState;
+            RemoteContentStatus.data_receive = state;
+            if (state == "closed") {
+                this.closeReceiveMessageChannel();
+            }
             this.updateHandler("state");
         }
     }
@@ -312,7 +336,7 @@ class WebRTCConnection {
             const state = SendChannel.readyState;
             RemoteContentStatus.data_send = state
             if (state == "closed") {
-                this.closeMessageChannel();
+                this.closeSendMessageChannel();
             }
             this.updateHandler("state")
         }
@@ -361,9 +385,8 @@ class WebRTCConnection {
     close(){
         this.EventListeners = {};
         this.PC.close();
-        this.closeMessageChannel();
-        if (this.ReceiveChannel) this.ReceiveChannel.close();
-        this.ReceiveChannel = null;
+        this.closeSendMessageChannel();
+        this.closeReceiveMessageChannel();
         this.Signaler.removeAllListeners();
     }
 
@@ -431,7 +454,8 @@ export function on(key, cb) {
 }
 
 export function send(data) {
-    if (CurrentConnection !== null && CurrentConnection.sessionState === "open") {
+
+    if (CurrentConnection !== null && CurrentConnection.isDataChannelReady) {
         if (typeof data === "object" && data !== null) {
             data = JSON.stringify(data);
             CurrentConnection.sendMessage("J"+data);

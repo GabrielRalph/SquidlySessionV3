@@ -106,6 +106,12 @@ export class VideoCall extends Features {
         })
     }
 
+    _setWidgetUserImage(url, user) {
+        this._allWidgets.forEach(w => {
+            w[user].userImage = url;
+        })
+    }
+
     _setWidgetEvents() {
         this._allWidgets.forEach(w => {
             w.addEventListener("mute", (e) => {
@@ -227,6 +233,10 @@ export class VideoCall extends Features {
             
             let name = (presets.name || "host") + (presets.pronouns ? ` (${presets.pronouns})` : "")
             this._setWidgetUserName(name, "host");
+
+            if (presets.image) {
+                this._setWidgetUserImage(presets.image, "host");
+            }
             
             let stream = getStream(2);// get new stream from webcam
     

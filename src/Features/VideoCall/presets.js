@@ -7,7 +7,8 @@ const keys = [
     ["hostVideo", "host-video"],
     ["participantVideo", "participant-video"],
     ["pronouns", "pronouns"],
-    ["displayName", "name"]
+    ["displayName", "name"],
+    ["displayPhoto", "image"],
 ]
 export async function getHostPresets(hostUID) {
     let presets = {};
