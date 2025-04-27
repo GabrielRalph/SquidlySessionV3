@@ -65,7 +65,7 @@ class VideoDisplay extends HideShow {
             }
         });
 
-
+        this._watchVideoSize();
     }
 
     applyHiddenState() {
@@ -127,27 +127,33 @@ class VideoDisplay extends HideShow {
         }
     }
 
-    async waitForVideoSize() {
-        let size = null;
-        let i = 0;
-        let src = this.srcObject;
-        while (size == null && i < 1000) {
-            try {
-                let settings = src.getVideoTracks()[0].getSettings();
-                let ratio = (this.border + settings.width) / (this.border + settings.height);
-                if (!Number.isNaN(ratio)) {
-                    size = ratio;
-                } else {
-                    size = null;
+    async _watchVideoSize() {
+        let lastSize = null;
+        while (true) {
+            let size = null;
+            let src = this.srcObject;
+            if (src != null) {
+                try {
+                    let settings = src.getVideoTracks()[0].getSettings();
+                    let ratio = (this.border + settings.width) / (this.border + settings.height);
+                    if (!Number.isNaN(ratio)) {
+                        size = ratio;
+                    } else {
+                        size = null;
+                    }
+                } catch (e) {
+                    size = null
                 }
-                await delay(50);
-            } catch (e) {
-                size = null
+            };
+
+            if (size !== lastSize) {
+                this._aspect = size;
+                this.dispatchEvent(new Event("aspect"));
+                lastSize = size;
             }
-            i++;
+            await delay(100);
         }
-        this._aspect = size;
-        this.dispatchEvent(new Event("aspect"));
+       
     }
 
     set userName(name) {
@@ -185,10 +191,7 @@ class VideoDisplay extends HideShow {
     }
 
     set srcObject(src) {
-        // console.log("SRC:", src);
-        
         this.video.srcObject = src;
-        this.waitForVideoSize();
     }
 
     get srcObject() { return this.video.srcObject; }
@@ -232,20 +235,12 @@ export class VideoPanelWidget extends ShadowElement {
             this.updateLayout()
         })
         robs.observe(this.root);
-        // this.startUpdating();
     }
 
-    // async startUpdating(){
-    //     while(!this.stop) {
-    //         this.updateLayout();
-    //         await delay();
-    //     }
-    // }
+ 
 
     async updateLayout(){
-        // if (this.scheduled) return;
-        // this.scheduled = true;
-        // await delay();
+      
         let size = this.bbox[1];
         if (!size.isZero) {
             let taspect = size.x / size.y;
@@ -294,7 +289,6 @@ export class VideoPanelWidget extends ShadowElement {
                 })
             }
         }
-        // this.scheduled = false;
     }
 
     static get usedStyleSheets(){

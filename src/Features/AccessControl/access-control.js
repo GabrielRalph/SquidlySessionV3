@@ -36,7 +36,7 @@ class CircleLoader extends SvgPlus {
             }
         },
         this.pathGroup = this.createChild("g");
-        this.wsv = new WaveStateVariable(false, 1.5, (t, goal) => {
+        this.wsv = new WaveStateVariable(false, 1.1, (t, goal) => {
             this.progress = t;
             position = button.getCenter();
             this.styles = {
