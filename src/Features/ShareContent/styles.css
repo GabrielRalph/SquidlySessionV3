@@ -1,0 +1,178 @@
+content-viewer {
+    display: block;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    position: relative;
+    background: white;
+    pointer-events: all;
+    --scale: 1;
+    --offset-x: 0%;
+    --offset-y: 0%;
+}
+
+file-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    --progress: 0;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    pointer-events: all;
+}
+file-loader .icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: 20%;
+    max-width: 50%;
+
+    transform: translate(-50%, -50%);
+}
+file-loader[progress] .icon path {
+    stroke: var(--color-danger);
+    --l1: calc(var(--progress) * var(--length));
+    stroke-dasharray: var(--l1) var(--length);
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+content-frame {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    --w1: calc(var(--height) * var(--aspect-ratio));
+    width: min(var(--width), var(--w1));
+    --h1: calc(var(--width) / var(--aspect-ratio));
+    height: min(var(--h1), var(--height));
+    margin: auto;
+    pointer-events: all;
+}
+
+content-frame video {
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+content-frame canvas {
+    max-width: 100%;
+    max-height: 100%;
+    margin: auto;
+    transform: scale(var(--scale)) translate(var(--offset-x), var(--offset-y));
+}
+
+content-frame .image {
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    pointer-events: none;
+    user-select: none;
+    transform: scale(var(--scale)) translate(var(--offset-x), var(--offset-y));
+}
+
+
+
+border-frame {
+    --color: rgba(32, 29, 29, 0.522);
+    --h: calc((var(--height) - var(--width) / var(--aspect-ratio)) / 2);
+    --w: calc((var(--width) - var(--height) * var(--aspect-ratio)) / 2);
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-top: var(--h) solid var(--color);
+    border-left: var(--w) solid var(--color);
+    border-bottom: var(--h) solid var(--color);
+    border-right: var(--w) solid var(--color);
+    pointer-events: none;
+}
+
+.tool-bar-area {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(5, calc((100% - 2em) / 5));
+    grid-template-rows: repeat(5, calc((100% - 2em) / 5));
+
+    gap: 0.5em;
+    margin: 0.5em;
+    pointer-events: none;
+}
+
+access-button {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    width: 100%;
+    align-items: center;
+    background: #a61f00;
+    justify-content: center;
+    color: white;
+    border-radius: 1em;
+    font-size: 1.3em;
+    cursor: pointer;
+    transition: 0.3s ease-in opacity;
+    text-align: center;
+    pointer-events: all;
+}
+access-button:hover {
+    --icon-color: var(--icon-color-hover);
+}
+access-button .icon {
+    height: 30%;
+}
+
+.blank { 
+    width: 100%;
+}
+
+content-viewer:not([display-type="pdf"]) access-button[name="next"],
+content-viewer:not([display-type="pdf"]) access-button[name="back"],
+content-viewer[display-type="pdf"][pages="1"] access-button[name="next"],
+content-viewer[display-type="pdf"][pages="1"] access-button[name="back"] {
+    display: none;
+}
+
+access-button[name="back"], access-button[name="next"], access-button[name="exit"], access-button[name="reset"] {
+    grid-column: 5;
+}
+
+access-button[name="up"] {
+    grid-row: 2;
+}
+access-button[name="down"] {
+    grid-row: 3;
+}
+access-button[name="left"] {
+    grid-row: 5;
+}
+access-button[name="right"] {
+    grid-row: 4;
+}
+access-button[name="left"], access-button[name="right"], access-button[name="up"], access-button[name="down"] {
+    grid-column: 1;
+}
+
+.tool-bar-area:not([open]) access-button[showable] {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tool-bar-area[open][no-next] access-button[name="next"] {
+    opacity: 0.2;
+    pointer-events: none;
+}
+.tool-bar-area[open][no-back] access-button[name="back"] {
+    opacity: 0.2;
+    pointer-events: none;
+}

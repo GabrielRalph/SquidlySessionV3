@@ -295,6 +295,12 @@ export function getQueryKey(string = window.location.search) {
   return key;
 }
 
+export function makeLogger(name, style) {
+  return (...args) => {
+    console.log("%c" + name + ": " + args.map(t => t + "").join(" "), style);
+  }
+}
+
 export class PromiseChain {
   constructor(){
       this.head = null;

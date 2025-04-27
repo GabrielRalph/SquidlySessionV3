@@ -14,6 +14,7 @@ class MuteEvent extends Event {
 
 class VideoDisplay extends HideShow {
     _aspect = null;
+    border = 0;
     constructor(el = "video-display") {
         super(el);
         this.class = "video-display"
@@ -133,7 +134,7 @@ class VideoDisplay extends HideShow {
         while (size == null && i < 100) {
             try {
                 let settings = src.getVideoTracks()[0].getSettings();
-                let ratio = settings.width / settings.height;
+                let ratio = (this.border + settings.width) / (this.border + settings.height);
                 if (!Number.isNaN(ratio)) {
                     size = ratio;
                 } else {
@@ -163,6 +164,9 @@ class VideoDisplay extends HideShow {
         }
     }
 
+    set isTalking(bool) {
+        this.toggleAttribute("talking", bool);
+    }
   
     /** @param {boolean} bool*/
     set hide(bool){
@@ -200,7 +204,6 @@ class VideoDisplay extends HideShow {
 }
 
 
-
 export class VideoPanelWidget extends ShadowElement {
     /** @type {VideoDisplay} */
     host = null;
@@ -229,12 +232,20 @@ export class VideoPanelWidget extends ShadowElement {
             this.updateLayout()
         })
         robs.observe(this.root);
+        // this.startUpdating();
     }
 
+    // async startUpdating(){
+    //     while(!this.stop) {
+    //         this.updateLayout();
+    //         await delay();
+    //     }
+    // }
+
     async updateLayout(){
-        if (this.scheduled) return;
-        this.scheduled = true;
-        await delay();
+        // if (this.scheduled) return;
+        // this.scheduled = true;
+        // await delay();
         let size = this.bbox[1];
         if (!size.isZero) {
             let taspect = size.x / size.y;
@@ -283,7 +294,7 @@ export class VideoPanelWidget extends ShadowElement {
                 })
             }
         }
-        this.scheduled = false;
+        // this.scheduled = false;
     }
 
     static get usedStyleSheets(){

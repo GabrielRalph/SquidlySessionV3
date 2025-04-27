@@ -1,8 +1,9 @@
 import { getStream, startWebcam } from "../../Utilities/webcam.js";
 import { Features } from "../features-interface.js";
+import { setupVoiceDetection } from "./AudioUtils/voice-detector.js";
 import { getHostPresets } from "./presets.js";
-import { RTCSignaler } from "./WebRTC/rtc-signaler.js";
-import * as WebRTC from "./WebRTC/webrtc-base.js"
+import { RTCSignaler } from "../../Utilities/WebRTC/rtc-signaler.js";
+import * as WebRTC from "../../Utilities/WebRTC/webrtc-base.js"
 import { VideoPanelWidget } from "./widgets.js";
 
 
@@ -41,12 +42,12 @@ const DATA_DELIMITER = ":::"
 export class VideoCall extends Features {
     muteState = {
         host: {
-            video: true,
-            audio: true
+            video: undefined,
+            audio: undefined
         },
         participant: {
-            video: true,
-            audio: true,
+            video: undefined,
+            audio: undefined,
         }
     }
     
@@ -82,7 +83,7 @@ export class VideoCall extends Features {
             
             if (dataString !== null) {
                 let fullString = path + ":::" + dataString;
-                WebRTC.send(fullString);
+                this._mainConnection.send(fullString);
             }
         }
     }
@@ -93,11 +94,11 @@ export class VideoCall extends Features {
      * @param {("host"|"participant")} user
      */
     async toggleMuted(type, user) {
-        console.log(`toggling ${user}'s ${type}`);
         if (user in this.muteState && type in this.muteState[user]) {
             let oldState = this.muteState[user][type];
             await this._updateMutedState(type, !oldState, user);
         }
+        console.log(`Toggled ${user}'s ${type} mute state`);
     }
 
     _setWidgetUserName(name, user) {
@@ -109,6 +110,12 @@ export class VideoCall extends Features {
     _setWidgetUserImage(url, user) {
         this._allWidgets.forEach(w => {
             w[user].userImage = url;
+        })
+    }
+
+    _setWidgetTalking(bool, user) {
+        this._allWidgets.forEach(w => {
+            w[user].isTalking = bool;
         })
     }
 
@@ -135,12 +142,12 @@ export class VideoCall extends Features {
 
     _onWebRTCState(state) {
         let stream = state.remoteStream;
-        console.log(state.isRemoteStreamReady);
+        // console.log(state.isRemoteStreamReady);
         
         if (!state.isRemoteStreamReady) {
             stream = null;
         }
-        console.log("stream:", stream);
+        // console.log("stream:", stream);
         
         this._setWidgetStream(stream, this.sdata.them)
     }
@@ -179,12 +186,10 @@ export class VideoCall extends Features {
      */
     async _updateMutedState(type, bool, user, setDB = true) {
         if (user in this.muteState && type in this.muteState[user]) {
-            if (typeof bool !== "boolean" && user == this.sdata.me) {
-                bool = this.presets[user + '-' + type];
-                setDB = true;
+            if (typeof bool !== "boolean") {
+                bool = true
             }
             
-
             if (this.muteState[user][type] != bool) {
                 if (setDB) await this.sdata.set(`${user}/${type}`, bool);
             }
@@ -198,16 +203,30 @@ export class VideoCall extends Features {
             if (user === this.sdata.me) {
                 let iconName = bool ? icons[type][1] : icons[type][0];
                 this.session.toolBar.setIcon(`control/${type}/name`, iconName);
-                WebRTC.muteTrack(type, bool)
+                this._mainConnection.muteTrack(type, bool)
             }
             this._setWidgetMuteState(type, !bool, user);
         }
     }
 
 
-    _setUpListeners(){
+    async _setupMuteStateListeners(presets){
         const {sdata} = this;
         const {me, them} = sdata;
+
+        let [videoMuted, audioMuted] = await Promise.all([
+            sdata.get(`${me}/video`),
+            sdata.get(`${me}/audio`)
+        ]);
+
+        // console.log(videoMuted, audioMuted);
+        
+        await Promise.all([
+            videoMuted == null ? this._updateMutedState("video", !!presets[me+"-video"], me) : null,
+            audioMuted == null ? this._updateMutedState("audio", !!presets[me+"-audio"], me) : null,
+        ]);
+      
+        // listen to changes in the database mute state
         sdata.onValue(`${me}/audio`, (value) => {
             this._updateMutedState('audio', value, me, false);
         })
@@ -225,35 +244,44 @@ export class VideoCall extends Features {
 
     async initialise(){
         await VideoPanelWidget.loadStyleSheets();
-        WebRTC.on("state", this._onWebRTCState.bind(this));
-        WebRTC.on("data", this._onWebRTCData.bind(this));
+        let connection = new WebRTC.ConnectionManager();
+        connection.on("state", this._onWebRTCState.bind(this));
+        connection.on("data", this._onWebRTCData.bind(this));
         if (await startWebcam()) {
+            // Get presets from the host
             let presets = await getHostPresets(this.sdata.hostUID);
             this.presets = presets;
             
+            // set the host's name
             let name = (presets.name || "host") + (presets.pronouns ? ` (${presets.pronouns})` : "")
             this._setWidgetUserName(name, "host");
 
+            // set the host's image
             if (presets.image) {
                 this._setWidgetUserImage(presets.image, "host");
             }
             
-            let stream = getStream(2);// get new stream from webcam
-    
-            let signaler = new RTCSignaler(this.sdata);
-    
-            let config = getDefaulIceServers(); // get configuration ice servers from firebase
-    
-            WebRTC.initialise(config, stream, signaler);
-            
-            this._setWidgetStream(stream, this.sdata.me)
+            // get new stream from webcam
+            let stream = getStream(2);
 
-            this._setUpListeners();
+            // set up voice detection
+            setupVoiceDetection(stream, (d) => {
+                this._setWidgetTalking(d, this.sdata.me)
+            })
             
+            // set up the connection
+            let signaler = new RTCSignaler(this.sdata);
+            let config = getDefaulIceServers(); // get configuration ice servers from firebase
+            connection.start(config, stream, signaler);
+            this._mainConnection = connection;
+
+            this._setWidgetStream(stream, this.sdata.me)
+            this._setupMuteStateListeners(presets);
+            
+            // add toolbar listeners
             this.session.toolBar.addSelectionListener("audio", () => {
                 this.toggleMuted("audio", this.sdata.me)
             })
-
             this.session.toolBar.addSelectionListener("video", () => {
                 this.toggleMuted("video", this.sdata.me)
             })

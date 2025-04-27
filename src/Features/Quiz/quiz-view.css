@@ -40,8 +40,8 @@ quiz-view[locked] .answers {
     --icon-color-hover: var(--evening-blue-darker);
 }
 [colorf="red"] {
-    --button-color: var(--rose-red);
-    --button-color-select: var(--rose-red-darker);
+    --button-color: var(--action-red);
+    --button-color-select: var(--action-red-dark);
     --button-text-color: white;
 }
 

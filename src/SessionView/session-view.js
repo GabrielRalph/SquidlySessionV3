@@ -1,7 +1,7 @@
 import { SvgPlus, Vector } from "../SvgPlus/4.js";
 import { Icon } from "../Utilities/Icons/icons.js";
 import { ShadowElement } from "../Utilities/shadow-element.js";
-import { relURL, WaveStateVariable, getDevice } from "../Utilities/usefull-funcs.js";
+import { relURL, WaveStateVariable, getDevice, delay } from "../Utilities/usefull-funcs.js";
 
 /** @typedef {("entireScreen"|"fullAspectArea"|"fixedAspectArea"|"mainScreen"|"popupArea")} ScreenAreaName*/
 /** @typedef {("sideScreen"|"topPanel"|"sidePanel"|"bottomPanel"|"toolBarArea")} HideableElement*/
@@ -81,7 +81,13 @@ class SlidePanel extends SvgPlus {
      *  @param {Vector} sOffset an offset from the slider position
      *  @param {number} t the amount the offset whould be used
      */
-    sizeToPoint(e, sOffset, t) {
+    async sizeToPoint(...args) {
+        this._sizingParams = args
+        if (this._sizing) return 
+        this._sizing = true;
+        await delay()
+        let [e, sOffset, t] = this._sizingParams;
+
         // Compute the distance from the edge of the panel to the center of the slider
         let dOffset = this.sliderClickBox.bbox[1].div(2);
 
@@ -107,6 +113,7 @@ class SlidePanel extends SvgPlus {
         this.sview.root.styles = {
             [`--${this.tName}-desired`]: `${size}px`
         }
+        this._sizing = false;
     }
 
     /** Called by the eventlistener, begins the resizing.

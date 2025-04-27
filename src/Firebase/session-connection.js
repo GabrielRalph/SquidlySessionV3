@@ -3,7 +3,9 @@ import { callFunction, getUID } from "./firebase.js";
 import { FirebaseFrame } from "./firebase-frame.js";
 import { SvgPlus } from "../SvgPlus/4.js";
 
-const UPDATE_CYCLE_TIME_MS = 3 * 60 * 1000;
+const UPDATE_CYCLE_TIME_MS = 3 * 1000;
+const MAX_TIME_SINCE_PING = 5 * 1000;
+
 
 window.createSession = async () => {
     let res = await callFunction("sessions-create", {startTime: 123});
@@ -13,8 +15,6 @@ window.createSession = async () => {
     } else {
         window.location = window.location.origin + "/?" + sessionID;
     }
-    
-    
 }
 
 export const ERROR_CODES = {
@@ -35,6 +35,8 @@ export class SessionConnection extends FirebaseFrame {
     hasJoined = false;
     isJoining = false;
     hostUID = null;
+    activeUsers = {};
+    userUpdateListeners = {}
 
     /** @type {string} */
     sid;
@@ -69,6 +71,63 @@ export class SessionConnection extends FirebaseFrame {
     }
 
     async startUpdating(){
+        let makeTimeout = (key) => {
+            return setTimeout(() => {
+                this.activeUsers[key].active = false;
+                this._triggerEvent("left", key, "timeout");
+            }, MAX_TIME_SINCE_PING)
+        }
+
+        let onChange = (time, uid) => {
+            const key = uid == "host" ? "host" : "participant";
+            const {activeUsers} = this;
+
+            if (time != null) {
+                let dt = new Date().getTime() - time;
+                if (dt > MAX_TIME_SINCE_PING) {
+                   time = null;
+                }
+            }
+            
+            // If the user is not in the active users list, add them
+            if (!(key in activeUsers)) {
+                if (time !== null) {
+                    this.activeUsers[key] = {
+                        timeOfLastPing: time, 
+                        timeout: makeTimeout(key),
+                        active: true,
+                    }   
+                    this._triggerEvent("joined", key);
+                }
+            
+            // If the user is in the active users list, update their time
+            } else {
+                // If the user has left, remove them from the list
+                if (time == null) {
+                    this.activeUsers[key].active = false;
+                    this.activeUsers[key].timeOfLastPing = null;
+                    clearTimeout(this.activeUsers[key].timeout);
+                    this._triggerEvent("left", key, "null");
+                
+                // If the user is still active, update their time
+                } else {
+                    
+                    if (!this.activeUsers[key].active) {
+                        this._triggerEvent("joined", key, "pingback");
+                    }
+                    this.activeUsers[key].active = true;
+                    this.activeUsers[key].timeOfLastPing = time;
+                    clearTimeout(this.activeUsers[key].timeout);
+                    this.activeUsers[key].timeout = makeTimeout(key);
+                }
+            }
+        }
+    
+        this.onChildChanged("updates", onChange);
+        this.onChildAdded("updates", onChange);
+        this.onChildRemoved("updates", (_, key) => onChange(null, key));
+        
+        // Start the ping loop
         while (this.hasJoined) {
             let key = this.isHost ? "host" : getUID();
             this.set(`updates/${key}`, (new Date().getTime()));
@@ -76,9 +135,30 @@ export class SessionConnection extends FirebaseFrame {
         }
     }
 
+    isActive(key){
+        if (key in this.activeUsers) {
+            return this.activeUsers[key].active;
+        } else {
+            return false;
+        }
+    }
 
-    get userName() {
-        return this.isHost ? "host" : "participant";
+    _triggerEvent(type, ...args){
+        console.log("%c" + args.join(" "), `background:rgb(33, 32, 32); color: ${type == "joined" ? "#bada55" : "#ff7b7b"}; padding: 10px; border-radius: 10px;`);
+        if (type in this.userUpdateListeners) {
+            for (let listener of this.userUpdateListeners[type]) {
+                listener(...args);
+            }
+        }
+    }
+
+    addUserUpdateListener(type, listener) {
+        if (listener instanceof Function) {
+            if (!(type in this.userUpdateListeners)) {
+                this.userUpdateListeners[type] = [];
+            }
+            this.userUpdateListeners[type].push(listener);
+        }
     }
 
     get isHost(){

@@ -7,6 +7,7 @@ import { Notifications } from "./Notifications/notifications.js"
 import { Cursors } from "./Cursors/cursors.js"
 import { VideoCall } from "./VideoCall/video-call.js"
 import { Text2Speech } from "./Text2Speech/text2speech.js"
+import { ShareContent } from "./ShareContent/share-content.js"
 
 export const FEATURES = [
     {
@@ -72,7 +73,7 @@ export const FEATURES = [
             mainAreaWidget: {
                 type: "area",
                 area: "fullAspectArea",
-                index: 70,
+                index: 50,
             }
         }
     },
@@ -100,6 +101,18 @@ export const FEATURES = [
                 area: "entireScreen",
                 index: 310,
                 mode: "overlay"
+            }
+        }
+    },
+
+    {
+        class: ShareContent,
+        name: "shareContent",
+        layers: {
+            contentView: {
+                type: "area",
+                area: "fullAspectArea",
+                index: 60,
             }
         }
     },

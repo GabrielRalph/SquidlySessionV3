@@ -7,7 +7,7 @@ aac-board {
     --word-color-dark: #5a9ce2;
     --word-starter-color: #aeef93;
     --word-starter-color-dark: #80e157;
-    --action-color:#a61f00;
+    --action-color: var(--action-red);
     --word-noun: #d6c6ff;
     --word-noun-dark: #8d6fd7;
     --word-adjective-dark: #f0cf56;

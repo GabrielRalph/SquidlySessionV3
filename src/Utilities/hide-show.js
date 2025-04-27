@@ -13,10 +13,14 @@ export class HideShow extends SvgPlus {
       } else if (t == 1) {
         this.applyShownState();
         this._shown = true;
+      } else {
+        this.applyIntermediateState(t);
       }
     });
   }
 
+  applyIntermediateState(t) {
+  }
 
   applyHiddenState() {
     this.opacity = 0;

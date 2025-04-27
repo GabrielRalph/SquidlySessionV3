@@ -1,4 +1,14 @@
-import {set, get, ref,update, push, child, getUID, onChildAdded, onChildRemoved, onChildChanged, onValue} from "./firebase.js"
+import {set, get, ref,update, push, child, getUID, onChildAdded, onChildRemoved, onChildChanged, onValue, storageRef, uploadFileToCloud} from "./firebase.js"
+
+/** 
+ * @typedef {Object} UploadTaskSnapshot
+ * @property {number} bytesTransferred	The number of bytes that have been successfully uploaded so far.
+ * @property {Object} metadata	Before the upload completes, contains the metadata sent to the server. After the upload completes, contains the metadata sent back from the server.
+ * @property {Object}  ref	The reference that spawned this snapshot's upload task.
+ * @property {string}  state	The current state of the task.
+ * @property {Object}  task	The task of which this is a snapshot.
+ * @property {number} totalBytes The total number of bytes to be uploaded.
+ */
 
 const hasJoined = true;
 /**
@@ -13,27 +23,22 @@ export class FirebaseFrame {
           if (typeof path === "string") r = child(r, path);
           return r;
         }
+        this.getStoragePath = (path) => {
+          let fname = reference;
+          if (typeof path === "string") fname += "/" + path;
+          return fname;
+        }
+
         this.listeners = new Set();
         FirebaseFrames.push(this);
-        // if (hasJoined) {
-        //   this.onconnect();
-        // }
+
     }
-  
-    // get isConnected(){
-    //   return !!hasJoined;
-    // }
   
     logPath() {
         console.log(this.appRef("hello"));
     }
   
-    // /**
-    //  * Called when firebase is connected to a session
-    //  */
-    // onconnect(){
-    // }
-    
+
   
     /** get, gets a value in the apps database at the path specified.
      * 
@@ -214,6 +219,20 @@ export class FirebaseFrame {
       } else {
         throw "Session has not connected"
       }
+    }
+
+    /** Upload file to firebase storage bucket.
+     * 
+     * @param {File} file the actual file to be uploaded.
+     * @param {string} path path of the file to be uploaded (relative to the frame).
+     * @param {(UploadTaskSnapshot) => void} statusCallback called on progoress updates of the upload.
+     * @param {Object} metadata metedata of the file being uploaded
+     * @param {boolean} getURL whether to get a download url after upoading is complete.
+     * 
+     * @return {Promise<string?>} returns download url or null if not specified.
+    */
+    async uploadFile(file, path, statusCallback, metadata, getURL = true) {
+      return await uploadFileToCloud(file, this.getStoragePath(path), statusCallback, metadata, getURL);
     }
   
     /** Ends all listeners and removes the app database */

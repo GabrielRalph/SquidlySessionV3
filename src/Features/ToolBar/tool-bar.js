@@ -550,7 +550,7 @@ class ToolBarRing extends ShadowElement {
 }
 
 
-class ToolBar extends ShadowElement {
+export class ToolBar extends ShadowElement {
     constructor(){
         super("tool-bar");
     }

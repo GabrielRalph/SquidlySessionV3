@@ -97,6 +97,34 @@ export class SessionDataFrame extends FirebaseFrame {
             throw "Session not connected";
         }
         super(`session-data/${sessionConnection.sid}/${firebaseName}`);
+
+        this.getFirebaseName = () => firebaseName;
+    }
+
+    onUser(key, callback) {
+        if (sessionConnection == null || !sessionConnection.hasJoined) {
+            throw "Session not connected";
+        }
+        sessionConnection.addUserUpdateListener(key, callback);
+    }
+
+    isUserActive(key) {
+        if (sessionConnection == null || !sessionConnection.hasJoined) {
+            throw "Session not connected";
+        }
+        return sessionConnection.isActive(key);
+    }
+
+    /** Get session data frame referenced at a child path
+     * @param {string} path
+     * 
+     * @return {SessionDataFrame?}
+     */
+    child(path) {
+        if (typeof path == "string" && path.length > 0) {
+            return new SessionDataFrame(this.getFirebaseName() + "/" + path)
+        }
+        return null;
     }
 
     get isHost(){
@@ -359,42 +387,64 @@ export class SquidlySessionElement extends ShadowElement {
     }
 
     async initialiseFixedAspect(){
+        const {me, them} = this.sdata;
+
+        // Create a blank element to get the aspect ratio of the screen
         let blank = new ShadowElement("dummy-element");
-       
-        // Watch for resize changes in the full aspect area
-        let observer = new ResizeObserver(() => {
-            // If the size changes broadcast the new size to the 
-            // database
-            let me = sessionConnection.isHost ? "host" : "participant";
-            let size = blank.bbox[1];
-            this.sdata.set(`aspect/${me}`, {x: size.x, y: size.y});
-        })
-        observer.observe(blank);
-
-        this.sdata.onValue("aspect", (val) => {
-            if (val !== null) {
-                let size = null;
-                if ("participant" in val) {
-                    size = new Vector(val.participant);
-                } else if ("host" in val) {
-                    size = new Vector(val.host);
-                }
-
-                if (size !== null) {
-                    let aspect = 1;
-                    if (size.x > 1e-3 && size.y > 1e-3) {
-                        aspect = size.x / size.y
-                    }
-                    this.sharedAspectRatio = aspect;
-                    this.sessionView.styles = {
-                        "--aspect-ratio": aspect
-                    }
-                }
-            }
-        })
-
         let area = this.sessionView.addScreenArea("fullAspectArea", blank);
         area.styles = {"z-index": -1};
+
+        // Store the aspect ratios of the both users screen
+        let aspects = {
+            [me]: null,
+            [them]: null
+        };
+
+        // Picks the aspect ratio of the participant if possible
+        // otherwise picks the aspect ratio of this user
+        let chooseAspect = () => {
+            let size = null;
+            if (this.sdata.isUserActive("participant") && aspects.participant !== null) {
+                size = aspects.participant;
+            } else {
+                size = aspects[me];
+            }
+
+            if (size !== null) {
+                let aspect = 1;
+                if (size.x > 1e-3 && size.y > 1e-3) {
+                    aspect = size.x / size.y
+                }
+                this.sharedAspectRatio = aspect;
+                this.sessionView.styles = {
+                    "--aspect-ratio": aspect
+                }
+            }
+        };
+
+        // Watch for resize changes in the full aspect area
+        let observer = new ResizeObserver(() => {
+            let size = blank.bbox[1];
+            aspects[me] = size;
+            this.sdata.set(`aspect/${me}`, {x: size.x, y: size.y});
+            chooseAspect();
+        });
+        observer.observe(blank);
+
+        // Watch for changes in the aspect ratio from the database
+        this.sdata.onValue("aspect", (val) => {
+            if (val !== null) {
+                if ("participant" in val) {
+                    aspects.participant = new Vector(val.participant);
+                } else if ("host" in val) {
+                    aspects.host = new Vector(val.host);
+                }
+                chooseAspect();
+            }
+        });
+
+        this.sdata.onUser("joined", chooseAspect);
+        this.sdata.onUser("left", chooseAspect);
     }
 
     async initialiseWindowManager(){

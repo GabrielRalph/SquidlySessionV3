@@ -402,7 +402,9 @@ export class EyeGazeFeature extends Features {
     async initialise(){
         await Promise.all([load(), FeedbackWindow.loadStyleSheets()])
         if (!await startWebcam()) {
-            throw "Please allow webcam access"
+            console.log("fail");
+            
+            throw new Error("Please allow webcam access")
         }
 
         this.session.cursors.updateCursorProperties("host-eyes", {
