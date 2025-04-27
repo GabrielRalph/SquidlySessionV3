@@ -111,14 +111,16 @@ export class SessionConnection extends FirebaseFrame {
                 
                 // If the user is still active, update their time
                 } else {
+                    let joined = !this.activeUsers[key].active
                     
-                    if (!this.activeUsers[key].active) {
-                        this._triggerEvent("joined", key, "pingback");
-                    }
                     this.activeUsers[key].active = true;
                     this.activeUsers[key].timeOfLastPing = time;
                     clearTimeout(this.activeUsers[key].timeout);
                     this.activeUsers[key].timeout = makeTimeout(key);
+
+                    if (joined) {
+                        this._triggerEvent("joined", key, "pingback");
+                    }
                 }
             }
         }

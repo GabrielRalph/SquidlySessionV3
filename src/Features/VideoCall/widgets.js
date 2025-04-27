@@ -131,7 +131,7 @@ class VideoDisplay extends HideShow {
         let size = null;
         let i = 0;
         let src = this.srcObject;
-        while (size == null && i < 100) {
+        while (size == null && i < 1000) {
             try {
                 let settings = src.getVideoTracks()[0].getSettings();
                 let ratio = (this.border + settings.width) / (this.border + settings.height);
@@ -140,7 +140,7 @@ class VideoDisplay extends HideShow {
                 } else {
                     size = null;
                 }
-                await delay();
+                await delay(50);
             } catch (e) {
                 size = null
             }

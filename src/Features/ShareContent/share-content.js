@@ -168,10 +168,7 @@ export class ShareContent extends Features {
 
         this._shareScreen = new ConnectionManager(false, {video: true});
         this._shareScreen.on("state", (data) => {
-            if (data.remoteStream) {
-                // data.remoteStream.
-                console.log(data);
-                
+            if (data.remoteStream && data.video != null) {
                 this.contentView.setStream(data.remoteStream, this.sdata.them);
             }
         })
