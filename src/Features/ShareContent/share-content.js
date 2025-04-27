@@ -37,14 +37,14 @@ function getDefaulIceServers(){
 }
 
 export class ShareContent extends Features {
-
+    _isSharing = false;
     constructor(session, sdata){
         super(session, sdata)
-        this.contentView = new ContentViewer();
+        this.contentView = new ContentViewer(this);
         this.contentView.root.events = {
             transform: (e) => this.sdata.set("content-transform", e.transform),
             page: () => this.sdata.set("content-info/page", this.contentView.page),
-            close: (e) => e.waitFor(this.session.openWindow("default")),
+            close: (e) => e.waitFor(this.close()),
             upload: (e) => this.shareFile(),
             screen: (e) => this.shareScreen()
         }
@@ -74,7 +74,6 @@ export class ShareContent extends Features {
 
     async shareScreen(){
         let stream = null;
-        let result = false;
         let oldStream = this._shareScreen.stream;
 
         // share screen media options
@@ -99,20 +98,13 @@ export class ShareContent extends Features {
                 this.session.openWindow("default");
             }
 
-            // // get the video track from the stream
-            // let videoTrack = stream.getVideoTracks()[0];
-            // videoTrack.onmute = () => {
-            //     console.log("Track muted ", videoTrack.muted);
-            // }
-            
             // clear old stream events
             if (oldStream instanceof MediaStream) oldStream.oninactive = null;
-            
-            result = true;
+         
             this.contentView.stream = stream;
             this._shareScreen.replaceStream(stream);
-
             this.contentView.setStream(stream, this.sdata.me);
+            this._isSharing = true;
 
             this.sdata.set("content-info", {
                 type: "stream",
@@ -143,6 +135,26 @@ export class ShareContent extends Features {
         }        
     }
 
+
+    async stopSharing(){
+        if (this._isSharing) {
+            let stream = this._shareScreen.stream;
+            stream.oninactive = null;
+            if (stream instanceof MediaStream) {
+                stream.getTracks().forEach((track) => {
+                    track.stop();
+                })
+            }
+            this._isSharing = false;
+        }
+    }
+
+
+    async close(){
+        this.stopSharing()
+        await this.session.openWindow("default");
+    }
+
     async initialise(){
         let signaler = new RTCSignaler(this.sdata.child("rtc"));
 
@@ -157,17 +169,23 @@ export class ShareContent extends Features {
         this._shareScreen = new ConnectionManager(false, {video: true});
         this._shareScreen.on("state", (data) => {
             if (data.remoteStream) {
+                // data.remoteStream.
+                console.log(data);
+                
                 this.contentView.setStream(data.remoteStream, this.sdata.them);
             }
         })
         this._shareScreen.start(getDefaulIceServers(), stream, signaler);
 
         let contentInfo = await this.sdata.get("content-info");
-        if (contentInfo !== null && contentInfo.type === "stream") {
+        if (contentInfo !== null && contentInfo.type === "stream" && contentInfo.page === this.sdata.me) {
             await this.session.openWindow("default");
         }
 
         this.sdata.onValue("content-info", (contentInfo) => {
+            if (contentInfo !== null && contentInfo.type === "stream" && contentInfo.page !== this.sdata.me) {
+                this.stopSharing();
+            }
             this.contentView.updateContentInfo(contentInfo);
         })
 

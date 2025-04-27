@@ -138,6 +138,8 @@ class ContentFrame extends SvgPlus {
 
     let updatingLoop = async () => {
       this.updatingVideo = true
+      console.log("%cupdating video", 'color: white; background: red;');
+      
       while (!stop) {
         if (this.displayType == "stream" && this.video.videoWidth > 0) {
           this.streamCanvas.width = this.video.videoWidth;
@@ -146,6 +148,8 @@ class ContentFrame extends SvgPlus {
         }
         await delay();
       }
+      console.log("%cupdating video stopped", 'color: white; background: red;');
+
     }
 
     let prom = updatingLoop();
@@ -330,7 +334,7 @@ export class ContentViewer extends OccupiableWindow {
   /** @type {Object<string, MediaStream>} */
   stream = {};
 
-  constructor(el = "content-viewer") {
+  constructor(feature) {
     let root = new HideShow("content-viewer");
     root.applyIntermediateState = () => {
         root.styles = {
@@ -348,7 +352,8 @@ export class ContentViewer extends OccupiableWindow {
         }
     }
     root.shown = false
-    super(el, root);
+    super("content-viewer", root);
+    this.shareContent = feature;
     this._pageNumber = 1;
     
     this._displayType = null;
@@ -472,6 +477,9 @@ export class ContentViewer extends OccupiableWindow {
 
   setStream(stream, user) {
     this.stream[user] = stream;
+    // if (this.displayType == "stream" && this.streamUser == user) {
+    //   this.content.stream = stream;
+    // }
   }
 
   /** @param {string} type */
@@ -502,6 +510,8 @@ export class ContentViewer extends OccupiableWindow {
             break;
 
           case "stream":
+            console.log("setting share stream", contentInfo.page);
+            this.streamUser = contentInfo.page;
             this.content.stream = this.stream[contentInfo.page];
             this.loader.progress = 1;
             this.loader.hide(500);
@@ -561,6 +571,7 @@ export class ContentViewer extends OccupiableWindow {
   }
 
   close(){
+    this.shareContent.stopSharing();
     this.root.hide(300);
   }
 
