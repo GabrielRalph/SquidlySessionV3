@@ -11,15 +11,15 @@ const camParams2 = {
       sampleRate: 48000,
       channelCount: 1,
     },
-  };
-  const camParams1 = {
-    video: {
-      width: { min: 320, ideal: 640, max: 1920 },
-      height: { min: 240, ideal: 480, max: 1080 },
-      facingMode: "user",
-    },
-    audio: false,
-  };
+};
+const camParams1 = {
+  video: {
+    width: { min: 320, ideal: 640, max: 1920 },
+    height: { min: 240, ideal: 480, max: 1080 },
+    facingMode: "user",
+  },
+  audio: false,
+};
   
   let Canvas = document.createElement("canvas");
   let Ctx = Canvas.getContext("2d", {willReadFrequently: true});
@@ -325,8 +325,60 @@ const camParams2 = {
     });
   }
   
-  export async function getTrackSelection(type) {
-    let devices = [...await navigator.mediaDevices.enumerateDevices()]
-    return devices;
+  const selectedDevices = {
+    1: {
+      audioinput: "default",
+      videoinput: "default",
+    },
+    2: {
+      audioinput: "default",
+      videoinput: "default",
+    }
   }
+  export async function getTrackSelection(type, streamId = 2) {
+    let stream = streamId == 2 ? Stream2 : Stream;
+
+    let devices = [...await navigator.mediaDevices.enumerateDevices()];
+    devices = devices.filter(device => device.kind === type);
+    let tracks = stream.getTracks(); 
+    
+    devices.forEach(device => {
+
+      let track = tracks.find(t => t.getSettings().deviceId === device.deviceId) || selectedDevices[streamId][device.kind] === device.deviceId;
+      device.active = !!track;
+    });
+
+    let devicesByGID = {};
+    for (let device of devices) {
+      if (!(device.groupId in devicesByGID)) {
+        let {
+          deviceId,
+          groupId,
+          kind,
+          label,
+          active
+        } = device;
+        devicesByGID[device.groupId] = {
+          deviceId,
+          groupId,
+          kind,
+          label,
+          active,
+        }
+      } else {
+        devicesByGID[device.groupId].active = devicesByGID[device.groupId].active || device.active;
+        let labela = devicesByGID[device.groupId].label;
+        let labelb = device.label;
+        if (labela.length < labelb.length) {
+          devicesByGID[device.groupId].label = labelb;
+        }
+        if (device.deviceId !== "default") {
+          devicesByGID[device.groupId].deviceId = device.deviceId;
+        }
+      }
+    }
+    
+    return Object.values(devicesByGID);
+  }
+
   

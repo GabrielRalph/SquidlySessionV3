@@ -108,7 +108,7 @@ border-frame {
     margin: 0.5em;
     pointer-events: none;
 }
-
+/* 
 access-button {
     display: flex;
     flex-direction: column;
@@ -130,7 +130,7 @@ access-button:hover {
 }
 access-button .icon {
     height: 30%;
-}
+} */
 
 .blank { 
     width: 100%;
@@ -142,7 +142,9 @@ content-viewer[display-type="pdf"][pages="1"] access-button[name="next"],
 content-viewer[display-type="pdf"][pages="1"] access-button[name="back"] {
     display: none;
 }
-
+access-button {
+    pointer-events: all;
+}
 access-button[name="back"], access-button[name="next"], access-button[name="exit"], access-button[name="reset"] {
     grid-column: 5;
 }

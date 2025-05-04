@@ -8,6 +8,7 @@ import { Cursors } from "./Cursors/cursors.js"
 import { VideoCall } from "./VideoCall/video-call.js"
 import { Text2Speech } from "./Text2Speech/text2speech.js"
 import { ShareContent } from "./ShareContent/share-content.js"
+import { SettingsFeature } from "./Settings/settings.js"
 
 export const FEATURES = [
     {
@@ -52,6 +53,19 @@ export const FEATURES = [
                 type: "area",
                 area: "fullAspectArea",
                 index: 80,
+                mode: "occupy",
+            }
+        }
+    },
+
+    {
+        class: SettingsFeature,
+        name: "settings",
+        layers: {
+            settingsWindow: {
+                type: "area",
+                area: "fullAspectArea",
+                index: 81,
                 mode: "occupy",
             }
         }

@@ -32,7 +32,7 @@ for (let name in IconSourceText) {
         e.removeAttribute("class");
         if (e.hasAttribute("stroke")) {
             e.classList.add('i-stroke')
-        } else {
+        } else if (e.getAttribute("fill") !== "none") {
             e.classList.add("i-fill");
         }
         e.classList.add(e.getAttribute("id"));

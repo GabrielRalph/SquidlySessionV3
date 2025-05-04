@@ -4,9 +4,9 @@
  * @typedef {import("./topics.js").GItem} GItem
  */
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
-import { AccessButton, AccessClickEvent, AccessEvent } from "../../Utilities/access-buttons.js";
-import { Icon } from "../../Utilities/Icons/icons.js";
-import { ShadowElement } from "../../Utilities/shadow-element.js";
+import { AccessClickEvent, AccessEvent } from "../../Utilities/access-buttons.js";
+import { GridIconSymbol, GridIcon } from "../../Utilities/grid-icon.js";
+import { Rotater } from "../../Utilities/rotater.js";
 import { relURL, isExactSame } from "../../Utilities/usefull-funcs.js";
 import { Features, OccupiableWindow } from "../features-interface.js";
 import * as Topics from "./topics.js"
@@ -41,268 +41,26 @@ class IconSelectionEvent extends Event {
 }
 
 
-function plainCard(size, border = 4) {
-    let inSize = size.sub(border);
-    let g = inSize.y / 20;
-    return `<rect class = "card" x = "${border/2}" y = "${border/2}" width = "${inSize.x}"  height = "${inSize.y}" rx = "${g}" ry = "${g}" />
-            <rect stroke-width = "${border}" class = "outline" x = "${border/2}" y = "${border/2}" width = "${inSize.x}"  height = "${inSize.y}" rx = "${g}" ry = "${g}" />`
-}
-function folderCard(size, border = 4) {
-    let inSize = size.sub(border);
-    let g = inSize.y / 20;
-    let w = inSize.x;
-    let b = w * 0.45;
-
-    g = Math.min(b / 3, g);
-
-
-    let t = g / 3;
-    let h = inSize.y;
-
-
-    let p0 = new Vector(border/2, border/2 + 2*g);
-    let p1 = p0.addV(-g);
-    let p2 = p1.add(g, -g);
-
-    let c2 = p1.addH(b);
-    let c1 = c2.add(-g);
-    
-    let tv = new Vector(t, 0);
-    let tv2 = tv.rotate(-Math.PI * 3 / 4);
-
-    let p3 = c1.sub(tv);
-    let p4 = c1.sub(tv2);
-
-    let p5 = c2.add(tv2);
-    let p6 = c2.add(tv);
-
-    let p7 = p1.addH(w - g);
-    let p8 = p0.addH(w);
-
-    let rg = new Vector(g);
-    let rt = new Vector(t * Math.tan(Math.PI * 3 / 8));
-
-    let tabPath = `M${p0}L${p1}A${rg},0,0,1,${p2}L${p3}A${rt},0,0,1,${p4}L${p5}A${rt},0,0,0,${p6}L${p7}A${rg},0,0,1,${p8}Z`
-
-    let p9 = p8.addV(h - 3 * g);
-    let p10 = p9.add(-g, g);
-
-    let p11 = p10.addH(2 * g - w);
-    let p12 = p11.sub(g);
-
-    let card = `M${p8.addV(-0.1)}L${p9}A${rg},0,0,1,${p10}L${p11}A${rg},0,0,1,${p12}L${p0.addV(-0.1)}Z`
-    let outline = `M${p0}L${p1}A${rg},0,0,1,${p2}L${p3}A${rt},0,0,1,${p4}L${p5}A${rt},0,0,0,${p6}L${p7}A${rg},0,0,1,${p8}L${p9}A${rg},0,0,1,${p10}L${p11}A${rg},0,0,1,${p12}Z`;
-    return  `<path class = "card" d = "${card}" />
-             <path class = "tab" d = "${tabPath}" />
-             <path stroke-width = "${border}" class = "outline" d = "${outline}" />`
-}
-const MAKE_CARD_ICON = {
-    topic: folderCard,
-    "topic-normal": folderCard,
-    "topic-starter": folderCard,
-    "topic-noun": folderCard,
-    "topic-verb": folderCard,
-    "topic-adjective": folderCard,
-    normal: plainCard,
-    starter: plainCard,
-    noun: plainCard,
-    verb: plainCard,
-    adjective: plainCard,
-    action: plainCard,
-}
-
-
-/** A GridIconSymbol represents the image from a grid icon. */
-export class GridIconSymbol extends SvgPlus{
-    constructor(symbol, useBackgroundImg = false){
-        super("div");
-        this.class = "symbol";
-
-        this.isLoaded = false;
-        if (typeof symbol == "object" && symbol !== null && "url" in symbol && typeof symbol.url === "string") {
-            // Create image and add load event.
-            if (useBackgroundImg) {
-                this.createChild("div", {
-                    class: "bg-img",
-                    style: {
-                        "background-image": `url(${symbol.url})`
-                    }
-                });
-                this.isLoaded = true;
-            } else {
-                this.isLoaded = true;
-                this.createChild("img", {
-                    events: {
-                        load: () => this.dispatchEvent(new Event("load")),
-                        error: () => this.dispatchEvent(new Event("load")),
-                    },
-                    src: symbol.url
-                });
-            }
-        } else if (typeof symbol === "string") {
-            this.createChild(Icon, {}, symbol)
-        } else {
-            this.isLoaded = true;
-        }
-    }
-}
-
 /** A GridIcon represents an item from a topic. */
-class GridIcon extends AccessButton {
+class AACGridIcon extends GridIcon {
     constructor(item, [row, col]){
-        super("grid-row-"+row);
+        super(item, "grid-row-"+row);
         this.order = col;
-
-        // Set class to type
-        this.class = "grid-icon " + item.type;
-        this.type = item.type;
-        this.item = item;
-
-        // Get utterance url
         this.getUtterance(item);
-        
-        // Toggle attribute 'i-hidden' if icon is hidden.
-        this.toggleAttribute("i-hidden", item.hidden);
-
-        // Enable draggability
-        this.setAttribute("draggable", true)
-
-
-        // Create card background svg, and icon content box.
-        this.cardIcon = this.createChild("svg", {class: "card-icon"});
-        this.content = this.createChild("div", {class: "content"});
-
-        // Add symbol to content box.
-        this.symbol = this.content.createChild(GridIconSymbol, {
-            events: {load: () => {
-                this.loaded = true;
-                if (this.onload instanceof Function) this.onload();
-                this.dispatchEvent(new Event("load"));
-            }}
-        }, item.symbol);
-        this.loaded = this.symbol.isLoaded;
-
-        // Add text box with display value to content box.
-        this.content.createChild("div", {content: item.displayValue || "", class: "display-value"});
-
-        // Set up resize observer to re render the card when the size of the 
-        // grid icon changes.
-        let rs = new ResizeObserver(() => this.onresize())
-        rs.observe(this);
     }
-
     async getUtterance(item) {
         this.utteranceProm = Topics.getUtterance(item);
         this.utteranceURL = await this.utteranceProm;
     }
 
-    /** Can be used to wait for the grid symbol image to load.
-     *  @return {Promise<void>}
-     * */ 
     async waitForLoad(){
-        let proms = [this.utteranceProm]
-        if (!this.loaded) proms.push(new Promise((r) => this.onload = () => r()));
-        await Promise.all(proms);
-        
+        await Promise.all([this.utteranceProm, super.waitForLoad()]);
     }
-
-    // Called when the size of the icon changes.
-    onresize(){
-        // If element is on the DOM
-        if (this.parentElement) {
-            // Get the size from the bounding client rect of the icon.
-            let size = this.bbox[1]; 
-            
-            // If there are no zero values in size dimension.
-            if (size.x > 1e-10 && size.y > 1e-10 && this.type in MAKE_CARD_ICON) {
-                this.cardIcon.props = {
-                    viewBox: `0 0 ${size.x} ${size.y}`,      // Update the svg viewBox.
-                    content: MAKE_CARD_ICON[this.type](size) // Recompute the svg content.
-                }
-            }
-        }
-    }
-}
-
-/** Rotates between two elements */
-class Rotater extends SvgPlus {
-    angle = 0;
-    contentSets = [];
-    constructor(){
-        super("div");
-        this.class = "rotater";
-        let rel = this.createChild("div")
-        this.slot1 = rel.createChild("div", {class: "slot-1"});
-        this.slot2 = rel.createChild("div", {class: "slot-2"});
-        this.transitionTime = 0.8;
-
-    }
-
-    /** Set the content of the rotater
-     * @param {Element} content
-     * @param {boolean} immediate whether to use rotation transition or immediate.
-     * @returns {Promise<void>}
-     */
-    async setContent(content, immediate = false) {
-        // If a current set is in progress add the set request to a buffer.
-        if (this._settingContent) {
-            this.contentSets.push([content, immediate]);
-        
-        // Otherwise set the content
-        } else {
-            this._settingContent = true;
-            let element = immediate ? this.shownSlot : this.hiddenSlot;
-            
-            element.innerHTML = "";
-            if (content instanceof Element) {
-                element.appendChild(content);
-            }
-    
-            if (!immediate) {
-                await this.flip();
-            }
-            this._settingContent = false;
-            if (this.contentSets.length > 0) {
-                this.setContent(...this.contentSets.pop());
-                this.contentSets = [];
-            }
-        }
-    }
-
-    
-    set transitionTime(time){
-        this._transitionTime = time;
-        this.styles = {"--transition-time": time + "s"}
-    }
-    get transitionTime(){ return this._transitionTime; }
-    
-    get shownSlot(){ return this.flipped > 0.5 ? this.slot1 : this.slot2; }
-    get hiddenSlot(){ return this.flipped > 0.5 ? this.slot2 : this.slot1; }
-
-
-    /** Filps the rotater
-     * @return {Promise<void>}
-     */
-    async flip(){
-        this.flipping = true;
-        this.angle =  this.angle + 180;
-        this.styles = {
-            "--angle": this.angle + "deg"
-        }
-        let flipped = !this.flipped;
-        this.toggleAttribute("flip", flipped);
-        this._flipped = flipped;
-        await new Promise((r) => {setTimeout(r, this.transitionTime * 1000)});
-        this.flipping = false;
-    }
-
-
-    get flipped(){return this._flipped;}
 }
 
 /** Represents a space in a grid. */
 class GridSpace extends SvgPlus {
-    /** @type {?GridIcon} */
+    /** @type {?AACGridIcon} */
     icon = null;
     constructor(row, col){
         super("grid-space");
@@ -325,7 +83,7 @@ class GridSpace extends SvgPlus {
      */
     set value(item) {
         this.innerHTML = "";
-        this.icon = this.createChild(GridIcon, {events: {
+        this.icon = this.createChild(AACGridIcon, {events: {
             /** @param {AccessClickEvent} e */
             "access-click": (e) => {
                 if (this.onAccessClick instanceof Function) this.onAccessClick(e);
@@ -338,7 +96,7 @@ class GridSpace extends SvgPlus {
      * @returns {Promise<void>}
      */
     async waitForLoad(){
-        if (SvgPlus.is(this.icon, GridIcon)) {
+        if (SvgPlus.is(this.icon, AACGridIcon)) {
             await this.icon.waitForLoad();
         }
     }
@@ -488,7 +246,7 @@ class AACOutput extends SvgPlus {
         this.main = this.createChild("div", {class: "content"});
         this.textLine = this.main.createChild("div", {class: "text-line"})
         // Set up resize observer.
-        let rs = new ResizeObserver(() => this.onresize())
+        let rs = new ResizeObserver(this.onresize.bind(this));
         rs.observe(this);
     }
 
@@ -548,11 +306,11 @@ class AACOutput extends SvgPlus {
         this.dispatchEvent(new Event("change"))
     }
 
-    onresize(){
-        let size = this.bbox[1];
+    onresize(e){
+        let bbox = e[0]?.contentRect;
         this.styles = {
-            "--width": size.x + "px",
-            "--height": size.y + "px",
+            "--width": bbox.width + "px",
+            "--height": bbox.height + "px",
         }
     }
 
@@ -772,7 +530,7 @@ class AACGridBoard extends OccupiableWindow {
     }
     
     static get fixToolBarWhenOpen() {return true}
-    static get usedStyleSheets() {return [relURL("grid.css", import.meta)]}
+    static get usedStyleSheets() {return [relURL("grid.css", import.meta), GridIcon.styleSheet, Rotater.styleSheet]}
 }
 
 export class AACGrid extends Features {

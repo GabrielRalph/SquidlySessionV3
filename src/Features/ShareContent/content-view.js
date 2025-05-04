@@ -6,6 +6,7 @@ import { OccupiableWindow } from "../features-interface.js";
 import { AccessButton, AccessClickEvent, AccessEvent } from "../../Utilities/access-buttons.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
 import { HideShow } from "../../Utilities/hide-show.js";
+import { GridIcon } from "../../Utilities/grid-icon.js";
 
 /**
  * @typedef {Object} ContentInfo
@@ -284,11 +285,9 @@ class ContentFrame extends SvgPlus {
 
 }
 
-class ToolIcon extends AccessButton {
-  constructor(name, text) {
-    super("share-tools");
-    this.icon = this.createChild(Icon, {}, name);
-    this.text = this.createChild("div", {content: text})
+class ToolIcon extends GridIcon {
+  constructor(name, text, type = "action") {
+    super({displayValue: text, symbol: name, type, hidden: false}, "share-tools");
   }
 }
 
@@ -382,11 +381,11 @@ export class ContentViewer extends OccupiableWindow {
         "access-click": () => {
           open = !open;
           iconsList.toggleAttribute("open", open);
-          openIcon.text.innerHTML = open ? "hide" : "show"
-          openIcon.icon.name = open ? "minus" : "add"
+          openIcon.displayValue = open ? "hide" : "show"
+          openIcon.symbol = open ? "minus" : "add"
         }
       }
-    }, "add", "show");
+    }, "add", "show", "topic-action");
 
 
     // let r1 = iconsList.createChild("div", {class: "row"})
@@ -604,7 +603,7 @@ export class ContentViewer extends OccupiableWindow {
   }
 
   static get usedStyleSheets() {
-    return [relURL("./styles.css", import.meta)]
+    return [relURL("./styles.css", import.meta), GridIcon.styleSheet]
   }
 
   static get fixToolBarWhenOpen() {return true}

@@ -1,0 +1,453 @@
+{
+    "home": [
+        [
+            {
+                "displayValue": "Host",
+                "hidden": false,
+                "symbol": {
+                    "id": "1FTPH7FB50pQum1JgL1O",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2F1FTPH7FB50pQum1JgL1O?alt=media&token=3fc66772-4ee3-4271-9f3f-1936e659fd52"
+                },
+                "link": "host",
+                "type": "topic-normal",
+                "utterance": ""
+            },
+            {
+                "displayValue": "Participant",
+                "hidden": false,
+                "symbol": {
+                    "id": "IW2GZlGNbiZUV7eUSKeU",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FIW2GZlGNbiZUV7eUSKeU?alt=media&token=928b72a6-d96b-4f38-9701-e4be6c14d4a3"
+                },
+                "topicUID": "-ON3bODSEHAZbLGbjs7t",
+                "type": "topic-adjective",
+                "utterance": ""
+            }
+        ]
+    ],
+    "host": [
+        [
+            {
+                "displayValue": "Speaker",
+                "hidden": false,
+                "symbol": {
+                    "id": "S6n76FD9JZZ6LRiHEHCG",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FS6n76FD9JZZ6LRiHEHCG?alt=media&token=7262d8e8-4ca0-46cf-87ea-e207a95640bb"
+                },
+                "link": "speaker",
+                "type": "topic-verb",
+                "utterance": ""
+            },
+            {
+                "displayValue": "Display",
+                "hidden": false,
+                "symbol": {
+                    "id": "R7OmZUkFaS6HAEmZIn1D",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FR7OmZUkFaS6HAEmZIn1D?alt=media&token=55699b68-7e6b-4cc4-b5c4-d2266ebe1c48"
+                },
+                "topicUID": "-ON418XEqtLXJ6HEI6pT",
+                "type": "topic-starter",
+                "utterance": ""
+            },
+            {
+                "displayValue": "Live Caption",
+                "hidden": false,
+                "symbol": {
+                    "id": "v6k5CatCQB6lY2xV8UUL",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2Fv6k5CatCQB6lY2xV8UUL?alt=media&token=78ac63b6-9d46-42bd-88d9-6cbf4d90e790"
+                },
+                "topicUID": "-ON4110YgqrAO4jiD0sF",
+                "type": "topic-adjective",
+                "utterance": ""
+            }
+        ],
+        [
+            {
+                "displayValue": "Microphone",
+                "hidden": false,
+                "symbol": {
+                    "id": "vmc1NZQT1vRNEFHSKCb7",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2Fvmc1NZQT1vRNEFHSKCb7?alt=media&token=8827dbad-f13d-4107-9e2a-60b240e4bd62"
+                },
+                "link": "microphone",
+                "type": "topic-verb",
+                "utterance": ""
+            },
+            {
+                "displayValue": "Access",
+                "hidden": false,
+                "symbol": {
+                    "id": "VKtlw1GP6XQq0518M3C1",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FVKtlw1GP6XQq0518M3C1?alt=media&token=1d403d43-ee1b-429f-8292-8aa8b9460be6"
+                },
+                "link": "access",
+                "type": "topic-starter",
+                "utterance": ""
+            },
+            {
+                "displayValue": "Keyboard Shortcuts",
+                "hidden": false,
+                "symbol": {
+                    "id": "xfbtFKIK6Q7PjWyrDxC6",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FxfbtFKIK6Q7PjWyrDxC6?alt=media&token=de09f530-36af-4d79-a7d2-1d2bd3abcdba"
+                },
+                "link": "keyboardShortcuts",
+                "type": "topic-adjective",
+                "utterance": ""
+            }
+        ],
+        [
+            {
+                "displayValue": "Video",
+                "hidden": false,
+                "symbol": {
+                    "id": "ZmIjtFzfer6renT0IP64",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FZmIjtFzfer6renT0IP64?alt=media&token=18a4f60f-1908-4b4f-8855-7732b612bb39"
+                },
+                "link": "video",
+                "type": "topic-verb",
+                "utterance": ""
+            },
+            {
+                "displayValue": "Calibration",
+                "hidden": false,
+                "symbol": {
+                    "id": "vFWZT7iOGfm7aQkONjT7",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FvFWZT7iOGfm7aQkONjT7?alt=media&token=9c011d4c-fce7-4018-a7c9-8e19747a0555"
+                },
+                "link": "calibration",
+                "type": "topic-starter",
+                "utterance": ""
+            },
+            {
+                "displayValue": "Volume",
+                "hidden": false,
+                "symbol": {
+                    "id": "p0BdckgPIuetCH2g0G9o",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2Fp0BdckgPIuetCH2g0G9o?alt=media&token=4643da17-53d1-44ed-8bc4-ce871968fe4a"
+                },
+                "link": "volume",
+                "type": "topic-adjective",
+                "utterance": ""
+            }
+        ]
+    ],
+    "access": [
+        [
+            {
+                "displayValue": "Longer hold",
+                "hidden": false,
+                "symbol": "add",
+                "type": "verb",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "switchTime",
+                "direction": 1
+            },
+            {
+                "displayValue": "Longer dwell",
+                "hidden": false,
+                "symbol": "add",
+                "type": "verb",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "dwellTime",
+                "direction": 1
+            },
+            {
+                "displayValue": "Next Voice",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "voice",
+                "direction": 1
+            }
+        ],
+        [
+            {
+                "hidden": false,
+                "setting": "switchTime",
+                "type": "normal"
+            },
+            {
+                "setting": "dwellTime",
+                "hidden": false,
+                "type": "normal"
+            },
+            {
+                "setting": "voice",
+                "hidden": false,
+                "type": "normal"
+            }
+        ],
+        [
+            {
+                "displayValue": "Shorter hold",
+                "hidden": false,
+                "symbol": "minus",
+                "type": "verb",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "switchTime",
+                "direction": -1
+            },
+            {
+                "displayValue": "Faster dwell",
+                "hidden": false,
+                "symbol": "minus",
+                "type": "verb",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "dwellTime",
+                "direction": -1
+            },
+            {
+                "displayValue": "Previous Voice",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "voice",
+                "direction": -1
+            }
+        ]
+    ],
+    "calibration": [
+        [
+            {
+                "displayValue": "Next calibration size",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "size",
+                "direction": 1
+            },
+            {
+                "displayValue": "Next calibration speed",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "speed",
+                "direction": 1
+            },
+            {
+                "displayValue": "Next Guide",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "guide",
+                "direction": 1
+            }
+        ],
+        [
+            {
+                "setting": "size",
+                "hidden": false,
+                "type": "normal"
+            },
+            {
+                "setting": "speed",
+                "hidden": false,
+                "type": "normal"
+            },
+            {
+                "setting": "guide",
+                "hidden": false,
+                "type": "normal"
+            }
+        ],
+        [
+            {
+                "displayValue": "Previous calibration size",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "size",
+                "direction": -1
+            },
+            {
+                "displayValue": "Previous calibration speed",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "speed",
+                "direction": -1
+            },
+            {
+                "displayValue": "Previous guide",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "guide",
+                "direction": -1
+            }
+        ]
+    ],
+    "volume": [
+        [
+            {
+                "displayValue": "Shout",
+                "hidden": false,
+                "symbol": {
+                    "id": "RmurwOlvGv65AyCujc1p",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FRmurwOlvGv65AyCujc1p?alt=media&token=b902c80c-b8a5-41a0-992f-141d0b3f1362"
+                },
+                "type": "noun",
+                "utterance": "",
+                "settingKey": "level",
+                "action": "set-setting",
+                "value": 100
+            },
+            {
+                "displayValue": "Volume up",
+                "hidden": false,
+                "symbol": {
+                    "id": "fPPYamUF4TTfnqtrI6j6",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FfPPYamUF4TTfnqtrI6j6?alt=media&token=3a38dae1-9833-4273-8a63-daf46dbb0f2f"
+                },
+                "type": "starter",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "level",
+                "direction": 1
+            },
+            {
+                "hidden": true
+            }
+        ],
+        [
+            {
+                "displayValue": "Talk",
+                "hidden": false,
+                "symbol": {
+                    "id": "LiD6EMoMhGqoyGtXR3N2",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FLiD6EMoMhGqoyGtXR3N2?alt=media&token=85aa4ad3-792c-4655-8e67-658aa44a9127"
+                },
+                "type": "noun",
+                "utterance": "",
+                "settingKey": "level",
+                "action": "set-setting",
+                "value": 70
+            },
+            {
+                "hidden": false,
+                "setting": "level",
+                "type": "normal"
+            },
+            {
+                "hidden": true
+            }
+        ],
+        [
+            {
+                "displayValue": "Whisper",
+                "hidden": false,
+                "symbol": {
+                    "id": "iDt5nnAa2JoeueIve3Tw",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FiDt5nnAa2JoeueIve3Tw?alt=media&token=060d0d90-eb29-4b37-8031-83e0c2ffddd3"
+                },
+                "type": "noun",
+                "utterance": "",
+                "settingKey": "level",
+                "action": "set-setting",
+                "value": 20
+            },
+            {
+                "displayValue": "Volume down",
+                "hidden": false,
+                "symbol": {
+                    "id": "omgyQ8wr7IYhcIpl1jf4",
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FomgyQ8wr7IYhcIpl1jf4?alt=media&token=4e248d43-38fe-47e5-84aa-ef69f54db186"
+                },
+                "type": "verb",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "level",
+                "direction": -1
+            },
+            {
+                "hidden": true
+            }
+        ]
+    ],
+    "keyboardShortcuts": [
+        [{
+            "displayValue": "Start/Stop Video",
+            "hidden": false,
+            "type": "adjective",
+            "setting": "video-v",
+            "action": "toggle-setting"
+        },
+        {
+            "displayValue": "Start/Stop Eye Gaze",
+            "hidden": false,
+            "type": "adjective",
+            "setting": "eyeGaze-e",
+            "action": "toggle-setting"
+        },
+        {
+            "displayValue": "Open/Close AAC Grid",
+            "hidden": false,
+            "type": "adjective",
+            "setting": "grid-g",
+            "action": "toggle-setting"
+        }],
+        [{
+            "displayValue": "Mute/Unmute Audio",
+            "hidden": false,
+            "type": "adjective",
+            "setting": "audio-a",
+            "action": "toggle-setting"
+        },
+        {
+            "displayValue": "Start/Stop Switch Access",
+            "hidden": false,
+            "type": "adjective",
+            "setting": "switch-x",
+            "action": "toggle-setting"
+        },
+        {
+            "displayValue": "Open/Close Quiz",
+            "hidden": false,
+            "type": "adjective",
+            "setting": "quiz-q",
+            "action": "toggle-setting"
+        }],
+        [{
+            "displayValue": "Start/Stop Screen Sharing",
+            "hidden": false,
+            "type": "adjective",
+            "setting": "screen-f",
+            "action": "toggle-setting"
+        },
+        {
+            "displayValue": "Show/Hide Calibration",
+            "hidden": false,
+            "type": "adjective",
+            "setting": "calibration-c",
+            "action": "toggle-setting"
+        },
+        {
+            "displayValue": "Open/Close Settings",
+            "hidden": false,
+            "type": "adjective",
+            "setting": "settings-s",
+            "action": "toggle-setting"
+        }]
+    ]
+}

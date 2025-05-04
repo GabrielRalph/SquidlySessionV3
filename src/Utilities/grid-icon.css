@@ -1,0 +1,182 @@
+[shadow] {
+    --folder-color: #ffddad;
+    --folder-tab-color: #d69b48;
+    --word-color: #a7d2ff;
+    --word-color-dark: #5a9ce2;
+    --word-starter-color: #aeef93;
+    --word-starter-color-dark: #80e157;
+    --action-color: var(--action-red);
+    --word-noun: #d6c6ff;
+    --word-noun-dark: #8d6fd7;
+    --word-adjective-dark: #f0cf56;
+    --word-adjective: #ffe792;
+    --word-verb-dark: #e36c7a;
+    --word-verb: #ff9ca7;
+    --border: 4px;
+}
+
+.grid-icon {
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+    user-drag: none;
+	-webkit-user-drag: none;
+	-moz-user-select: none;
+
+    --icon-color: rgb(41, 40, 40);
+    --icon-color-hover: black;
+    --tab-color: var(--word-color-dark);
+    --card-color: var(--word-color);
+}
+
+.grid-icon.action {
+    --icon-color: rgb(237, 234, 234);
+    --icon-color-hover: white;
+    --card-color: var(--action-color);
+    --tab-color: var(--action-red-dark);
+    color: white;
+}
+.grid-icon.topic-action {
+    --card-color: var(--action-color);
+    --tab-color: var(--action-red-dark);
+    color: white;
+}
+
+.grid-icon.starter, .grid-icon.topic-starter {
+    --card-color: var(--word-starter-color);
+    --tab-color: var(--word-starter-color-dark);
+}
+
+.grid-icon.noun, .grid-icon.topic-noun {
+    --card-color: var(--word-noun);
+    --tab-color: var(--word-noun-dark);
+}
+
+.grid-icon.verb, .grid-icon.topic-verb {
+    --card-color: var(--word-verb);
+    --tab-color: var(--word-verb-dark);
+}
+
+.grid-icon.adjective, .grid-icon.topic-adjective {
+    --card-color: var(--word-adjective);
+    --tab-color: var(--word-adjective-dark);
+}
+
+.grid-icon.topic {
+    --tab-color: var(--folder-tab-color);
+    --card-color: var(--folder-color);
+}
+
+.grid-icon.topic {
+    --tab-color: var(--folder-tab-color);
+    --card-color: var(--folder-color);
+}
+
+.grid-icon[i-hidden] {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.grid-icon .content {
+    position: absolute;
+    --b1: calc(var(--border) / 2);
+    top: var(--b1);
+    left: var(--b1);
+    right: var(--b1);
+    bottom: var(--b1);
+    width: calc(100% - 2 * var(--b1));
+    height: calc(100% - 2 * var(--b1));
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+}
+
+.grid-icon .content .symbol {
+    width: 100%;
+    height: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.symbol .text {
+    font-size: 2em;
+}
+
+.symbol svg {
+    height: 100%;
+    max-width: 100%;
+}
+
+.symbol img {
+    height: 100%;
+    max-width: 100%;
+}
+
+.symbol .bg-img {
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.grid-icon .content .display-value {
+    font-size: 1.2em;
+    font-weight: 300;
+    text-align: center;
+    max-width: 90%;
+    word-wrap: break-word;
+}
+
+.grid-icon .content .subtitle {
+    font-size: 1em;
+    font-weight: 300;
+    text-align: center;
+    word-wrap: break-word;
+
+    max-width: 90%;
+}
+
+.grid-icon .card-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(2px 2px 4px #bfbfbfc5);
+}
+
+.grid-icon .card-icon .outline {
+    fill: none;
+}
+
+.grid-icon .card-icon .card {
+    fill: var(--card-color);
+}
+
+.grid-icon .card-icon .tab {
+    fill: var(--tab-color);
+}
+
+
+.grid-icon[hover] .card-icon .card, 
+.grid-icon[hover] .card-icon .tab, 
+.grid-icon:hover .card-icon .card,
+.grid-icon:hover .card-icon .tab{
+    filter: brightness(0.7) contrast(1.6);
+} 
+
+.grid-icon:hover .icon {
+    --icon-color: var(--icon-color-hover);
+}
+
+.grid-icon[hover] .card-icon .outline {
+    stroke: var(--color-danger);
+}

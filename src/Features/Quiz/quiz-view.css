@@ -294,7 +294,7 @@ quiz-view[locked] .answers access-button[emphasize]::after {
 
 
 access-button[quiz-icon] .title {
-    font-size: 1.5em;
+    font-size: 1.2em;
     font-weight: bold;
 }
 .subtitle {
