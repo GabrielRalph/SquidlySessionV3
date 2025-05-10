@@ -442,6 +442,8 @@ export class ConnectionManager {
         }
         // this.stream.addEventListener("trackchanged", func);
         this.stream.ontrackchanged = func;
+        console.log(this.stream);
+        
     
         this.signaler = signaler;
     
