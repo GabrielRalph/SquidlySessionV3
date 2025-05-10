@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 50 50">
+  <!-- Generator: Adobe Illustrator 29.5.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 137)  -->
+  <g>
+    <path id="cursor-fill" d="M25.5,34l1.9-1,1.6-.8-2.6-4.8h4.3l-11.4-11.4v16l3.3-3.2,2.9,5.2Z"/>
+    <path id="cursor-stroke" d="M25.7,32.6l1.8-1-2.8-5.2h3.6l-8-8v11.2l2.5-2.4,2.9,5.4Z" style="fill: #fff;"/>
+  </g>
+  <line x1="36.42" y1="13.58" x2="13.58" y2="36.42" style="fill: none; stroke: #ff0303; stroke-linecap: round; stroke-miterlimit: 10; stroke-width: 2px;"/>
+</svg>

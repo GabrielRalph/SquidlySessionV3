@@ -72,7 +72,7 @@ export class VideoCall extends Features {
         if (typeof path === "string" && path.length > 0) {
             let dataString = null;
             switch (typeof data) {
-                case "object": dataString = 'J' + JSON.stringify(a); break;
+                case "object": dataString = 'J' + JSON.stringify(data); break;
                 case "number": dataString = 'N' + data; break;
                 case "boolean": dataString = 'B' + (data ? 1 : 0); break;
                 case "string": dataString = 'S' + data; break;

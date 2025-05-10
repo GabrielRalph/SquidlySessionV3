@@ -1,4 +1,34 @@
+import { FirebaseFrame } from "../../Firebase/firebase-frame.js";
+import { get, set } from "../../Firebase/firebase.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
+
+/** @typedef {import("../squidly-session.js").SessionDataFrame} SessionDataFrame */
+
+function makeSideDots(value, options) {
+    let sideDots = new Array(options.options.length).fill(false);
+    sideDots[options.options.indexOf(value)] = true;
+    return sideDots;
+}
+
+function getAllKeys(arr) {
+    let keys = [];
+    let r = (ri = 0, root = "") => { 
+        if (ri >= arr.length)  {
+            keys.push(root);
+        } else {
+            if (Array.isArray(arr[ri])) {
+                for (let key of arr[ri]) {
+                    r(ri + 1, (root ? root + "/" : "") + key);
+                }
+            } else if (typeof arr[ri] === "string") {
+                r(ri + 1, (root ? root + "/" : "") + arr[ri]);
+            }
+        }
+    }
+    r(0, "");
+   
+    return keys;
+}
 
 const MY_VOICES = {
     margaret: true,
@@ -12,12 +42,6 @@ const MY_VOICES = {
     lucy: true,
     holly: true,
     default: true
-}
-
-function makeSideDots(value, options) {
-    let sideDots = new Array(options.options.length).fill(false);
-    sideDots[options.options.indexOf(value)] = true;
-    return sideDots;
 }
 
 const SettingOptions = [
@@ -125,13 +149,126 @@ const SettingOptions = [
             }
         }
     },
+    {
+        key: [["host", "participant"], "display", "layout"],
+        type: "option",
+        default: "v-side",
+        options: ["v-side", "v-top"],
+        toIcon(value) {
+            let upperCase = value == "v-side" ? "Side" : "Top";
+            return {
+                symbol: value,
+                displayValue: upperCase,
+                sideDots: makeSideDots(value, this),
+            }
+        }
+    },
+    {
+        key: [["host", "participant"], "display", "cursorSize"],
+        type: "option",
+        default: "none",
+        options: ["none", "small", "medium", "large"],
+        toIcon(value) {
+            let upperCase = value[0].toUpperCase() + value.slice(1);
+            return {
+                symbol: {
+                    url: relURL("../../Utilities/Cursors/" + value + ".svg", import.meta),
+                },
+                displayValue: upperCase,
+                sideDots: makeSideDots(value, this),
+            }
+        }
+    },
+    {
+        key: [["host", "participant"], "display", "cursorColour"],
+        type: "option",
+        default: "colour-1",
+        options: ["colour-1", "colour-2", "colour-3", "colour-4", "colour-5"],
+        color2name: {
+            "colour-1": "Black/White",
+            "colour-2": "White/Black",
+            "colour-3": "Black/Yellow",
+            "colour-4": "Black/Green",
+            "colour-5": "Blue/Yellow",
+        },
+        toIcon(value) {
+            return {
+                symbol: {
+                    url: relURL("../../Utilities/Cursors/" + value + ".svg", import.meta),
+                },
+                displayValue: this.color2name[value],
+                sideDots: makeSideDots(value, this),
+            }
+        }
+    }
 ]
-const Settings = {
+
+/** @type {Function[]} */
+const settingChangeListeners = [
+]
+ 
+
+
+function onChange(...args) {
+    
+    for (let listener of settingChangeListeners) {  
+        listener(...args);
+    }
 }
 
-const settingChangeListeners = [
+class Setting {
+    /**
+     * @param {Object} options - The options for the setting
+     * @param {string} name - The name of the setting
+     * @param {FirebaseFrame} sdata - The session data frame
+     */
+    constructor(options, name, sdata) {
+        
+        this.options = options;
+        this._value = options.default;
+        this.sdata = sdata;
+        this.path = name;
 
-]
+        sdata.onValue(name, (value) => {
+            
+            if (value === null) {
+                value = options.default;
+                this.sdata.set(name, value);
+            }
+
+            if (value !== this.value) {
+                this._value = value;
+                onChange(name, value);
+            }
+        });
+    }
+
+    get icon(){
+        let icon = {};
+        if (this.options.toIcon) {
+            icon = this.options.toIcon(this.value, this.path);
+        } else {
+            icon = this.value;
+        }
+        return icon;
+    }
+
+    get value() {
+        return this._value;
+    }
+
+    set value(value) {
+        if (this.value !== value) {
+            this._value = value;
+            this.sdata.set(this.path, value);
+            onChange(this.path, value);
+        }
+    }
+}
+
+/** @type {Object<string, Setting>} */
+const Settings = {
+}
 
 function getSetting(name) {
     let setting = null;
@@ -141,47 +278,27 @@ function getSetting(name) {
     return setting;
 }
 
-function getAllKeys(arr) {
-    let keys = [];
-    let r = (ri = 0, root = "") => { 
-        if (ri >= arr.length)  {
-            keys.push(root);
-        } else {
-            if (Array.isArray(arr[ri])) {
-                for (let key of arr[ri]) {
-                    r(ri + 1, (root ? root + "/" : "") + key);
-                }
-            } else if (typeof arr[ri] === "string") {
-                r(ri + 1, (root ? root + "/" : "") + arr[ri]);
-            }
-        }
-    }
-    r(0, "");
-   
-    return keys;
-}
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-function buildSettings() {
+/** Initialises the settings for the session
+ * @param {SessionDataFrame} sdata
+ */
+export function initialise(sdata) {
+    let hostUID = sdata.hostUID;
+    let settingFrame = new FirebaseFrame(`users/${hostUID}/settings`);
     for (let options of SettingOptions) {
         let keys = getAllKeys(options.key);
         for (let key of keys) {
-            Settings[key] = {
-                value: options.default,
-                options,
-            }
+            Settings[key] = new Setting(options, key, settingFrame);
         }
     }
-    
 }
 
-function onChange(...args) {
-    for (let listener of settingChangeListeners) {  
-        listener(...args);
-    }
-}
-
-buildSettings();
-
+/** Returns the setting value for the given name 
+ * @param {string} name - The name of the setting
+ */
 export function getValue(name) {
     let setting = getSetting(name);
     let value = null;
@@ -191,6 +308,9 @@ export function getValue(name) {
     return value;
 }
 
+/** Returns the setting string value for the given name
+ * @param {string} name - The name of the setting
+ */
 export function getStringValue(name) {
     let setting = getSetting(name);
     let value = null;
@@ -204,12 +324,19 @@ export function getStringValue(name) {
    return value;
 }
 
+/** Add a change listener
+ * @param {Function} listener - The function to call when a setting changes
+ */
 export function addChangeListener(listener) {
     if (listener instanceof Function) {
         settingChangeListeners.push(listener);
     }
 }
 
+/** Increments a setting by a given direction
+ * @param {string} name - The name of the setting
+ * @param {number} direction - The direction to increment the setting by
+ */
 export function incrementValue(name, direction) {
     let setting = getSetting(name);
     if (setting) {
@@ -235,9 +362,11 @@ export function incrementValue(name, direction) {
     }
 }
 
+/** Toggles a setting value, if it is a boolean
+ * @param {string} name - The name of the setting
+ */
 export function toggleValue(name) {
     let setting = getSetting(name);
-    console.log("toggleValue", name, setting);
     
     if (setting) {
         let {options, value} = setting;
@@ -251,6 +380,10 @@ export function toggleValue(name) {
     }
 }
 
+/** Sets the value of a setting
+ * @param {string} name - The name of the setting
+ * @param {any} value - The value to set the setting to
+ */
 export function setValue(name, value) {
     let setting = getSetting(name);
     if (setting) {
@@ -269,16 +402,16 @@ export function setValue(name, value) {
     }
 }
 
+/** Returns the icon for the setting with the given name
+ * @param {string} name - The name of the setting
+ * 
+ * @returns {Object} - The icon object
+ */
 export function getIcon(name) {
     let setting = getSetting(name);
     let icon = {};
     if (setting) {
-        
-        if (setting.options.toIcon) {
-            icon = setting.options.toIcon(setting.value, name);
-        } else {
-            icon = setting.value;
-        }
+        icon = setting.icon;
     }
     return icon;
 }

@@ -28,16 +28,13 @@
     --icon-color-hover: black;
     --tab-color: var(--word-color-dark);
     --card-color: var(--word-color);
+
+    cursor: pointer;
 }
 
-.grid-icon.action {
+.grid-icon.action, .grid-icon.topic-action {
     --icon-color: rgb(237, 234, 234);
     --icon-color-hover: white;
-    --card-color: var(--action-color);
-    --tab-color: var(--action-red-dark);
-    color: white;
-}
-.grid-icon.topic-action {
     --card-color: var(--action-color);
     --tab-color: var(--action-red-dark);
     color: white;
@@ -75,6 +72,10 @@
 
 .grid-icon[i-hidden] {
     opacity: 0;
+    pointer-events: none;
+}
+.grid-icon[i-disabled] {
+    opacity: 0.4;
     pointer-events: none;
 }
 
@@ -166,11 +167,10 @@
 }
 
 
-.grid-icon[hover] .card-icon .card, 
-.grid-icon[hover] .card-icon .tab, 
-.grid-icon:hover .card-icon .card,
-.grid-icon:hover .card-icon .tab{
+.grid-icon[hover] .card-icon, 
+.grid-icon:hover .card-icon {
     filter: brightness(0.7) contrast(1.6);
+    -webkit-filter: brightness(0.7) contrast(1.6);;
 } 
 
 .grid-icon:hover .icon {

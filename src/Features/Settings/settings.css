@@ -21,10 +21,10 @@ settings-panel {
     grid-template-columns: repeat(var(--size), calc((100% - 3 * var(--gap)) / var(--size))); 
 }
 
-settings-panel *:first-child {
+settings-panel > *:first-child {
     grid-column: 1;
 }
-settings-panel *:last-child {
+settings-panel > *:last-child {
     grid-column-start: 2;
     grid-column-end: calc(var(--size) + 1);
 }
@@ -47,7 +47,6 @@ icon-grid .grid-icon .card-icon {
     margin: 0.5em;
     height: 1.5em;
     display: none;
-    --icon-color: var(--tab-color);
 }
 .grid-icon .active[show] {
     display: block;

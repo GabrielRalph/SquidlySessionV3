@@ -15,21 +15,20 @@ class SettingsIcon extends GridIcon {
     constructor(icon, type) {
         super(icon, type);
         this.sideDotsElement = this.createChild("div", {class: "side-dots"})
-        this.activeIcon = this.createChild(Icon, {class: "active"}, "radioTick");
+        this.activeIcon = this.createChild(Icon, {class: "icon active"}, "radioTick");
 
         if (Array.isArray(icon.path) && icon.setting) {
-            
             this.setting = icon.path.join("/") + "/" + icon.setting
             console.log(this.setting);
             this.setAttribute("setting", this.setting);
             this.updateDynamicTemplate();
         }
 
+        this.active = !!icon.active;
+
     }
 
     set active(value) {
-        console.log(value);
-        
         this.activeIcon.toggleAttribute("show", value);
     }
 
@@ -133,7 +132,11 @@ class SettingsPanel extends SvgPlus {
 
 class SettingsWindow extends OccupiableWindow {
     history = [];
-    constructor() {
+
+    /**@type {SettingsFeature} */
+    settingsFeature = null;
+
+    constructor(settings) {
         let root = new HideShow("settings-window");
         root.applyIntermediateState = () => {
             root.styles = {
@@ -154,10 +157,10 @@ class SettingsWindow extends OccupiableWindow {
         root.shown = false
         super("settings-window", root);
         
+        this.settingsFeature = settings;
         this.root.events = {
             "settings-click": this.onSettingsClick.bind(this),
         };
-
 
         this.rotater = this.createChild(Rotater);
     }
@@ -178,11 +181,8 @@ class SettingsWindow extends OccupiableWindow {
             Settings.setValue(path, value);
         },
         "toggle-setting": (e) => {
-            console.log(e);
-            
             let {icon} = e;
             let path = icon.path.join("/") + "/" + (icon.settingKey || icon.setting);
-            
             Settings.toggleValue(path);
         }
     }
@@ -190,19 +190,16 @@ class SettingsWindow extends OccupiableWindow {
         "video": () => this.make_devices("videoinput"),
         "microphone": () => this.make_devices("audioinput"),
         "speaker": () => this.make_devices("audiooutput"),
-        "access": () => this.make_sliders([
-            ["longer dwell", "shorter dwell"],
-            ["longer switch", "shorter switch"],
-            ["next voice", "last voice"],
-        ]),
     }
 
     async make_devices(type){
-        let devices = await getTrackSelection(type);
+        let user = this.history[1];
+
+        let devices = await this.settingsFeature.getDevices(type, user);
+
         let n = devices.length;
         n = n > 16 ? 16 : n;
 
-        
         let gsize = n <= 9 ? 3 : 4;
 
         let grid = new Array(gsize).fill(0).map(() => new Array(gsize).fill(0).map(() => ({hidden: true})));
@@ -211,50 +208,19 @@ class SettingsWindow extends OccupiableWindow {
             for (let j = 0; j < gsize; j++) {
                 let index = i * gsize + j;
                 if (index < n) {
+                    const {active, label, deviceId} = devices[index];
                     grid[i][j] = {
                         type: "normal",
-                        displayValue: devices[index].label,
-                        // symbol: devices[index].label,
+                        displayValue: label,
                         action: "device",
-                        device: devices[index],
-                        active: devices[index].active,
+                        device: deviceId,
+                        active: active,
                     }
                 }
             }
         }
-
+        
         return grid;
-    }
-
-    make_sliders(names){
-        let up = [];
-        let values = [];
-        let down = [];
-        for (let [nameUp, nameDown] of names) {
-            up.push({
-                type: "adjective",
-                displayValue: nameUp,
-                symbol: "upArrow",
-                action: "slider-up",
-            });
-            down.push({
-                type: "adjective",
-                displayValue: nameDown,
-                symbol: "downArrow",
-                action: "slider-down",
-            });
-            values.push({
-                type: "normal",
-                displayValue: 0,
-                symbol: "",
-            });
-        }
-
-        return [
-            up,
-            values,
-            down,
-        ]
     }
 
     async onSettingsClick(e) {
@@ -279,7 +245,11 @@ class SettingsWindow extends OccupiableWindow {
     async gotoLink(link) {
         let grid = null;
         if (link in this.settings) {
-            grid = this.settings[link];
+            let value = this.settings[link];
+            while (typeof value === "string" && value in this.settings) {
+                value = this.settings[value];
+            }
+            grid = value;
         } else if (link in this.dynamicPages) {
             grid = await this.dynamicPages[link]();
         }
@@ -292,7 +262,6 @@ class SettingsWindow extends OccupiableWindow {
     }
 
     async gotoBack() {
-        
         if (this.history.length > 1) {
             this.history.pop();
             let link = this.history.pop();
@@ -336,40 +305,65 @@ class SettingsWindow extends OccupiableWindow {
 export class SettingsFeature extends Features {
     constructor(session, sdata) {
         super(session, sdata);
-        this.settingsWindow = new SettingsWindow();
+        this.settingsWindow = new SettingsWindow(this);
 
         this.session.toolBar.addSelectionListener("settings", (e) => {
             e.waitFor(this.session.openWindow("settings"))  ;
         });
 
         this.settingsWindow.addEventListener("settings-click", (e) => { 
-            
             if (e?.icon?.action === "exit") {
                 this.session.openWindow("default");
-            } else if (e?.icon?.action in this.settingActions) {
-                this.settingActions[e.icon.action](e);
             }
         })
 
         Settings.addChangeListener((name, value) => {
-            
             this.settingsWindow.updateSettings();
         });
     }
 
-    settingActions = {
-        "increment-setting": (e) => {
-            
+
+    async getDevices(type, user) {
+        if (user === this.sdata.me) {
+            return await getTrackSelection(type);
+        } else {
+            return new Promise((resolve) => {
+                this.resolvePromise = resolve;
+                this.session.videoCall.sendData("request-devices", type);
+                setTimeout(() => {
+                    if (this.resolvePromise instanceof Function) {
+                        this.resolvePromise([]);
+                        this.resolvePromise = null;
+                    }
+                }, 1000);
+            });
         }
     }
 
 
-    
-   
-
     async initialise() {
+        Settings.initialise(this.sdata);
         await SettingsWindow.loadStyleSheets();
         let settings = await (await fetch(relURL("./settings.json", import.meta))).json();
         this.settingsWindow.settings = settings;
+
+        this.session.videoCall.addEventListener("request-devices", async (e) => {
+            let type = e.data;
+            let devices = await this.getDevices(type, this.sdata.me);
+            this.session.videoCall.sendData("response-devices", devices);
+        })
+
+        this.session.videoCall.addEventListener("response-devices", (e) => {
+            let devices = e.data;
+            this._remoteDevices = devices;
+            if (this.resolvePromise instanceof Function) {
+                this.resolvePromise(devices);
+                this.resolvePromise = null;
+            }
+        })
+    }
+
+    static get firebaseName() {
+        return "settings";
     }
 }

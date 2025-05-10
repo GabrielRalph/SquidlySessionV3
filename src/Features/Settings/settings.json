@@ -19,12 +19,13 @@
                     "id": "IW2GZlGNbiZUV7eUSKeU",
                     "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FIW2GZlGNbiZUV7eUSKeU?alt=media&token=928b72a6-d96b-4f38-9701-e4be6c14d4a3"
                 },
-                "topicUID": "-ON3bODSEHAZbLGbjs7t",
+                "link": "participant",
                 "type": "topic-adjective",
                 "utterance": ""
             }
         ]
     ],
+    "participant": "host",
     "host": [
         [
             {
@@ -45,12 +46,14 @@
                     "id": "R7OmZUkFaS6HAEmZIn1D",
                     "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FR7OmZUkFaS6HAEmZIn1D?alt=media&token=55699b68-7e6b-4cc4-b5c4-d2266ebe1c48"
                 },
-                "topicUID": "-ON418XEqtLXJ6HEI6pT",
+                "link": "display",
                 "type": "topic-starter",
                 "utterance": ""
             },
             {
                 "displayValue": "Live Caption",
+                "subtitle": "Coming soon",
+                "disabled": true,
                 "hidden": false,
                 "symbol": {
                     "id": "v6k5CatCQB6lY2xV8UUL",
@@ -384,6 +387,83 @@
                 "hidden": true
             }
         ]
+    ],
+    "display": [
+        [{
+          "displayValue": "Next layout",
+          "hidden": false,
+          "symbol": "upArrow",
+          "type": "adjective",
+          "utterance": "",
+          "action": "increment-setting",
+          "settingKey": "layout",
+          "direction": 1
+        },
+        {
+            "displayValue": "Smaller cursor",
+            "hidden": false,
+            "symbol": "add",
+            "type": "verb",
+            "utterance": "",
+            "action": "increment-setting",  
+            "settingKey": "cursorSize",
+            "direction": 1
+        },
+        {
+          "displayValue": "Next cursor colour",
+          "hidden": false,
+          "symbol": "upArrow",
+          "type": "adjective",
+          "utterance": "",
+          "action": "increment-setting",
+          "settingKey": "cursorColour",
+          "direction": 1
+        }],
+       [ {
+            "hidden": false,
+            "setting": "layout",
+            "type": "normal"
+        },
+        {
+            "hidden": false,
+            "setting": "cursorSize",
+            "type": "normal"
+        },
+        {
+          "hidden": false,
+          "setting": "cursorColour",
+          "type": "normal"
+        }],
+       [ {
+          "displayValue": "Previous layout",
+          "hidden": false,
+          "symbol": "downArrow",
+          "type": "adjective",
+          "utterance": "",
+          "action": "increment-setting",
+          "settingKey": "layout",
+          "direction": -1
+        },
+        {
+          "displayValue": "Larger cursor",
+          "hidden": false,
+          "symbol": "minus",
+          "type": "starter",
+          "utterance": "",
+            "action": "increment-setting",
+            "settingKey": "cursorSize",
+            "direction": -1
+        },
+        {
+          "displayValue": "Previous cursor colour",
+          "hidden": false,
+          "symbol": "downArrow",
+          "type": "adjective",
+          "utterance": "",
+            "action": "increment-setting",
+            "settingKey": "cursorColour",
+            "direction": -1
+        }]
     ],
     "keyboardShortcuts": [
         [{

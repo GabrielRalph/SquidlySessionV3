@@ -174,6 +174,19 @@ export class GridIcon extends AccessButton {
             let rs = new ResizeObserver(this.onresize.bind(this));
             rs.observe(this);
         }
+
+        this.disabled = item.disabled || false;
+    }
+
+    /** @param {boolean} disabled */
+    set disabled(disabled) {
+        this.toggleAttribute("i-disabled", disabled);
+        this._disabled = disabled;
+    }
+
+    /** @return {boolean} */
+    get disabled() {
+        return this._disabled;
     }
 
     /** @param {IconSymbol} symbol*/

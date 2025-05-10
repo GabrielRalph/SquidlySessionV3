@@ -402,7 +402,7 @@ export class EyeGazeFeature extends Features {
     async initialise(){
         await Promise.all([load(), FeedbackWindow.loadStyleSheets()])
         if (!await startWebcam()) {
-            console.log("fail");
+            console.log("LOOOOOOG");
             
             throw new Error("Please allow webcam access")
         }

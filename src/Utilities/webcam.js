@@ -3,6 +3,9 @@ const camParams2 = {
       width: { min: 320, ideal: 640, max: 1920 },
       height: { min: 240, ideal: 480, max: 1080 },
       facingMode: "user",
+      deviceId: {
+        exact: "abc",
+      },
     },
     audio: {
       noiseSuppression: true,
@@ -10,38 +13,52 @@ const camParams2 = {
       autoGainControl: true,
       sampleRate: 48000,
       channelCount: 1,
+      deviceId: {
+        exact: "abc",
+      },
     },
 };
+
 const camParams1 = {
   video: {
     width: { min: 320, ideal: 640, max: 1920 },
     height: { min: 240, ideal: 480, max: 1080 },
     facingMode: "user",
+    deviceId: {
+      exact: "abc",
+    },
   },
   audio: false,
 };
   
-  let Canvas = document.createElement("canvas");
-  let Ctx = Canvas.getContext("2d", {willReadFrequently: true});
-  let Video = document.createElement("video");
-  Video.style.setProperty("opacity", "0");
-  document.body.prepend(Video);
-  let Stream = null;
-  let Stream2 = null;
-  let webcam_on = false;
-  var stopCapture = false;
-  let capturing = false;
+const selectedDevices = {
+  audioinput: null,
+  videoinput: null,
+  audiooutput: null,
+}
+
+
+let Canvas = document.createElement("canvas");
+let Ctx = Canvas.getContext("2d", {willReadFrequently: true});
+let Video = document.createElement("video");
+Video.style.setProperty("opacity", "0");
+document.body.prepend(Video);
+let Stream = null;
+let Stream2 = null;
+let webcam_on = false;
+var stopCapture = false;
+let capturing = false;
+
+let ProcessRunning = {};
+let Process = {};
+let processListeners = {};
   
-  let ProcessRunning = {};
-  let Process = {};
-  let processListeners = {};
-  
-  Video.setAttribute("autoplay", "true");
-  Video.setAttribute("playsinline", "true");
-  Video.muted = true;
-  Video.onunmute = () => {
-    console.log('xx');
-  }
+Video.setAttribute("autoplay", "true");
+Video.setAttribute("playsinline", "true");
+Video.muted = true;
+Video.onunmute = () => {
+  console.log('xx');
+}
   
   // ~~~~~~~~ HELPFULL METHODS ~~~~~~~~
   async function parallel() {
@@ -210,6 +227,54 @@ const camParams1 = {
     Filter.frequency.setValueAtTime(mid, AudioContext.currentTime); 
     Filter.Q.setValueAtTime(q, AudioContext.currentTime); 
   }
+
+
+  async function selectDeviceIds(){
+    let devices = await getDevices();
+
+    let deviceById = {
+      audioinput: {},
+      videoinput: {},
+      audiooutput: {},
+    }
+    for (let kind in devices) {
+      for (let groupId in devices[kind]) {
+        if (kind in deviceById) {
+          let device = devices[kind][groupId];
+          deviceById[kind][device.deviceId] = device;
+        }
+      }
+    }
+
+    if (! (camParams1.video.deviceId.exact in deviceById.videoinput)) {
+      let cams =  Object.values(deviceById.videoinput || {});
+      let cam = cams.filter(c => c.isDefault);
+      cam = cam.length > 0 ? cam[0] : cams[0];
+      camParams1.video.deviceId.exact = cam.deviceId;
+      camParams2.video.deviceId.exact = cam.deviceId;
+      selectedDevices.videoinput = cam.deviceId;
+    }
+
+    if (! (camParams2.audio.deviceId.exact in deviceById.audioinput)) {
+      let mics =  Object.values(deviceById.audioinput || {});
+      let mic = mics.filter(m => m.isDefault);
+      mic = mic.length > 0 ? mic[0] : mics[0];
+      camParams2.audio.deviceId.exact = mic.deviceId;
+      selectedDevices.audioinput = mic.deviceId;
+    }
+
+    if (! (selectedDevices.audiooutput)) {
+      let speakers =  Object.values(deviceById.audiooutput || {});
+      let speakerID = null;
+      if (speakers.length > 0) {
+        let speaker = speakers.filter(s => s.isDefault);
+        speaker = speaker.length > 0 ? speaker[0] : speakers[0];
+        speakerID = speaker.deviceId;
+      }
+      selectedDevices.audiooutput = speakerID
+    }
+  }
+
   
   // ~~~~~~~~ PUBLIC METHODS ~~~~~~~~
   
@@ -229,6 +294,7 @@ const camParams1 = {
     try {
       setUserMediaVariable();
       // Get the users video media stream
+      await selectDeviceIds();
       let stream = await navigator.mediaDevices.getUserMedia( params );
       let stream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
       stream2 = createAudioFilteredStream(stream2);
@@ -268,7 +334,6 @@ const camParams1 = {
     stopProcessingAll();
     webcam_on = false;
   }
-  
   
   export function startProcessing(name = "default") {
     if (name in ProcessRunning) {
@@ -312,73 +377,69 @@ const camParams1 = {
     }
   }
   
-  export async function setStream(stream) {
-    Stream = stream;
-    Video.srcObject = stream;
-    return new Promise((resolve, reject) => {
-      let onload = () => {
-        webcam_on = true;
-        Video.removeEventListener("loadeddata", onload);
-        resolve(true)
-      };
-      Video.addEventListener("loadeddata", onload);
-    });
-  }
+  // export async function setStream(stream) {
+  //   Stream = stream;
+  //   Video.srcObject = stream;
+  //   return new Promise((resolve, reject) => {
+  //     let onload = () => {
+  //       webcam_on = true;
+  //       Video.removeEventListener("loadeddata", onload);
+  //       resolve(true)
+  //     };
+  //     Video.addEventListener("loadeddata", onload);
+  //   });
+  // }
   
-  const selectedDevices = {
-    1: {
-      audioinput: "default",
-      videoinput: "default",
-    },
-    2: {
-      audioinput: "default",
-      videoinput: "default",
-    }
-  }
-  export async function getTrackSelection(type, streamId = 2) {
-    let stream = streamId == 2 ? Stream2 : Stream;
-
+  export async function getDevices() {
     let devices = [...await navigator.mediaDevices.enumerateDevices()];
-    devices = devices.filter(device => device.kind === type);
-    let tracks = stream.getTracks(); 
     
+    let deviceByKind = {};
     devices.forEach(device => {
+      const {kind, deviceId, groupId, label} = device;
+      if (!(kind in deviceByKind)) {
+        deviceByKind[kind] = {};
+      } 
 
-      let track = tracks.find(t => t.getSettings().deviceId === device.deviceId) || selectedDevices[streamId][device.kind] === device.deviceId;
-      device.active = !!track;
-    });
+      let id = groupId == "" ? deviceId : groupId;
 
-    let devicesByGID = {};
-    for (let device of devices) {
-      if (!(device.groupId in devicesByGID)) {
-        let {
+      if (!(id in deviceByKind[kind])) {
+        let isDefault = deviceId === "default";
+        deviceByKind[kind][id] = {
           deviceId,
           groupId,
           kind,
           label,
-          active
-        } = device;
-        devicesByGID[device.groupId] = {
-          deviceId,
-          groupId,
-          kind,
-          label,
-          active,
-        }
+          active: false,
+          isDefault
+        };
       } else {
-        devicesByGID[device.groupId].active = devicesByGID[device.groupId].active || device.active;
-        let labela = devicesByGID[device.groupId].label;
-        let labelb = device.label;
-        if (labela.length < labelb.length) {
-          devicesByGID[device.groupId].label = labelb;
-        }
-        if (device.deviceId !== "default") {
-          devicesByGID[device.groupId].deviceId = device.deviceId;
-        }
+        let newDeviceID = deviceByKind[kind][id].deviceId;
+        let isDefault = deviceId === "default" || deviceByKind[kind][id].isDefault;
+        newDeviceID = deviceId === "default" ? newDeviceID : deviceId;
+        deviceByKind[kind][id].deviceId = newDeviceID;
+        deviceByKind[kind][id].isDefault = isDefault;
+      }
+    });
+   
+    for (let kind in deviceByKind) {
+      for (let groupId in deviceByKind[kind]) {
+        let device = deviceByKind[kind][groupId];
+        device.active = selectedDevices[kind] && selectedDevices[kind] == device.deviceId;
       }
     }
-    
-    return Object.values(devicesByGID);
+
+    return deviceByKind;
+  }
+
+
+  export async function getTrackSelection(type, streamId = 2) {
+
+    let object = await getDevices();
+    let devices = [];
+    if (type in object) {
+      devices = Object.values(object[type]);
+    }
+    return devices;
   }
 
   

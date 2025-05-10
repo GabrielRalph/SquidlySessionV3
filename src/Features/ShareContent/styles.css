@@ -102,7 +102,7 @@ border-frame {
     bottom: 0;
     display: grid;
     grid-template-columns: repeat(5, calc((100% - 2em) / 5));
-    grid-template-rows: repeat(5, calc((100% - 2em) / 5));
+    grid-template-rows: repeat(4, calc((100% - 2em) / 4));
 
     gap: 0.5em;
     margin: 0.5em;
@@ -146,23 +146,23 @@ access-button {
     pointer-events: all;
 }
 access-button[name="back"], access-button[name="next"], access-button[name="exit"], access-button[name="reset"] {
-    grid-column: 5;
+    grid-column: 1;
 }
 
 access-button[name="up"] {
-    grid-row: 2;
+    grid-column: 1;
 }
 access-button[name="down"] {
-    grid-row: 3;
+    grid-column: 2;
 }
 access-button[name="left"] {
-    grid-row: 5;
+    grid-column: 3;
 }
 access-button[name="right"] {
-    grid-row: 4;
+    grid-column: 4;
 }
 access-button[name="left"], access-button[name="right"], access-button[name="up"], access-button[name="down"] {
-    grid-column: 1;
+    grid-row: 4;
 }
 
 .tool-bar-area:not([open]) access-button[showable] {
