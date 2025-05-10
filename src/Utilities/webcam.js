@@ -45,8 +45,8 @@ let Ctx = Canvas.getContext("2d", {willReadFrequently: true});
 let Video = document.createElement("video");
 Video.style.setProperty("opacity", "0");
 document.body.prepend(Video);
-let Stream = null;
-let Stream2 = null;
+let VideoOnlyStream = null;
+let VideoAudioStream = null;
 let webcam_on = false;
 var stopCapture = false;
 let capturing = false;
@@ -265,8 +265,13 @@ Video.onunmute = () => {
         webcam_off = false;
         throw 'no stream'
       }
-      Stream = stream;
-      Stream2 = stream2;
+      console.log("settting stream here");
+      VideoOnlyStream = stream;
+      VideoAudioStream = stream2;
+      VideoOnlyStream.myid = "videoOnlyStream";
+      VideoAudioStream.myid = "videoAudioStream";
+      console.log(VideoOnlyStream, VideoAudioStream);
+      
       Video.srcObject = stream;
   
       webcam_on = await new Promise((resolve, reject) => {
@@ -290,7 +295,7 @@ Video.onunmute = () => {
   
   export function stopWebcam(){
     try {
-      for (let track of Stream.getTracks()) {
+      for (let track of VideoOnlyStream.getTracks()) {
         track.stop();
       }
     } catch(e) {}
@@ -334,9 +339,9 @@ Video.onunmute = () => {
   
   export function getStream(i) {
     if (i == 2) {
-      return Stream2;
+      return VideoAudioStream;
     } else {
-      return Stream;
+      return VideoOnlyStream;
     }
   }
 
@@ -351,38 +356,40 @@ Video.onunmute = () => {
           let newStream1 = await navigator.mediaDevices.getUserMedia( camParams1 );
           let newStream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
           if (newStream2 && newStream1) {
-            if (Stream) {
-              const oldVideoTrack = Stream.getVideoTracks()[0]
+            if (VideoOnlyStream) {
+              const oldVideoTrack = VideoOnlyStream.getVideoTracks()[0]
               const newVideoTrack = newStream1.getVideoTracks()[0];
-              oldAudioTrack.stop(); 
-              Stream.removeTrack(oldVideoTrack);
-              Stream.addTrack(newVideoTrack);
+              oldVideoTrack.stop(); 
+              VideoOnlyStream.removeTrack(oldVideoTrack);
+              VideoOnlyStream.addTrack(newVideoTrack);
               const event = new Event("trackchanged");
               event.oldTrack = oldVideoTrack;
               event.newTrack = newVideoTrack;
-              // Stream.dispatchEvent(event);
-              if (Stream.ontrackchanged instanceof Function) {
-                Stream.ontrackchanged(event);
+              // VideoOnlyStream.dispatchEvent(event);
+              if (VideoOnlyStream.ontrackchanged instanceof Function) {
+                VideoOnlyStream.ontrackchanged(event);
               }
-            } else {
-              Stream = newStream1;
             }
+            // } else {
+            //   VideoOnlyStream = newStream1;
+            // }
             
-            if (Stream2) {  
-              const oldVideoTrack = Stream2.getVideoTracks()[0]
+            if (VideoAudioStream) {  
+              const oldVideoTrack = VideoAudioStream.getVideoTracks()[0]
               const newVideoTrack = newStream2.getVideoTracks()[0];
-              oldAudioTrack.stop(); 
-              Stream2.removeTrack(oldVideoTrack);
-              Stream2.addTrack(newVideoTrack);
+              oldVideoTrack.stop(); 
+              VideoAudioStream.removeTrack(oldVideoTrack);
+              VideoAudioStream.addTrack(newVideoTrack);
               const event = new Event("trackchanged");
               event.oldTrack = oldVideoTrack;
               event.newTrack = newVideoTrack;
-              if (Stream2.ontrackchanged instanceof Function) {
-                Stream2.ontrackchanged(event);
+              if (VideoAudioStream.ontrackchanged instanceof Function) {
+                VideoAudioStream.ontrackchanged(event);
               }
-            } else {
-              Stream2 = newStream2;
             }
+            // } else {
+            //   VideoAudioStream = newStream2;
+            // }
             // Update audio processing if required
           }
         }
@@ -395,22 +402,23 @@ Video.onunmute = () => {
           camParams2.audio.deviceId.exact = deviceId;
           let newStream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
           if (newStream2) {
-            if (Stream2) {
-              const oldAudioTrack = Stream2.getAudioTracks()[0]
+            if (VideoAudioStream) {
+              const oldAudioTrack = VideoAudioStream.getAudioTracks()[0]
               const newAudioTrack = newStream2.getAudioTracks()[0];
               oldAudioTrack.stop();
-              Stream2.removeTrack(oldAudioTrack);
-              Stream2.addTrack(newAudioTrack);
+              VideoAudioStream.removeTrack(oldAudioTrack);
+              VideoAudioStream.addTrack(newAudioTrack);
               const event = new Event("trackchanged");
               event.oldTrack = oldAudioTrack;
               event.newTrack = newAudioTrack;
               console.log("dispatching event");
-              if (Stream2.ontrackchanged instanceof Function) {
-                Stream2.ontrackchanged(event);
+              if (VideoAudioStream.ontrackchanged instanceof Function) {
+                VideoAudioStream.ontrackchanged(event);
               }
-            } else {
-              Stream2 = newStream2;
-            }
+            } 
+            // else {
+            //   VideoAudioStream = newStream2;
+            // }
             // Update audio processing if required
           }
         }
