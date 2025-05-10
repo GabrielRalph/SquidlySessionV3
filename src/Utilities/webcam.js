@@ -250,16 +250,13 @@ Video.onunmute = () => {
     }
   }
   
+  let starting_webcam = false;
   export async function startWebcam(params = camParams1){
-    console.log("STARTING WEBCAM: webcam_on", webcam_on);
-    try {
-      throw new Error("test");
-    } catch (e) {
-      console.log(e);
-    }
-    if (webcam_on) {
+    console.log("STARTING WEBCAM: webcam_on", webcam_on, "starting_webcam", starting_webcam);
+    if (webcam_on || starting_webcam) {
       return true;
     }
+    starting_webcam = true;
     webcam_on = false;
     try {
       setUserMediaVariable();
@@ -268,10 +265,10 @@ Video.onunmute = () => {
       let stream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
       stream2 = createAudioFilteredStream(stream2);
       if (!stream) {
-        webcam_off = false;
+        webcam_on = false;
         throw 'no stream'
       }
-      console.log("settting stream here");
+
       VideoOnlyStream = stream;
       VideoAudioStream = stream2;
       VideoOnlyStream.myid = "videoOnlyStream";
@@ -295,7 +292,8 @@ Video.onunmute = () => {
     if (webcam_on && isRunning()) {
       runProcessingLoop();
     }
-  
+    
+    starting_webcam = false;
     return webcam_on;
   }
   
