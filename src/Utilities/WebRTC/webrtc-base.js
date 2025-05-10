@@ -430,7 +430,7 @@ export class ConnectionManager {
         this.stream = stream;
 
         let func = (e) => {
-            
+            console.log("track changed");
             if (e.srcElement === this.stream) {
                 const {newTrack, oldTrack} = e;
                 this.replaceTrack(oldTrack, newTrack);
