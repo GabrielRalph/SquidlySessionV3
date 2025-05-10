@@ -431,14 +431,14 @@ export class ConnectionManager {
 
         let func = (e) => {
             console.log("track changed");
-            if (e.srcElement === this.stream) {
+            // if (e.srcElement === this.stream) {
                 const {newTrack, oldTrack} = e;
                 this.replaceTrack(oldTrack, newTrack);
-            } else {
-                console.log("removing event listener");
+            // } else {
+            //     console.log("removing event listener");
                 
-                e.srcElement.removeEventListener("trackchanged", func);
-            }
+            //     e.srcElement.removeEventListener("trackchanged", func);
+            // }
         }
         // this.stream.addEventListener("trackchanged", func);
         this.stream.ontrackchanged = func;
