@@ -428,6 +428,20 @@ export class ConnectionManager {
         this.closeConnection();
         this.config = config;
         this.stream = stream;
+
+        let func = (e) => {
+            
+            if (e.srcElement === this.stream) {
+                const {newTrack, oldTrack} = e;
+                this.replaceTrack(oldTrack, newTrack);
+            } else {
+                console.log("removing event listener");
+                
+                e.srcElement.removeEventListener("trackchanged", func);
+            }
+        }
+        this.stream.addEventListener("trackchanged", func);
+    
         this.signaler = signaler;
     
         this.connection = new WebRTCConnection(config, stream, signaler, this.useDataChannel);
@@ -508,6 +522,18 @@ export class ConnectionManager {
             track.stop();
         }
         this.stream = stream;
+    }
+
+    /** @param {MediaStreamTrack} track */
+    replaceTrack(oldTrack, newTrack){
+        console.log(`replacing track\n OLD: ${oldTrack.label}\n NEW: ${newTrack.label}`);
+        
+        if (this.connection && this.connection.PC instanceof RTCPeerConnection) {
+            const sender = this.connection.PC.getSenders().find((s) => s.track === oldTrack);
+            if (sender) {
+                sender.replaceTrack(newTrack);
+            }
+        }
     }
     
 }

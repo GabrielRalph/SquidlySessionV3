@@ -1,3 +1,5 @@
+import { set } from "../Firebase/firebase.js";
+import { getSelectedDevice, setSelectedDevice } from "./device-manager.js";
 const camParams2 = {
     video: {
       width: { min: 320, ideal: 640, max: 1920 },
@@ -228,55 +230,17 @@ Video.onunmute = () => {
     Filter.Q.setValueAtTime(q, AudioContext.currentTime); 
   }
 
-
-  async function selectDeviceIds(){
-    let devices = await getDevices();
-
-    let deviceById = {
-      audioinput: {},
-      videoinput: {},
-      audiooutput: {},
-    }
-    for (let kind in devices) {
-      for (let groupId in devices[kind]) {
-        if (kind in deviceById) {
-          let device = devices[kind][groupId];
-          deviceById[kind][device.deviceId] = device;
-        }
-      }
-    }
-
-    if (! (camParams1.video.deviceId.exact in deviceById.videoinput)) {
-      let cams =  Object.values(deviceById.videoinput || {});
-      let cam = cams.filter(c => c.isDefault);
-      cam = cam.length > 0 ? cam[0] : cams[0];
-      camParams1.video.deviceId.exact = cam.deviceId;
-      camParams2.video.deviceId.exact = cam.deviceId;
-      selectedDevices.videoinput = cam.deviceId;
-    }
-
-    if (! (camParams2.audio.deviceId.exact in deviceById.audioinput)) {
-      let mics =  Object.values(deviceById.audioinput || {});
-      let mic = mics.filter(m => m.isDefault);
-      mic = mic.length > 0 ? mic[0] : mics[0];
-      camParams2.audio.deviceId.exact = mic.deviceId;
-      selectedDevices.audioinput = mic.deviceId;
-    }
-
-    if (! (selectedDevices.audiooutput)) {
-      let speakers =  Object.values(deviceById.audiooutput || {});
-      let speakerID = null;
-      if (speakers.length > 0) {
-        let speaker = speakers.filter(s => s.isDefault);
-        speaker = speaker.length > 0 ? speaker[0] : speakers[0];
-        speakerID = speaker.deviceId;
-      }
-      selectedDevices.audiooutput = speakerID
-    }
-  }
-
+  
   
   // ~~~~~~~~ PUBLIC METHODS ~~~~~~~~
+
+  export async function updateSelectedDevice(type, deviceId) {
+    let [audioinput, videoinput, audiooutput] = await Promise.all([getSelectedDevice("audioinput"), getSelectedDevice("videoinput"), getSelectedDevice("audiooutput")]);
+    
+    camParams1.video.deviceId.exact = videoinput;
+    camParams2.video.deviceId.exact = videoinput;
+    camParams2.audio.deviceId.exact = audioinput;
+  }
   
   export function setProcess(algorithm, name = "default"){
     if (algorithm instanceof Function) {
@@ -293,8 +257,7 @@ Video.onunmute = () => {
     webcam_on = false;
     try {
       setUserMediaVariable();
-      // Get the users video media stream
-      await selectDeviceIds();
+      await updateSelectedDevice();
       let stream = await navigator.mediaDevices.getUserMedia( params );
       let stream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
       stream2 = createAudioFilteredStream(stream2);
@@ -376,70 +339,78 @@ Video.onunmute = () => {
       return Stream;
     }
   }
-  
-  // export async function setStream(stream) {
-  //   Stream = stream;
-  //   Video.srcObject = stream;
-  //   return new Promise((resolve, reject) => {
-  //     let onload = () => {
-  //       webcam_on = true;
-  //       Video.removeEventListener("loadeddata", onload);
-  //       resolve(true)
-  //     };
-  //     Video.addEventListener("loadeddata", onload);
-  //   });
-  // }
-  
-  export async function getDevices() {
-    let devices = [...await navigator.mediaDevices.enumerateDevices()];
+
+  export async function changeDevice(type, deviceId) {
     
-    let deviceByKind = {};
-    devices.forEach(device => {
-      const {kind, deviceId, groupId, label} = device;
-      if (!(kind in deviceByKind)) {
-        deviceByKind[kind] = {};
-      } 
-
-      let id = groupId == "" ? deviceId : groupId;
-
-      if (!(id in deviceByKind[kind])) {
-        let isDefault = deviceId === "default";
-        deviceByKind[kind][id] = {
-          deviceId,
-          groupId,
-          kind,
-          label,
-          active: false,
-          isDefault
-        };
-      } else {
-        let newDeviceID = deviceByKind[kind][id].deviceId;
-        let isDefault = deviceId === "default" || deviceByKind[kind][id].isDefault;
-        newDeviceID = deviceId === "default" ? newDeviceID : deviceId;
-        deviceByKind[kind][id].deviceId = newDeviceID;
-        deviceByKind[kind][id].isDefault = isDefault;
-      }
-    });
-   
-    for (let kind in deviceByKind) {
-      for (let groupId in deviceByKind[kind]) {
-        let device = deviceByKind[kind][groupId];
-        device.active = selectedDevices[kind] && selectedDevices[kind] == device.deviceId;
-      }
+    switch (type) {
+      case "videoinput":
+        console.log("attempting to change video input");
+        if (await setSelectedDevice("videoinput", deviceId)) {
+          camParams1.video.deviceId.exact = deviceId;
+          camParams2.video.deviceId.exact = deviceId;
+          let newStream1 = await navigator.mediaDevices.getUserMedia( camParams1 );
+          let newStream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
+          if (newStream2 && newStream1) {
+            if (Stream) {
+              const oldVideoTrack = Stream.getVideoTracks()[0]
+              const newVideoTrack = newStream1.getVideoTracks()[0];
+              oldAudioTrack.stop(); 
+              Stream.removeTrack(oldVideoTrack);
+              Stream.addTrack(newVideoTrack);
+              const event = new Event("trackchanged");
+              event.oldTrack = oldVideoTrack;
+              event.newTrack = newVideoTrack;
+              Stream.dispatchEvent(event);
+            } else {
+              Stream = newStream1;
+            }
+            
+            if (Stream2) {  
+              const oldVideoTrack = Stream2.getVideoTracks()[0]
+              const newVideoTrack = newStream2.getVideoTracks()[0];
+              oldAudioTrack.stop(); 
+              Stream2.removeTrack(oldVideoTrack);
+              Stream2.addTrack(newVideoTrack);
+              const event = new Event("trackchanged");
+              event.oldTrack = oldVideoTrack;
+              event.newTrack = newVideoTrack;
+              Stream2.dispatchEvent(event);
+            } else {
+              Stream2 = newStream2;
+            }
+            // Update audio processing if required
+          }
+        }
+        break;
+      case "audioinput": 
+        console.log("attempting to change audio input");
+        if (await setSelectedDevice("audioinput", deviceId)) {
+          console.log("change audio input");
+          
+          camParams2.audio.deviceId.exact = deviceId;
+          let newStream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
+          if (newStream2) {
+            if (Stream2) {
+              const oldAudioTrack = Stream2.getAudioTracks()[0]
+              const newAudioTrack = newStream2.getAudioTracks()[0];
+              oldAudioTrack.stop();
+              Stream2.removeTrack(oldAudioTrack);
+              Stream2.addTrack(newAudioTrack);
+              const event = new Event("trackchanged");
+              event.oldTrack = oldAudioTrack;
+              event.newTrack = newAudioTrack;
+              console.log("dispatching event");
+              Stream2.dispatchEvent(event);
+            } else {
+              Stream2 = newStream2;
+            }
+            // Update audio processing if required
+          }
+        }
+        break;
+      case "audiooutput":
+        // camParams1.audio.deviceId.exact = deviceId;
+        break;
     }
-
-    return deviceByKind;
   }
-
-
-  export async function getTrackSelection(type, streamId = 2) {
-
-    let object = await getDevices();
-    let devices = [];
-    if (type in object) {
-      devices = Object.values(object[type]);
-    }
-    return devices;
-  }
-
-  
+ 

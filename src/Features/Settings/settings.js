@@ -1,15 +1,15 @@
 import { get, set } from "../../Firebase/firebase.js";
 import { SvgPlus } from "../../SvgPlus/4.js";
 import { AccessEvent } from "../../Utilities/access-buttons.js";
+import { addDeviceChangeCallback, getDevices } from "../../Utilities/device-manager.js";
 import { GridIcon } from "../../Utilities/grid-icon.js";
 import { HideShow } from "../../Utilities/hide-show.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
 import { Rotater } from "../../Utilities/rotater.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
-import { getTrackSelection } from "../../Utilities/webcam.js";
+import { changeDevice } from "../../Utilities/webcam.js";
 import { Features, OccupiableWindow } from "../features-interface.js";
 import * as Settings from "./settings-base.js";
-
 
 class SettingsIcon extends GridIcon {
     constructor(icon, type) {
@@ -60,6 +60,14 @@ class IconGrid extends SvgPlus{
      */
     constructor(grid) {
         super("icon-grid");
+        this.grid = grid;
+    }
+
+    /**
+     * @param {IconGrid[][]} grid
+     */
+    set grid(grid) {
+        this.innerHTML = "";
 
         let rows = grid.length;
         let cols = Math.max(...grid.map(row => row.length));
@@ -89,10 +97,7 @@ class IconGrid extends SvgPlus{
                 this.appendChild(iconElement);
             });
         });
-        
     }
-
-    
 }
 
 class SettingsPanel extends SvgPlus {
@@ -122,12 +127,62 @@ class SettingsPanel extends SvgPlus {
                 action: "back",  
             }],
         ]);
+        this.path = [...path];
+
         grid.forEach(row => row.forEach(icon => {
             icon.path = path.slice(1);
         }));
         
-        this.createChild(IconGrid, {}, grid);
+        this.gridElement = this.createChild(IconGrid, {}, grid);
     }
+
+     /**
+     * @param {IconGrid[][]} grid
+     */
+    set grid(grid) { 
+        grid.forEach(row => row.forEach(icon => {
+            icon.path = this.path.slice(1);
+        }));
+        this.gridElement.grid = grid;
+    }
+
+}
+
+const name2kind = {
+    "video": "videoinput",
+    "microphone": "audioinput",
+    "speaker": "audiooutput",
+}
+
+function device2Icon(device) {
+    const {active, label, deviceId} = device;
+    return {
+        type: "normal",
+        displayValue: label,
+        action: "change-device",
+        device: deviceId,
+        active: active,
+    }
+}
+
+function devices2grid(devices) {
+    let n = devices.length;
+    n = n > 16 ? 16 : n;
+
+    let gsize = n <= 9 ? 3 : 4;
+
+    let grid = new Array(gsize).fill(0).map(() => new Array(gsize).fill(0).map(() => ({hidden: true})));
+    
+    for (let i = 0; i < gsize; i++) {   
+        for (let j = 0; j < gsize; j++) {
+            let index = i * gsize + j;
+            if (index < n) {
+                grid[i][j] = device2Icon(devices[index]);
+            }
+        }
+    }
+    
+    return grid;
 }
 
 class SettingsWindow extends OccupiableWindow {
@@ -184,42 +239,24 @@ class SettingsWindow extends OccupiableWindow {
             let {icon} = e;
             let path = icon.path.join("/") + "/" + (icon.settingKey || icon.setting);
             Settings.toggleValue(path);
+        },
+        "change-device": (e) => {
+            let {icon} = e;
+            this.settingsFeature.changeDevice(icon.path[0], name2kind[icon.path[1]], icon.device);
         }
     }
+
     dynamicPages = {
-        "video": () => this.make_devices("videoinput"),
-        "microphone": () => this.make_devices("audioinput"),
-        "speaker": () => this.make_devices("audiooutput"),
+        "video": () => this.makeDevices("videoinput"),
+        "microphone": () => this.makeDevices("audioinput"),
+        "speaker": () => this.makeDevices("audiooutput"),
     }
 
-    async make_devices(type){
+    async makeDevices(kind){
         let user = this.history[1];
-
-        let devices = await this.settingsFeature.getDevices(type, user);
-
-        let n = devices.length;
-        n = n > 16 ? 16 : n;
-
-        let gsize = n <= 9 ? 3 : 4;
-
-        let grid = new Array(gsize).fill(0).map(() => new Array(gsize).fill(0).map(() => ({hidden: true})));
-        
-        for (let i = 0; i < gsize; i++) {   
-            for (let j = 0; j < gsize; j++) {
-                let index = i * gsize + j;
-                if (index < n) {
-                    const {active, label, deviceId} = devices[index];
-                    grid[i][j] = {
-                        type: "normal",
-                        displayValue: label,
-                        action: "device",
-                        device: deviceId,
-                        active: active,
-                    }
-                }
-            }
-        }
-        
+        let devices = await this.settingsFeature.getDevices(user);
+        devices = Object.values(devices[kind] || {});
+        let grid = devices2grid(devices);
         return grid;
     }
 
@@ -251,12 +288,14 @@ class SettingsWindow extends OccupiableWindow {
             }
             grid = value;
         } else if (link in this.dynamicPages) {
+
             grid = await this.dynamicPages[link]();
         }
         
         if (grid !== null) {
             this.history.push(link);
-            await this.rotater.setContent(new SettingsPanel(grid, this.history), false);
+            this.currentPage = new SettingsPanel(grid, this.history)
+            await this.rotater.setContent(this.currentPage, false);
         }
         return grid !== null;
     }
@@ -274,6 +313,16 @@ class SettingsWindow extends OccupiableWindow {
         icons.forEach(icon => {
             icon.updateDynamicTemplate();
         })
+    }
+
+    updateDevices(user, devices) { 
+        let [_, pathUser, settingType] = this.history
+
+        if (pathUser === user && settingType in this.dynamicPages) {
+            const kind = name2kind[settingType];
+            devices = Object.values(devices[kind] || {});
+            this.currentPage.grid = devices2grid(devices);
+        }
     }
 
     set settings(settings) {
@@ -322,22 +371,24 @@ export class SettingsFeature extends Features {
         });
     }
 
-
-    async getDevices(type, user) {
+    changeDevice(user, kind, deviceId) {
         if (user === this.sdata.me) {
-            return await getTrackSelection(type);
+            changeDevice(kind, deviceId);
+        }  else {
+            this.session.videoCall.sendData("change-device", [kind, deviceId]);
+        } 
+    }
+
+
+    async getDevices(user) {
+        let devices = {audioinput: {}, audiooutput: {}, videoinput: {}};
+        if (user === this.sdata.me) {
+            devices = await getDevices(true);
         } else {
-            return new Promise((resolve) => {
-                this.resolvePromise = resolve;
-                this.session.videoCall.sendData("request-devices", type);
-                setTimeout(() => {
-                    if (this.resolvePromise instanceof Function) {
-                        this.resolvePromise([]);
-                        this.resolvePromise = null;
-                    }
-                }, 1000);
-            });
+            devices =  this.lastTheirDevices
         }
+        
+        return devices;
     }
 
 
@@ -347,20 +398,34 @@ export class SettingsFeature extends Features {
         let settings = await (await fetch(relURL("./settings.json", import.meta))).json();
         this.settingsWindow.settings = settings;
 
-        this.session.videoCall.addEventListener("request-devices", async (e) => {
-            let type = e.data;
-            let devices = await this.getDevices(type, this.sdata.me);
-            this.session.videoCall.sendData("response-devices", devices);
-        })
+        addDeviceChangeCallback((devices) => {
+            this.sdata.set("devices/"+this.sdata.me, devices);
+            this.settingsWindow.updateDevices(this.sdata.me, devices);
+        });
+        this.sdata.set("devices/"+this.sdata.me, await getDevices(true));
 
-        this.session.videoCall.addEventListener("response-devices", (e) => {
-            let devices = e.data;
-            this._remoteDevices = devices;
-            if (this.resolvePromise instanceof Function) {
-                this.resolvePromise(devices);
-                this.resolvePromise = null;
+
+        this.lastTheirDevices = {
+            audioinput: {},
+            audiooutput: {},
+            videoinput: {},
+        }
+        this.sdata.onValue("devices/"+this.sdata.them, (devices) => {
+            if (devices === null) {
+                devices = {
+                    audioinput: {},
+                    audiooutput: {},
+                    videoinput: {},
+                }
             }
-        })
+            this.lastTheirDevices = devices;
+            this.settingsWindow.updateDevices(this.sdata.them, devices);
+        });
+
+        this.session.videoCall.addEventListener("change-device", (e) => {
+            let [kind, deviceId] = e.data;
+            this.changeDevice(this.sdata.me, kind, deviceId);
+        });
     }
 
     static get firebaseName() {
