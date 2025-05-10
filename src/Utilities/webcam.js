@@ -251,6 +251,12 @@ Video.onunmute = () => {
   }
   
   export async function startWebcam(params = camParams1){
+    console.log("STARTING WEBCAM: webcam_on", webcam_on);
+    try {
+      throw new Error("test");
+    } catch (e) {
+      console.log(e);
+    }
     if (webcam_on) {
       return true;
     }
@@ -300,6 +306,7 @@ Video.onunmute = () => {
       }
     } catch(e) {}
     stopProcessingAll();
+    console.log("stopping webcam");
     webcam_on = false;
   }
   
