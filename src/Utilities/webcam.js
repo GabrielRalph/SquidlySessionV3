@@ -360,7 +360,10 @@ Video.onunmute = () => {
               const event = new Event("trackchanged");
               event.oldTrack = oldVideoTrack;
               event.newTrack = newVideoTrack;
-              Stream.dispatchEvent(event);
+              // Stream.dispatchEvent(event);
+              if (Stream.ontrackchanged instanceof Function) {
+                Stream.ontrackchanged(event);
+              }
             } else {
               Stream = newStream1;
             }
@@ -374,7 +377,9 @@ Video.onunmute = () => {
               const event = new Event("trackchanged");
               event.oldTrack = oldVideoTrack;
               event.newTrack = newVideoTrack;
-              Stream2.dispatchEvent(event);
+              if (Stream2.ontrackchanged instanceof Function) {
+                Stream2.ontrackchanged(event);
+              }
             } else {
               Stream2 = newStream2;
             }
@@ -400,7 +405,9 @@ Video.onunmute = () => {
               event.oldTrack = oldAudioTrack;
               event.newTrack = newAudioTrack;
               console.log("dispatching event");
-              Stream2.dispatchEvent(event);
+              if (Stream2.ontrackchanged instanceof Function) {
+                Stream2.ontrackchanged(event);
+              }
             } else {
               Stream2 = newStream2;
             }
