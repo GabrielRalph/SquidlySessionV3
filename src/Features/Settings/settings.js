@@ -19,7 +19,6 @@ class SettingsIcon extends GridIcon {
 
         if (Array.isArray(icon.path) && icon.setting) {
             this.setting = icon.path.join("/") + "/" + icon.setting
-            console.log(this.setting);
             this.setAttribute("setting", this.setting);
             this.updateDynamicTemplate();
         }
@@ -262,24 +261,38 @@ class SettingsWindow extends OccupiableWindow {
 
     async onSettingsClick(e) {
        let {icon} = e;
-       if (await this.gotoLink(icon.link)) {
-        
-       } else if (icon?.action in this.actions) {
-            this.actions[icon.action](e);
-       } else {
-            const event = new AccessEvent("settings-click", e);
-            event.icon = icon;
-            event.iconElement = e.iconElement;
-            this.dispatchEvent(event);
-       }
+       if (icon.action === "exit") return ;
+       let res = await e.waitFor(this.gotoLink(icon.link, e));
+       if (!res) {
+             if (icon?.action in this.actions) {
+                e.waitFor(this.actions[icon.action](e));
+            } else {
+                    const event = new AccessEvent("settings-click", e);
+                    event.icon = icon;
+                    event.iconElement = e.iconElement;
+                    this.dispatchEvent(event);
+            }
+        }
     }
 
-    gotoHome() {
+    async gotoHome(e) {
         this.history = ["home"];
-        this.rotater.setContent(new SettingsPanel(this.settings.home, this.history), false);
+        await this.rotater.setContent(new SettingsPanel(this.settings.home, this.history), false);
+        this.dispatchEvent(new AccessEvent("navigation", e));
     }
 
-    async gotoLink(link) {
+    async setPath(path) {
+        let pathStr = path.join("/");
+        let historyStr = this.history.join("/");
+        
+        if (historyStr !== pathStr) {
+            this.history = [...path];
+            let link = this.history.pop();
+            await this.gotoLink(link);
+        }
+    }
+
+    async gotoLink(link, e) {
         let grid = null;
         if (link in this.settings) {
             let value = this.settings[link];
@@ -288,7 +301,6 @@ class SettingsWindow extends OccupiableWindow {
             }
             grid = value;
         } else if (link in this.dynamicPages) {
-
             grid = await this.dynamicPages[link]();
         }
         
@@ -296,15 +308,18 @@ class SettingsWindow extends OccupiableWindow {
             this.history.push(link);
             this.currentPage = new SettingsPanel(grid, this.history)
             await this.rotater.setContent(this.currentPage, false);
+            this.dispatchEvent(new AccessEvent("navigation", e));
         }
+
         return grid !== null;
     }
 
-    async gotoBack() {
+    async gotoBack(e) {
         if (this.history.length > 1) {
             this.history.pop();
             let link = this.history.pop();
             await this.gotoLink(link);
+            this.dispatchEvent(new AccessEvent("navigation", e));
         }
     }
 
@@ -360,16 +375,31 @@ export class SettingsFeature extends Features {
             e.waitFor(this.session.openWindow("settings"))  ;
         });
 
-        this.settingsWindow.addEventListener("settings-click", (e) => { 
+        this.settingsWindow.root.addEventListener("settings-click", (e) => { 
             if (e?.icon?.action === "exit") {
-                this.session.openWindow("default");
+                this.sdata.set("path", null);
+                e.waitFor(this.session.openWindow("default"));
             }
         })
 
+        this.settingsWindow.addEventListener("navigation", (e) => {
+            let path = this.settingsWindow.history;
+            sdata.set("path", path);
+        });
+
         Settings.addChangeListener((name, value) => {
             this.settingsWindow.updateSettings();
+            const event = new Event("change", {bubbles: true});
+            event.path = name;
+            event.value = value;    
+            this.dispatchEvent(event);
         });
     }
+
+    get(name) {
+        return Settings.getValue(name);
+    }
+
 
     changeDevice(user, kind, deviceId) {
         if (user === this.sdata.me) {
@@ -403,6 +433,15 @@ export class SettingsFeature extends Features {
             this.settingsWindow.updateDevices(this.sdata.me, devices);
         });
         this.sdata.set("devices/"+this.sdata.me, await getDevices(true));
+
+        this.sdata.onValue("path", (path) => {
+            console.log("path", path);
+            
+            if (path === null) {
+                path = ["home"];
+            }
+            this.settingsWindow.setPath(path);
+        });
 
 
         this.lastTheirDevices = {

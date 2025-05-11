@@ -1,4 +1,5 @@
 import { Vector } from "../../SvgPlus/vector.js";
+import { addDeviceChangeCallback } from "../../Utilities/device-manager.js";
 import { HideShow } from "../../Utilities/hide-show.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
@@ -65,6 +66,14 @@ class VideoDisplay extends HideShow {
             }
         });
 
+        let lastSinkId = null;
+        addDeviceChangeCallback((devices) => {
+            let activeOutput = Object.values(devices.audiooutput || {}).find(d => d.active);
+            if (activeOutput && activeOutput.deviceId !== lastSinkId) {
+                lastSinkId = activeOutput.deviceId;
+                this.video.setSinkId(lastSinkId)
+            }
+        })
         this._watchVideoSize();
     }
 

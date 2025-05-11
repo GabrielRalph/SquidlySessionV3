@@ -21,6 +21,7 @@ const parallel = (...args) => Promise.all(...args);
 /** @typedef {import('./Features/Cursors/cursors.js').Cursors} Cursors*/
 /** @typedef {import('./Features/features-interface.js').Features} Feature*/
 /** @typedef {import('./Features/EyeGaze/eye-gaze.js').EyeGazeFeature} EyeGazeFeature*/
+/** @typedef {import('./Features/Settings/settings.js').SettingsFeature} SettingsFeature*/
 /** @typedef {import('./Features/VideoCall/video-call.js').VideoCall} VideoCall*/
 /** @typedef {import('./Features/Text2Speech/text2speech.js').Text2Speech} Text2Speech*/
 /** @typedef {import('./Features/Notifications/notifications.js').Notifications} Notifications*/
@@ -168,6 +169,9 @@ export class SquidlySessionElement extends ShadowElement {
     /** @type {Notifications} */
     notifications = null;
 
+    /** @type {SettingsFeature} */
+    settings = null;
+
     /** @type {number} */
     sharedAspectRatio = 1;
 
@@ -229,17 +233,23 @@ export class SquidlySessionElement extends ShadowElement {
             let nextOccupier = name in this.occupiables ? this.occupiables[name] : null;
             name = name in this.occupiables ? name : null;
 
-            let proms = Promise.all([
+            let proms = [
                 this.currentOccupier instanceof Element ? this.currentOccupier.close() : null,
                 nextOccupier != null ? nextOccupier.open() : null,
                 nextOccupier != null && nextOccupier.fixToolBarWhenOpen ? this.toolBar.toggleToolBar(false) : null,
                 nextOccupier != null ? this.togglePanel(this.panelMode, true) : this.togglePanel(this.panelMode, false)
-            ]);
-            this.toolBar.toolbarFixed = nextOccupier?.fixToolBarWhenOpen
+            ];
+            this.toolBar.toolbarFixed = !!nextOccupier?.fixToolBarWhenOpen
+            if (nextOccupier == null && this.accessControl.isSwitching) {
+                this.toolBar.toolbarFixed = true;
+                // console.log("toggle tool bar for access control", this.toolBar.toolbarFixed);
+                proms.push(this.togglePanel("toolBarArea", true));
+                // proms.push(this.toolBar.toggleToolBar(true));
+            }
             this.occupier = name;
             this.currentOccupier = nextOccupier;
             this.sdata.set("occupier", name);
-            await proms;
+            await Promise.all(proms);
         }
     }
 
@@ -471,35 +481,6 @@ export class SquidlySessionElement extends ShadowElement {
         
     }
 
-    testin(){
-        // this.testFR()
-
-        this.toolBar.addEventListener("icon-selection", async (e) => {
-            if (e.icon.key == "audio") {
-                e.icon.name = e.icon.name == "mute" ? "unmute" : "mute";
-                e.preventDefault();
-            }else if (e.icon.key == "video") {
-                e.icon.name = e.icon.name == "video" ? "novideo" : "video";
-                e.preventDefault();
-            } else if (e.icon.key == "screen") {
-                e.preventDefault();
-                await this.toolBar.toggleRingBar(false);
-                this.toolBar.setIcon("share/trash/hidden", false);
-                this.toolBar.setIcon("share/notification", "1");
-                e.icon.notification = "1";
-            } else if (e.icon.key == "trash") {
-                await this.toolBar.toggleRingBar(false);
-                e.icon.hidden = true;
-                this.toolBar.setIcon("share/screen/notification", null);
-                this.toolBar.setIcon("share/notification", null);
-            } else if (e.icon.key == "settings") {
-                this.sessionView.toggle("sideScreen")
-            } else if (e.icon.key == "end") {
-                sessionConnection.leave();
-            }
-        })
-    }
-
     get squidlyLoader(){
         return document.querySelector("squidly-loader")
     }
@@ -562,8 +543,13 @@ export class SquidlySession {
     }
 
      /** @return {?VideoCall} */
-     get videoCall(){
+    get videoCall(){
         return $$.get(this).videoCallPublic;
+    }
+
+    /** @return {?SettingsFeature} */
+    get settings(){
+        return $$.get(this).settingsPublic;
     }
 
     /** @return {?Text2Speech} */
@@ -593,7 +579,7 @@ export class SquidlySession {
 
 
     async openWindow(name) {
-        await $$.get(this).openWindow(name);
+        await $$.get(this).openWindow(name)
     }
 
 

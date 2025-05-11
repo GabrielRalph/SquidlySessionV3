@@ -129,32 +129,42 @@ export const POINTERS = {
   calibration: class CPointer extends BasePointer {
     constructor(size, cOuter = "red", cInner = "darkred", cText = "white") {
       super();
-      this.circle = this.createChild("circle", { fill: cOuter })
-      this.circle2 = this.createChild("circle", { fill: cInner })
-      this.tg = new HideShow("g");
-      this.circle3 = this.tg.createChild("circle", { fill: cOuter })
-      this.textel = this.tg.createChild("text", { "text-anchor": "middle", fill: cText });
-      this.appendChild(this.tg);
+      let sizeG = this.createChild("g");
+      let subG = sizeG.createChild("g", { transform: "translate(-50, -50)" });
+      this.circle = subG.createChild("circle", { r: 50, fill: cOuter, cx: 50, cy: 50 })
+      this.circle2 = subG.createChild("circle", { r: 10, cx: 50, cy: 50, fill: cInner })
+
+      this.sizeG = sizeG;
+      this.subG = subG;
+      // this.tg = new HideShow("g");
+      // this.circle3 = this.tg.createChild("circle", { fill: cOuter })
+      // this.textel = this.tg.createChild("text", { "text-anchor": "middle", fill: cText });
+      // this.appendChild(this.tg);
       this.size = size;
     }
 
-    set color(c) {
-      let p = { fill: c };
-      this.circle.props = p;
-      this.circle3.props = p;
-    }
+    // set color(c) {
+    //   // let p = { fill: c };
+    //   // this.circle.props = p;
+    //   // this.circle3.props = p;
+    // }
 
     async showText(duration = 400) { await this.tg.show(duration) }
     async hideText(duration = 400) { await this.tg.hide(duration) }
 
-    set text(value) {
-      this.textel.innerHTML = value;
-    }
+    // set text(value) {
+    //   this.textel.innerHTML = value;
+    // }
     set size(size) {
-      this.circle.props = { r: size };
-      this.circle2.props = { r: size / 5 };
-      this.circle3.props = { r: size / 1.5 };
-      this.textel.props = { "font-size": size * 1.2, y: size * 0.4 };
+      this.sizeG.props = { transform: `scale(${size / 50})` }
+      // this.circle.props = { r: size };
+      // this.circle2.props = { r: size / 5 };
+      // this.circle3.props = { r: size / 1.5 };
+      // this.textel.props = { "font-size": size * 1.2, y: size * 0.4 };
+    }
+
+    set guide(value) {
+      this.subG.innerHTML = value;
     }
   },
   simple: class SPointer extends BasePointer {

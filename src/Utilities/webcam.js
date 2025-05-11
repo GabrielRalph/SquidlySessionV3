@@ -252,7 +252,7 @@ Video.onunmute = () => {
   
   let starting_webcam = false;
   export async function startWebcam(params = camParams1){
-    console.log("STARTING WEBCAM: webcam_on", webcam_on, "starting_webcam", starting_webcam);
+    console.log("WEBCAM: starting webcam [webcam_on", webcam_on, "starting_webcam", starting_webcam);
     if (webcam_on || starting_webcam) {
       return true;
     }
@@ -273,7 +273,9 @@ Video.onunmute = () => {
       VideoAudioStream = stream2;
       VideoOnlyStream.myid = "videoOnlyStream";
       VideoAudioStream.myid = "videoAudioStream";
-      console.log(VideoOnlyStream, VideoAudioStream);
+
+      console.log("WEBCAM");
+      
       
       Video.srcObject = stream;
   
@@ -304,7 +306,6 @@ Video.onunmute = () => {
       }
     } catch(e) {}
     stopProcessingAll();
-    console.log("stopping webcam");
     webcam_on = false;
   }
   
@@ -351,10 +352,8 @@ Video.onunmute = () => {
   }
 
   export async function changeDevice(type, deviceId) {
-    
     switch (type) {
       case "videoinput":
-        console.log("attempting to change video input");
         if (await setSelectedDevice("videoinput", deviceId)) {
           camParams1.video.deviceId.exact = deviceId;
           camParams2.video.deviceId.exact = deviceId;
@@ -370,14 +369,11 @@ Video.onunmute = () => {
               const event = new Event("trackchanged");
               event.oldTrack = oldVideoTrack;
               event.newTrack = newVideoTrack;
-              // VideoOnlyStream.dispatchEvent(event);
               if (VideoOnlyStream.ontrackchanged instanceof Function) {
                 VideoOnlyStream.ontrackchanged(event);
               }
+              VideoOnlyStream.dispatchEvent(event);
             }
-            // } else {
-            //   VideoOnlyStream = newStream1;
-            // }
             
             if (VideoAudioStream) {  
               const oldVideoTrack = VideoAudioStream.getVideoTracks()[0]
@@ -391,19 +387,13 @@ Video.onunmute = () => {
               if (VideoAudioStream.ontrackchanged instanceof Function) {
                 VideoAudioStream.ontrackchanged(event);
               }
+              VideoAudioStream.dispatchEvent(event);
             }
-            // } else {
-            //   VideoAudioStream = newStream2;
-            // }
-            // Update audio processing if required
           }
         }
         break;
       case "audioinput": 
-        console.log("attempting to change audio input");
         if (await setSelectedDevice("audioinput", deviceId)) {
-          console.log("change audio input");
-          
           camParams2.audio.deviceId.exact = deviceId;
           let newStream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
           if (newStream2) {
@@ -416,20 +406,16 @@ Video.onunmute = () => {
               const event = new Event("trackchanged");
               event.oldTrack = oldAudioTrack;
               event.newTrack = newAudioTrack;
-              console.log("dispatching event");
               if (VideoAudioStream.ontrackchanged instanceof Function) {
                 VideoAudioStream.ontrackchanged(event);
               }
+              VideoAudioStream.dispatchEvent(event);
             } 
-            // else {
-            //   VideoAudioStream = newStream2;
-            // }
-            // Update audio processing if required
           }
         }
         break;
       case "audiooutput":
-        // camParams1.audio.deviceId.exact = deviceId;
+        await setSelectedDevice("audiooutput", deviceId)
         break;
     }
   }

@@ -131,6 +131,8 @@ class RestAccessButton extends AccessButton {
         let [pos,size] = this.bbox;
         return p.y > pos.y; 
     }
+
+    get disableSwitch() {return true}
 }
 
 class RestButton extends ShadowElement {
@@ -400,7 +402,7 @@ export class EyeGazeFeature extends Features {
     }
 
     async initialise(){
-        await Promise.all([load(), FeedbackWindow.loadStyleSheets()])
+        await Promise.all([load(), FeedbackWindow.loadStyleSheets(), this.calibrationFrame.loadGuides()])
         if (!await startWebcam()) {
             console.log("LOOOOOOG");
             
@@ -417,6 +419,16 @@ export class EyeGazeFeature extends Features {
             class: "blob",
             text: "participant"
         })
+
+        this.session.settings.addEventListener("change", (e) => {
+            let path = e.path.split("/");
+            let [user, type, setting] = path;
+            if (user == this.sdata.me && type == "calibration") {
+                this.calibrationFrame[setting] = e.value;
+            }
+        })
+        this.calibrationFrame.size = this.session.settings.get(`${this.sdata.me}/calibration/size`);
+        this.calibrationFrame.speed = this.session.settings.get(`${this.sdata.me}/calibration/speed`);
 
         addProcessListener(this._onEyeData.bind(this));
 

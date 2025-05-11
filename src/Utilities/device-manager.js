@@ -189,5 +189,4 @@ export async function getDevices(forceUpdate = false) {
     return devicesByType;
 }
 
-
 startUpdatingDevices();

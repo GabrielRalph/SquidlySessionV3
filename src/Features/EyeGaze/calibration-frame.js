@@ -1,8 +1,10 @@
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
 import { HideShow } from "../../Utilities/hide-show.js";
 import { BasePointer, SvgResize } from "../../Utilities/svg-resize.js";
+import { delay, relURL } from "../../Utilities/usefull-funcs.js";
 import * as Algorithm from "./Algorithm/index.js"
 import { linspace } from "./Algorithm/Utils/other.js";
+
 
 /**
  * @typedef {Object} CalibrationSequence
@@ -13,23 +15,6 @@ import { linspace } from "./Algorithm/Utils/other.js";
  * @property {string} label
  * @property {CalibrationSequence[]} [sequences]
  */
-
-async function delay(ms) {
-    if (!ms) return new Promise(requestAnimationFrame)
-    return new Promise((r) => setTimeout(r, ms))
-}
-async function waitForClick() {
-	return new Promise((resolve, reject) => {
-		let end = () => {
-			window.removeEventListener("click", end);
-			resolve();
-		}
-		window.addEventListener("click", end);
-	});
-}
-
-
-
 class CSeq {
 	constructor(cs) {
 		for (let k in cs) {
@@ -118,9 +103,7 @@ class CSList extends CSeq{
 		return ts.reduce((t1, t2) => t1+t2)
 	}	
 }
-
 const CSeqs = {
-	
 	list: CSList,
 	wait: class CSWait extends CSeq {
 		getPointAtTime(t) {
@@ -328,7 +311,6 @@ const CSeqs = {
 			super(ncs);
 		}
 	}, 
-
 	message: class CSMessage extends CSList {
 		constructor(cs) {
 			let {time, message, isCount} = cs;
@@ -364,6 +346,7 @@ const CSeqs = {
 		}
 	},
 }
+
 /**
  * @param {CalibrationSequence}
  * @return {CSeq}
@@ -372,46 +355,64 @@ function makeCSeq(cs) {
 	return new CSeqs[cs.type](cs);
 }
 
+function makeDefaultCSeqs(speed, size) {
+	console.log("Calibration speed: " + speed, "size: " + size);
+	
+	return makeCSeq({
+		type: "list",
+		sequences: [
+			{
+				type: "message",
+				time: 1.5,
+				isCount: false,
+				message: "Let's calibrate..."
+			},
+			{
+				type: "message",
+				time: 4,
+				isCount: false,
+				message: "<span style = 'white-space:pre'>Follow the targets. Relax, it's okay to blink.</span></br></br>Press Esc to cancel at any time."
+			},
+			{
+				type: "scanX",
+				scanTime: speed,
+				pulseTime: 0.75,
+				size: size,
+			},
+			{
+				type: "scanY",
+				scanTime: speed,
+				pulseTime: 0.75,
+				size: size,
+			},
+		]
+	});
+}
 
-const defaultCalibration = makeCSeq({
-	type: "list",
-	sequences: [
-		{
-			type: "message",
-			time: 1.5,
-			isCount: false,
-			message: "Let's calibrate..."
-		},
-		{
-			type: "message",
-			time: 4,
-			isCount: false,
-			message: "<span style = 'white-space:pre'>Follow the targets. Relax, it's okay to blink.</span></br></br>Press Esc to cancel at any time."
-		},
-		{
-			type: "scanX",
-			scanTime: 3,
-			pulseTime: 0.75,
-			size: 3,
-		},
-		{
-			type: "scanY",
-			scanTime: 3,
-			pulseTime: 0.75,
-			size: 3,
-		},
-	]
-});
+const speedName2value = {
+	"slow": 6,
+	"medium": 4,
+	"fast": 2,
+}
 
-// console.log(defaultCalibration);
-window.cseq = defaultCalibration;
-
+const Guides = [
+	"default",
+	"balloon",
+	"bee",
+	"squidly"
+]
 
 export class CalibrationFrame extends HideShow {
 	/** @type {BasePointer} */
 	pointer = null;
-	
 	pointerSize = 50;
+	_speed = 4;
+	_size = 4;
+	_guide = "default";
+
+	/** @type {CalibrationSequence} */
+	calibrationSequence = null;
+
 	constructor(el = "calibration-frame") {
 		super(el);
 		if (typeof el === "string") this.onconnect();
@@ -420,8 +421,49 @@ export class CalibrationFrame extends HideShow {
 				this.stop = true;
 			}
 		})
-		
+		this.calibrationSequence = makeDefaultCSeqs(this.speed, this.size);
 	}
+
+	/** @param {string} value */
+	set guide(value) {
+		if (value in this.guides) {
+			this.pointer.guide = this.guides[value];
+			this._guide = value;
+		}
+	}
+
+	/** @return {string} */
+	get guide() {
+		return this._guide;
+	}
+
+	/** @param {Number|string} value */
+	set size(value) {	
+		value = parseInt(value);
+		if (!Number.isNaN(value)) {
+			this._size = value;
+			this.calibrationSequence = makeDefaultCSeqs(this.speed, this.size);
+		}
+	}
+	/** @return {Number} */
+	get size() {
+		return this._size;
+	}
+	/** @param {Number|string} value */
+	set speed(value) {		
+		if (typeof value === "number") {
+			this._speed = value;
+			this.calibrationSequence = makeDefaultCSeqs(this.speed, this.size);
+		} else if (value in speedName2value) {
+			this._speed = speedName2value[value];
+			this.calibrationSequence = makeDefaultCSeqs(this.speed, this.size);
+		}
+	}
+	/** @return {Number} */
+	get speed() {
+		return this._speed;
+	}
+
 
 	applyShownState() {
 		super.applyShownState();
@@ -454,22 +496,6 @@ export class CalibrationFrame extends HideShow {
 		pointers.shown = true;
 		pointers.start();
 
-		// let vregs = new HideShow("g");
-		// this.vregs = vregs;
-		// this.vregps = [];
-		// let s = 5;
-		// for (let y = 0; y < s; y++) {
-		// 	for (let x = 0; x < s; x++) {
-		// 		let p = pointers.createPointer("calibration", 20);
-		// 		p.position = new Vector((x + 0.5) / s, (y + 0.5) / s);
-		// 		p.shown = true;
-		// 		this.vregps.push(p);
-		// 		vregs.appendChild(p);
-		// 	}
-		// }
-		// pointers.appendChild(vregs);
-
-
 		let message = new HideShow("div");
 		message.styles = {
 			position: "absolute",
@@ -495,6 +521,7 @@ export class CalibrationFrame extends HideShow {
 	get bl() { return this.bottomleft; }
 	get bottomright() { return new Vector(1 - this.pad, 1 - this.pad); }
 	get br() { return this.bottomright; }
+
 	set recording(value) {
 		this._recording = value;
 		if (value) Algorithm.startSampling(this.sample_method, this.bbox)
@@ -503,6 +530,7 @@ export class CalibrationFrame extends HideShow {
 	get recording() {
 		return this._recording;
 	}
+
 	get position() {
 		return this.pointer.position;
 	}
@@ -510,7 +538,7 @@ export class CalibrationFrame extends HideShow {
 		this.pointer.position = pos;
 	}
 
-	async calibrate(css = defaultCalibration) {
+	async calibrate(css = this.calibrationSequence) {
 		let t = 0;
 		let duration = css.duration;
 		let t0 = performance.now();
@@ -549,83 +577,6 @@ export class CalibrationFrame extends HideShow {
 		return validation;
 	}
 
-	// async calibrate_grid(grid = 3, counts = 4) {
-	// 	let { tl, tr, bl, br } = this;
-	// 	this.ctype = `grid${grid}t${counts}`
-	// 	let points = dotGrid(grid, tl, tr, bl, br);
-	// 	await this.showMessageCountDown("Focus on the red dot<br/>as it appears on the screen.<br/>$$");
-	// 	await this.calibrate_points(points, counts);
-	// }
-
-	// async calibrate_points(points, counts) {
-	// 	let { pointer } = this;
-	// 	for (let p of points) {
-	// 		pointer.position = p;
-	// 		await pointer.show(1000);
-	// 		this.recording = true;
-	// 		for (let s = 0; s < counts; s++) {
-	// 			pointer.text = s + 1;
-	// 			await pointer.showText(500);
-	// 			await pointer.hideText(500)
-	// 		}
-	// 		this.recording = false;
-	// 		await pointer.hide();
-	// 	}
-	// }
-	
-	// async calibrate_scan(divs = 5, max_time = 3) {
-	// 	await this.showMessageCountDown("Focus on the red dot<br/>as it moves along the screen.<br/>$$");
-		
-	// 	let { pointer } = this;
-	// 	let bbox = this.getBoundingClientRect();
-	// 	let [t1, t2] = [max_time, max_time];
-	// 	if (bbox.width > bbox.height) t2 = max_time * bbox.height / bbox.width;
-	// 	else if (bbox.height > bbox.width) t1 = max_time * bbox.width / bbox.heipght;
-
-		
-	// 	this.ctype = `scan${divs}t${max_time}`
-	// 	let ext = [[this.tl, this.bl, this.tr, this.br, t1], [this.tl, this.tr, this.bl, this.br, t2]];
-	// 	for (let [pa1, pa2, pb1, pb2, time] of ext) {
-
-	// 		let pairs = linspace(1, 0, divs).map(t =>
-	// 			[pa1.mul(t).add(pa2.mul(1 - t)), pb1.mul(t).add(pb2.mul(1 - t))]
-	// 		)
-	// 		for (let [left, right] of pairs) {
-	// 			pointer.position = left;
-	// 			await pointer.show();
-	// 			this.recording = true;
-	// 			await pointer.moveTo(right, time * 1000);
-	// 			this.recording = false;
-	// 			await pointer.hide();
-	// 		}
-	// 	}
-	// }
-
-	// async showMessage(text) {
-	// 	this.message.innerHTML = text;
-	// 	await this.message.show();
-	// }
-	// async hideMessage() { await this.message.hide(); }
-	// async showMessageCountDown(text, count = 3) {
-	// 	let textf = (i) => text.replace("$$", i)
-	// 	this.message.innerHTML = textf("&nbsp;");
-	// 	await this.message.show();
-	// 	for (let i = count; i > 0; i--) {
-	// 		this.message.innerHTML = textf(i);
-	// 		await delay(1000);
-	// 	}
-	// 	await this.message.hide();
-	// }
-
-	// async calibrate(params = defaultCalibration) {
-	// 	if (params.scan.on) await this.calibrate_scan(params.scan.size, params.scan.time);
-	// 	if (params.grid.on) await this.calibrate_grid(params.grid.size, params.grid.time);
-	// 	await this.showMessage("Calibrating eye tracking...");
-	// 	let val = await Algorithm.trainModel();
-	// 	await this.hideMessage();
-	// 	return val;
-	// }
-
 	async show_results(std = this.std){
 		await this.showMessage(`Model Accuracy ${Math.round(100 - 2 * std * 100)}%`);
 		await delay(3000);
@@ -646,5 +597,16 @@ export class CalibrationFrame extends HideShow {
 				display: "none"
 			}
 		}
+	}
+
+	async loadGuides(){
+		let guides = {};
+		await Promise.all(Guides.map(async (g) => {
+			let url = `../../Utilities/CalibrationGuides/${g}.svg`;
+			let svg = await (await fetch(relURL(url, import.meta))).text();
+			svg = SvgPlus.parseSVGString(svg);
+			guides[g] = svg.innerHTML;
+		}))
+		this.guides = guides;
 	}
 }

@@ -212,6 +212,18 @@ class ControlOverlay extends ShadowElement {
     static get usedStyleSheets() {return [relURL("/access-control.css", import.meta)]}
 }
 
+function getSwitchButtonGroups() {
+    let groups = getButtonGroups();
+    let switchGroups = {};
+    for (let key in groups) {
+        let group = groups[key].filter(b => !b.disableSwitch);
+        if (group.length > 0) {
+            switchGroups[key] = group;
+        }
+    }
+    return switchGroups;
+}
+
 export class AccessControl extends Features {
     maxTransitionTimeMS = 500;
     constructor(sesh) {
@@ -279,7 +291,7 @@ export class AccessControl extends Features {
                 let selectedGroupName = null;
 
                 // Get the clickable access button groups
-                let groups = getButtonGroups();
+                let groups = getSwitchButtonGroups();
                 let keys = Object.keys(groups);
                 
                 
@@ -313,7 +325,7 @@ export class AccessControl extends Features {
                         }
 
                         // Get the new clickable access button groups
-                        groups = getButtonGroups();
+                        groups = getSwitchButtonGroups();
                         keys = Object.keys(groups);
                     }
     

@@ -1,6 +1,7 @@
 import { PromiseChain } from "../../Utilities/usefull-funcs.js";
 import * as FB from "../../Firebase/firebase.js";
 import { Features } from "../features-interface.js";
+import { getSelectedDevice } from "../../Utilities/device-manager.js";
 
 let UTTERANCES = {};
 let VOICE_NAME = "charles";
@@ -43,7 +44,6 @@ function defaultData(phrases) {
 
 async function playUtterance(utterance) {
     let url = await getUtteranceURL(utterance);
-
     if (url === "default") {
         await playUtteranceDefault(utterance);
     } else {
@@ -54,6 +54,8 @@ async function playUtterance(utterance) {
 
 async function playAudioURL(url) {
     const audio = new Audio(url);
+    let sinkID = await getSelectedDevice("audiooutput");
+    audio.setSinkId(sinkID);
     return new Promise((resolve, reject) => {
         audio.onerror = resolve
         audio.onended = resolve
@@ -61,16 +63,8 @@ async function playAudioURL(url) {
     });
 }
 
-
 async function playUtteranceDefault(phrase) {
-
     const utterThis = new SpeechSynthesisUtterance(phrase);
-    // const selectedOption = voiceSelect.selectedOptions[0].getAttribute("data-name");
-    // for (let i = 0; i < voices.length; i++) {
-    //     if (voices[i].name === selectedOption) {
-    //     utterThis.voice = voices[i];
-    //     }
-    // }
     return new Promise((resolve, reject) => {
         utterThis.onerror = resolve;
         utterThis.onend = resolve;
