@@ -190,7 +190,7 @@
                 "displayValue": "Shorter hold",
                 "hidden": false,
                 "symbol": "minus",
-                "type": "verb",
+                "type": "starter",
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "switchTime",
@@ -200,7 +200,7 @@
                 "displayValue": "Faster dwell",
                 "hidden": false,
                 "symbol": "minus",
-                "type": "verb",
+                "type": "starter",
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "dwellTime",
@@ -400,7 +400,7 @@
           "direction": 1
         },
         {
-            "displayValue": "Smaller cursor",
+            "displayValue": "Larger cursor",
             "hidden": false,
             "symbol": "add",
             "type": "verb",
@@ -445,7 +445,7 @@
           "direction": -1
         },
         {
-          "displayValue": "Larger cursor",
+          "displayValue": "Smaller cursor",
           "hidden": false,
           "symbol": "minus",
           "type": "starter",
@@ -470,63 +470,63 @@
             "displayValue": "Start/Stop Video",
             "hidden": false,
             "type": "adjective",
-            "setting": "video-v",
+            "setting": "v",
             "action": "toggle-setting"
         },
         {
             "displayValue": "Start/Stop Eye Gaze",
             "hidden": false,
             "type": "adjective",
-            "setting": "eyeGaze-e",
+            "setting": "e",
             "action": "toggle-setting"
         },
         {
             "displayValue": "Open/Close AAC Grid",
             "hidden": false,
             "type": "adjective",
-            "setting": "grid-g",
+            "setting": "g",
             "action": "toggle-setting"
         }],
         [{
             "displayValue": "Mute/Unmute Audio",
             "hidden": false,
             "type": "adjective",
-            "setting": "audio-a",
+            "setting": "a",
             "action": "toggle-setting"
         },
         {
             "displayValue": "Start/Stop Switch Access",
             "hidden": false,
             "type": "adjective",
-            "setting": "switch-x",
+            "setting": "x",
             "action": "toggle-setting"
         },
         {
             "displayValue": "Open/Close Quiz",
             "hidden": false,
             "type": "adjective",
-            "setting": "quiz-q",
+            "setting": "q",
             "action": "toggle-setting"
         }],
         [{
             "displayValue": "Start/Stop Screen Sharing",
             "hidden": false,
             "type": "adjective",
-            "setting": "screen-f",
+            "setting": "f",
             "action": "toggle-setting"
         },
         {
             "displayValue": "Show/Hide Calibration",
             "hidden": false,
             "type": "adjective",
-            "setting": "calibration-c",
+            "setting": "c",
             "action": "toggle-setting"
         },
         {
             "displayValue": "Open/Close Settings",
             "hidden": false,
             "type": "adjective",
-            "setting": "settings-s",
+            "setting": "s",
             "action": "toggle-setting"
         }]
     ]

@@ -145,63 +145,6 @@ class RestButton extends ShadowElement {
     }
 }
 
-const MODES = {
-    feedback: 1,
-    calibration: 2,
-    calibrated: 3,
-    uncalibrated: 4,
-}
-
-
-const used_points = [...new Set([152,10,389,162,473,468,33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154,153,145,144,163,7,362, 398, 384, 385, 386, 387, 388, 263, 249, 390,373, 374, 380, 381, 382,61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146,10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109])]
-// const prec_v = 1e4;
-// const prec_d = 10;
-// const total = 478;
-// function serialiseFaceMeshData(data) {
-//     let {points, width, height} = data;
-//     let pointsFlat = used_points.flatMap((i) => [points[i].x,points[i].y,points[i].z].map(v => Math.round(v * prec_v)));
-//     let u16 = new Int16Array(pointsFlat.length + 2);
-//     u16[0] = Math.round(width/prec_d);
-//     u16[1] = Math.round(height/prec_d);
-//     pointsFlat.forEach((e, i) => {
-//         u16[i+2] = e;
-//     });
-//     let u8 = new Uint8Array(u16.buffer);
-//     let str = "";
-//     for (let i = 0; i < u8.length; i++) {
-//         str += String.fromCharCode(u8[i]);
-//     }
-
-//     return str;
-// }
-
-// function deserialiseFaceMeshData(str) {
-//     let data = null;
-//     if (typeof str === "string") {
-//         let u8 = new Uint8Array(str.length);
-//         for (let i = 0; i < str.length; i++){
-//             u8[i] = str.charCodeAt(i);
-//         } 
-    
-//         let u16 = new Int16Array(u8.buffer);
-//         let width = u16[0]/prec_d;
-//         let height = u16[1]/prec_d;
-    
-//         let points = new Array(478);
-//         for (let i = 0; i < used_points.length; i++) {
-//             points[used_points[i]] = {
-//                 x: u16[i*3+2]/prec_v,
-//                 y: u16[i*3+3]/prec_v,
-//                 z: u16[i*3+4]/prec_v,
-//             }
-//         }
-//         points = new FaceLandmarks(points);
-    
-//         data = {points, width, height};
-//     }
-    
-//     return data;
-// }
 
 export class EyeGazeFeature extends Features {
     /**@type {CalibrationFrame} */
@@ -283,6 +226,9 @@ export class EyeGazeFeature extends Features {
     }
 
     toggleEyeGazeProcess(bool) {
+        if (typeof bool !== "boolean") {
+            bool = !this.isProcessing;
+        }
         if (bool !== this.isProcessing) {
             this.session.toolBar.setIcon("access/eye/name", bool ? "eye" : "noeye")
             this._isProcessing = bool;

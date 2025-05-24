@@ -63,15 +63,16 @@ const SettingOptions = [
         }
     },
     {
-        key: [["host", "participant"], "keyboardShortcuts", ["video-v", "audio-a", "screen-f", "calibration-c", "grid-g", "switch-x", "quiz-q", "settings-s", "eyeGaze-e"]],
+        key: [["host", "participant"], "keyboardShortcuts", ["v", "a", "f", "c", "g", "x", "q", "s", "e"]],
         type: "boolean",
         default: false,
         toIcon(value, name) {
             return {
-                symbol: {url: relURL("../../Utilities/KeyboardIcons/" + name[name.length-1]+ ".svg", import.meta)},
+                symbol: {url: relURL("../../Utilities/KeyboardIcons/" + name[name.length-1] + ".svg", import.meta)},
                 active: value,
             }
         }
+
     },
     {
         key: [["host", "participant"], "volume", "level"],
@@ -207,7 +208,6 @@ const SettingOptions = [
 const settingChangeListeners = [
 ]
  
-
 
 function onChange(...args) {
     
@@ -347,7 +347,6 @@ export function incrementValue(name, direction) {
             if (newValue < options.min) newValue = options.min;
             if (newValue !== value) {
                 setting.value = newValue;
-                onChange(name, newValue);
             }
         } else if (options.type === "option") {
             let index = options.options.indexOf(value);
@@ -356,7 +355,6 @@ export function incrementValue(name, direction) {
             if (newIndex < 0) newIndex = 0;
             if (newIndex !== index) {
                 setting.value = options.options[newIndex];
-                onChange(name, setting.value);
             }
         }
     }
@@ -374,7 +372,6 @@ export function toggleValue(name) {
             let newValue = !value;
             if (newValue !== value) {
                 setting.value = newValue;
-                onChange(name, newValue);
             }
         }
     }
@@ -397,7 +394,6 @@ export function setValue(name, value) {
         }
         if (value !== setting.value) {
             setting.value = value;
-            onChange(name, value);
         }
     }
 }

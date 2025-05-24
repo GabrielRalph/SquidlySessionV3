@@ -246,7 +246,13 @@ export class VideoPanelWidget extends ShadowElement {
         robs.observe(this.root);
     }
 
- 
+    /** 
+     * @param {number} value
+     */
+    set volume(value) {
+        this.host.video.volume = value;
+        this.participant.video.volume = value;
+    }
 
     async updateLayout(){
       

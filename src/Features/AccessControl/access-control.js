@@ -5,9 +5,11 @@ import { delay, relURL, WaveStateVariable } from "../../Utilities/usefull-funcs.
 import { addProcessListener } from "../../Utilities/webcam.js";
 import { Features } from "../features-interface.js";
 
+let SwitchTime = 1; // ms
+let DwellTime = 1; // ms
 
 class CircleLoader extends SvgPlus {
-    constructor(button) {
+    constructor(button, mode) {
         super("svg")
         this.class = "circle-loader";
         this.createChild("defs", {
@@ -47,6 +49,9 @@ class CircleLoader extends SvgPlus {
                 this.dispatchEvent(new Event("state-change"))
             }
         })
+
+        this.dwellRelease = mode == "dwell" ? DwellTime : SwitchTime;
+        this.dwellTime = mode == "dwell" ? DwellTime : SwitchTime;
     }
 
     pause(){
@@ -115,7 +120,7 @@ class ControlOverlay extends ShadowElement {
      * */
     async addDwellLoader(b, accessControl) {
         b.highlight = true;
-        let sl = this.createChild(CircleLoader, {}, b);
+        let sl = this.createChild(CircleLoader, {}, b, "dwell");
         this.loaders.set(b, sl)
         b.ondisconnect = () => {
             sl.force()
@@ -163,13 +168,12 @@ class ControlOverlay extends ShadowElement {
         let proms = buttons.map(async b => {
             b.highlight = true;
             /** @type {CircleLoader} */
-            let sl = this.createChild(CircleLoader, {}, b);
+            let sl = this.createChild(CircleLoader, {}, b, "switch");
 
             b.ondisconnect = () => {
                 sl.force()
-                console.log("force");
-                
             }
+
             switchLoaders.push(sl);
             await sl.setGoal(true);
             sl.remove();
@@ -226,8 +230,8 @@ function getSwitchButtonGroups() {
 
 export class AccessControl extends Features {
     maxTransitionTimeMS = 500;
-    constructor(sesh) {
-        super(sesh);
+    constructor(sesh, sdata) {
+        super(sesh, sdata);
         this.overlay = new ControlOverlay();
         this.session.toolBar.addSelectionListener("switch", async (e) => {
             await e.waitAll()
@@ -422,7 +426,19 @@ export class AccessControl extends Features {
     }
 
     initialise(){
-        this.session.eyeGaze.addEyeDataListener(this._onEyeData.bind(this))
+        this.session.eyeGaze.addEyeDataListener(this._onEyeData.bind(this));
+
+        this.session.settings.addEventListener("change", (e) => {
+            let path = e.path.split("/");
+            let [user, type, setting] = path;
+            if (user == this.sdata.me && type == "access") {
+                if (setting == "switchTime") {
+                    SwitchTime = e.value;
+                } else if (setting == "dwellTime") {
+                    DwellTime = e.value;
+                }
+            }
+        })
     }
 
     static async loadResources(){

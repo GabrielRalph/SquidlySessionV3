@@ -34,7 +34,7 @@ session-view {
 
     /* ~~~~~~~~~~~~~~~~ SIDE PANEL ~~~~~~~~~~~~~~~~ */
     --side-panel-max-p: 0.5;
-    --side-panel-desired: 150px;
+    --side-panel-desired: 16.666vw;
     --side-panel-min-p: 0.1;
 
     /* ~~~~~~~~~~~~~~~ SIDE SCREEN ~~~~~~~~~~~~~~~ */

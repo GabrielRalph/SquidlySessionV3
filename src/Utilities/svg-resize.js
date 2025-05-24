@@ -208,14 +208,23 @@ export const POINTERS = {
             t.style.setProperty("fill", "black");
             break
           case '2':
-            b.style.setProperty("fill", "#FFC107")
-            t.style.setProperty("fill", "black");
+            t.style.setProperty("fill", "#FFC107")
+            b.style.setProperty("fill", "black");
+            break
+          case '3': 
+            t.style.setProperty("fill", "#8aff03")
+            b.style.setProperty("fill", "black");
+            break
+          case '4': 
+            t.style.setProperty("fill", "#FFC107")
+            b.style.setProperty("fill", "#0606f7");
             break
         }
       }
     }
 
     setPosition(v) {
+      v = this.fromRelative(v);
       this.translate(v);
     }
   },

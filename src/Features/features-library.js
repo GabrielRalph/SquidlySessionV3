@@ -12,10 +12,6 @@ import { SettingsFeature } from "./Settings/settings.js"
 
 export const FEATURES = [
     {
-        class: Text2Speech,
-        name: "text2speech"
-    },
-    {
         class: ToolBarFeature,
         name: "toolBar",
         layers: {
@@ -31,33 +27,6 @@ export const FEATURES = [
             }
         },
     },
-
-    {
-        class: Notifications,
-        name: "notifications",
-        layers: {
-            notificationPanel: {
-                type: "area",
-                area: "entireScreen",
-                index: 120,
-                mode: "overlay"
-            }
-        }
-    },
-
-    {
-        class: AACGrid,
-        name: "aacGrid",
-        layers: {
-            board: {
-                type: "area",
-                area: "fullAspectArea",
-                index: 80,
-                mode: "occupy",
-            }
-        }
-    },
-
     {
         class: SettingsFeature,
         name: "settings",
@@ -70,8 +39,7 @@ export const FEATURES = [
             }
         }
     },
-
-
+    
     {
         class: VideoCall,
         name: "videoCall",
@@ -91,7 +59,34 @@ export const FEATURES = [
             }
         }
     },
-
+    {
+        class: Text2Speech,
+        name: "text2speech"
+    },
+    {
+        class: Notifications,
+        name: "notifications",
+        layers: {
+            notificationPanel: {
+                type: "area",
+                area: "entireScreen",
+                index: 120,
+                mode: "overlay"
+            }
+        }
+    },
+    {
+        class: AACGrid,
+        name: "aacGrid",
+        layers: {
+            board: {
+                type: "area",
+                area: "fullAspectArea",
+                index: 80,
+                mode: "occupy",
+            }
+        }
+    },
     {
         class: QuizFeature,
         name: "quiz",
@@ -105,7 +100,6 @@ export const FEATURES = [
             }
         }
     },
-
     {
         class: AccessControl,
         name: "accessControl",
@@ -118,7 +112,6 @@ export const FEATURES = [
             }
         }
     },
-
     {
         class: ShareContent,
         name: "shareContent",
@@ -130,7 +123,6 @@ export const FEATURES = [
             }
         }
     },
-
     {
         class: Cursors,
         name: "cursors",
@@ -155,7 +147,6 @@ export const FEATURES = [
             }
         }
     },
-
     {
         class: EyeGazeFeature,
         name: "eyeGaze",

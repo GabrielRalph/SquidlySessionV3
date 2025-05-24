@@ -154,8 +154,6 @@ const CSeqs = {
 				})
 			}
 			super(ncs);
-			console.log(this.sequences);
-			
 		}
 	},
 	scanX: class CSGrid extends CSList{
@@ -356,8 +354,6 @@ function makeCSeq(cs) {
 }
 
 function makeDefaultCSeqs(speed, size) {
-	console.log("Calibration speed: " + speed, "size: " + size);
-	
 	return makeCSeq({
 		type: "list",
 		sequences: [

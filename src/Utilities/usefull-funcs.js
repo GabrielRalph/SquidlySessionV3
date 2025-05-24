@@ -308,40 +308,61 @@ export class PromiseChain {
 
   }
   /** 
-   * @param {() => Promise} 
+   * @param {() => Promise} func
    * @return {Promise}
    * */
-  async addPromise(func) {
-      let item = {next: null, prom: null};
+  async addPromise(func, override = false) {
+      let item = {next: null, prom: null, override: override};
 
       // Add item to chain
       if (this.head == null) {
           this.head = item;
           this.tail = item;
       } else {
-          this.tail.next = item;
+        let node = this.head;
+          while (node.next != null) {
+              let nextNode = node.next;
+              if (nextNode.override && nextNode.prom === null) {
+                break;
+              }
+              node = nextNode;
+          }
+          node.next = item;
           this.tail = item;
       }
 
       // wait for previous promises in the chain
       let node = this.head;
-      while (node != item) {
+      while (node !== null && node != item) {
           await node.prom;
           node = node.next;
       }
 
-      // call the promise added.
-      item.prom = func();
-      let res = await item.prom;
+      let res = null;
+      // If the node is not null, it means that the promise was not overridden
+      if (node !== null) {
+        // call the promise added.
+        item.prom = func();
+        res = await item.prom;
 
-      // remove the item from the chain
-      if (this.tail == item) {
-          this.tail = null;
-          this.head = null;
-      } else {
-          this.head = item.next;
+        // remove the item from the chain
+        if (this.tail == item) {
+            this.tail = null;
+            this.head = null;
+        } else {
+            this.head = item.next;
+        }
       }
+     
       return res;
+  }
+
+  async wait(){
+    let node = this.head;
+    while (node != null) {
+      await node.prom;
+      node = node.next;
+    }
   }
 }
 

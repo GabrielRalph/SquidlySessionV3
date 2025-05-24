@@ -172,6 +172,9 @@ export class SquidlySessionElement extends ShadowElement {
     /** @type {SettingsFeature} */
     settings = null;
 
+     /** @type {EyeGazeFeature} */
+    eyeGaze = null;
+
     /** @type {number} */
     sharedAspectRatio = 1;
 
@@ -216,6 +219,7 @@ export class SquidlySessionElement extends ShadowElement {
                     this.initialiseFeatures()
                 ]);
                 await this.initialiseWindowManager();
+                await this.initialiseKeyboardShortcuts();
                 this.squidlyLoader.hide(0.5);
             } catch (e) {
                 console.log(e);
@@ -229,6 +233,8 @@ export class SquidlySessionElement extends ShadowElement {
     panelMode = "sidePanel"
 
     async openWindow(name){
+        console.log("open window", name, this.panelMode);
+        
         if (name != this.occupier) {
             let nextOccupier = name in this.occupiables ? this.occupiables[name] : null;
             name = name in this.occupiables ? name : null;
@@ -458,6 +464,24 @@ export class SquidlySessionElement extends ShadowElement {
     }
 
     async initialiseWindowManager(){
+        let updateSidePanel = (value) => {
+            value = value == "v-side" ? "sidePanel" : "topPanel";
+            this.panelMode = value;
+            
+            if (this.currentOccupier) {
+                this.togglePanel("sidePanel", value == "sidePanel");
+                this.togglePanel("topPanel", value == "topPanel");
+            }
+        }
+        this.settings.addEventListener("change", (e) => {
+            let {user, group, setting, value} = e;
+            if (user == this.sdata.me && group == "display" && setting == "layout") {
+                updateSidePanel(value);
+            }
+        })
+
+        updateSidePanel(this.settings.get(`${this.sdata.me}/display/layout`));
+
         return new Promise((r) => {
             this.sdata.onValue("occupier", async (name) => {
                 await this.openWindow(name);
@@ -465,6 +489,38 @@ export class SquidlySessionElement extends ShadowElement {
             })
         })
     }   
+
+    keyboardShortcuts = {
+        "v": () => this.videoCall.toggleMuted("video", this.sdata.me),
+        "a": () => this.videoCall.toggleMuted("audio", this.sdata.me),
+        "e": () => this.eyeGaze.toggleEyeGazeProcess(),
+        "g": () => this.openWindow(this.occupier === "aacGrid" ? "default" : "aacGrid"),
+        "q": () => this.openWindow(this.occupier === "quiz" ? "default" : "quiz"),
+        "s": () => this.openWindow(this.occupier === "settings" ? "default" : "settings"),
+        "c": () => this.openWindow(this.occupier === "eyeGaze" ? "default" : "eyeGaze"),
+        "f": () => this.openWindow(this.occupier === "shareContent" ? "default" : "shareContent"),
+        "x": () => {
+            if (this.accessControl.isSwitching) {
+                this.accessControl.endSwitching();
+            } else {
+                this.accessControl.startSwitching();
+            }
+        }
+    }
+    async initialiseKeyboardShortcuts() {
+        window.addEventListener("keydown", (e) => {
+            let notInInput = document.activeElement === document.body;
+            let validKey = e.key in this.keyboardShortcuts;
+            let enabled = this.settings.get(`${this.sdata.me}/keyboardShortcuts/${e.key}`);
+            console.log("key", e.key, "notInInput", notInInput, "validKey", validKey, "enabled", enabled);
+            
+            if(notInInput && validKey && enabled) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.keyboardShortcuts[e.key]();
+            }
+        });
+    }
 
     async testFR() {
         

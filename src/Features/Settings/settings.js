@@ -22,10 +22,9 @@ class SettingsIcon extends GridIcon {
             this.setAttribute("setting", this.setting);
             this.updateDynamicTemplate();
         }
-
-        this.active = !!icon.active;
-
     }
+
+
 
     set active(value) {
         this.activeIcon.toggleAttribute("show", value);
@@ -106,21 +105,21 @@ class SettingsPanel extends SvgPlus {
         this.createChild(IconGrid, {}, [
             [{
                 type: "action",
-                displayValue: "exit",
+                displayValue: "Exit",
                 symbol: "close",
                 action: "exit",
                 
             }],
             [{
                 type: "action",
-                displayValue: "home",
+                displayValue: "Home",
                 symbol: "home",
                 hidden: isHome,
                 action: "home",
             }],
             [{
                 type: "action",
-                displayValue: "back",
+                displayValue: "Back",
                 symbol: "back",
                 hidden: isHome,
                 action: "back",  
@@ -355,6 +354,7 @@ class SettingsWindow extends OccupiableWindow {
 
     close(){
         this.root.hide(400)
+        this.dispatchEvent(new Event("exit"));
     }
 
     static get usedStyleSheets() {
@@ -382,15 +382,24 @@ export class SettingsFeature extends Features {
             }
         })
 
-        this.settingsWindow.addEventListener("navigation", (e) => {
-            let path = this.settingsWindow.history;
-            sdata.set("path", path);
-        });
+        this.settingsWindow.events = {
+            navigation: (e) => {
+                let path = this.settingsWindow.history;
+                sdata.set("path", path);
+            },
+            exit: () => {
+                this.dispatchEvent(new Event("exit"));
+            }
+        }
 
         Settings.addChangeListener((name, value) => {
             this.settingsWindow.updateSettings();
             const event = new Event("change", {bubbles: true});
             event.path = name;
+            let [user, type, setting] = name.split("/");
+            event.user = user;
+            event.group = type;
+            event.setting = setting;
             event.value = value;    
             this.dispatchEvent(event);
         });

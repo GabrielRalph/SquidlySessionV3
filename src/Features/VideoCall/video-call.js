@@ -57,7 +57,6 @@ export class VideoCall extends Features {
         this.sidePanelWidget = new VideoPanelWidget();
         this.mainAreaWidget = new VideoPanelWidget();
         this._setWidgetEvents();
-     
     }
 
 
@@ -285,7 +284,27 @@ export class VideoCall extends Features {
             this.session.toolBar.addSelectionListener("video", () => {
                 this.toggleMuted("video", this.sdata.me)
             })
+
+            this.session.settings.addEventListener("change", (e) => {
+                let {user, group, setting, value} = e;
+                if (user == this.sdata.me) {
+                    if (group == "volume" && setting == "level") {
+                        this.volume = value;
+                    }
+                }
+            });
+
+            this.volume = this.session.settings.get(`${this.sdata.me}/volume/level`);
         }
+
+    }
+
+    /** @param {number} value */
+    set volume(value) {
+        value = value / 100; // convert to 0-1 range
+        this.topPanelWidget.volume = value;
+        this.sidePanelWidget.volume = value;
+        this.mainAreaWidget.volume = value;
     }
 
     get _allWidgets(){

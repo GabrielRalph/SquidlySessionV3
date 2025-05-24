@@ -8,6 +8,19 @@ import { Features } from "../features-interface.js";
 
 const MAXTIME = 5000;
 
+const size2num = {
+    "small": 1,
+    "medium": 2,
+    "large": 3,
+}
+const col2num = {
+    "colour-1":0,
+    "colour-2":1,
+    "colour-3":2,
+    "colour-4":3,
+    "colour-5": 4,
+}
+
 class Cursor extends HideShow {
     cursorIcon = null;
     constructor(){
@@ -87,7 +100,7 @@ export class Cursors extends Features {
      * @param {[Vector, Vector]} bbox the position and size of the bounding box to which
      *                                the position vector is relative too.
     */
-   updateCursorPosition(name, position, bbox) {
+    updateCursorPosition(name, position, bbox) {
        if (position == null) {
            this.sdata.set(`positions/${name}`, null);
            this._updatePosition(null, name)
@@ -104,20 +117,29 @@ export class Cursors extends Features {
         this.sdata.set("reference", name);
     }
     
-    
-
     rel_bbox2rel_ref(point, bbox){
-        point = point.mul(bbox[1]).add(bbox[0]);
-        let [pos, size] = this.referenceBBox;
-        let relPoint = point.sub(pos).div(size);
-        return relPoint;
+        let newPos = null;
+        try {
+            point = point.mul(bbox[1]).add(bbox[0]);
+            let [pos, size] = this.referenceBBox;
+            newPos =  point.sub(pos).div(size);
+        } catch (e) {
+            newPos = null;
+        }
+        return newPos;
     }
 
     rel_ref2rel_entire(relPoint) {
-        let [pos, size] = this.referenceBBox;
-        let screen = relPoint.mul(size).add(pos);
-        let [pose, sizee] = this.cursorsPanel.bbox;
-        return screen.sub(pose).div(sizee);
+        let newPos = null;
+        try {
+            let [pos, size] = this.referenceBBox;
+            let screen = relPoint.mul(size).add(pos);
+            let [pose, sizee] = this.cursorsPanel.bbox;
+            newPos = screen.sub(pose).div(sizee);
+        } catch (e) {
+            newPos = null;
+        }
+        return newPos;
     }
 
     get me() {return this.sdata.isHost ? "host" : "participant"}
@@ -133,6 +155,52 @@ export class Cursors extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVAE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    _getMouseCursorProperties(user) {
+        let size = this.session.settings.get(`${user}/display/cursorSize`);
+        let colour = this.session.settings.get(`${user}/display/cursorColour`);
+        let type = null;
+        if (size != "none") {
+            size = size2num[size];
+            colour = col2num[colour];
+            type = `${size}${colour}`;
+        }
+        return {type, class: "cursor"}
+    }
+    _watchMouseCursorPosition() {
+        let update = false;
+
+        let updatef = () => {
+            let props = this._getMouseCursorProperties(this.me);
+            update = props.type !== null;
+            if (props.type !== null) {
+                this.updateCursorProperties(this.me + "-mouse", props);
+            } else {
+                this.updateCursorPosition(this.me + "-mouse", null, null);
+            }
+        }
+        updatef();
+        this.session.settings.addEventListener("change", (e) => {
+            let {user, group, setting} = e;
+            if (user == this.me && group == "display" && (setting == "cursorSize" || setting == "cursorColour")) {
+                updatef();
+            }
+        });
+
+        window.addEventListener("mousemove", (e) => {
+            if (update) {
+                let pos = null;
+                let size = null;
+                try {
+                    pos = new Vector(e.clientX, e.clientY);
+                    size = new Vector(window.innerWidth, window.innerHeight);
+                    pos = pos.div(size);
+                } catch (e) {
+                    pos = null;
+                }
+                this.updateCursorPosition(this.me + "-mouse", pos, [new Vector(0, 0), size]);
+            } 
+        });
+    }
 
     _createNewCursor(name) {
         if (!(name in this.cursorLibrary)) {
@@ -210,6 +278,7 @@ export class Cursors extends Features {
         this.sdata.onChildRemoved("positions", (_, name) => {
             this._updatePosition(null, name)
         })
+        this._watchMouseCursorPosition();
     }
 
     static get privatePropertyNames(){return ["svg", "cursorLibrary", "entireScreen"]}
