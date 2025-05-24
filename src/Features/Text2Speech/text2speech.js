@@ -3,7 +3,7 @@ import * as FB from "../../Firebase/firebase.js";
 import { Features } from "../features-interface.js";
 import { getSelectedDevice } from "../../Utilities/device-manager.js";
 
-const DEBUG = false;
+const DEBUG = true;
 const cmodes = {
     "normal": ["rgb(214, 109, 22)", "rgb(183, 61, 17)"],
     "load": ["rgb(64, 195, 21)", "rgb(14, 127, 31)"]
@@ -243,7 +243,7 @@ export class Text2Speech extends Features {
         if (utterance in MY_VOICES) {
             const {videoCall} = this.session;
             if (broadcast && videoCall) {
-                videoCall.sendData("t2s", utterance)
+                videoCall.sendData("t2s-name", utterance)
             }
     
             await speak(utterance, true, true);
@@ -258,7 +258,13 @@ export class Text2Speech extends Features {
         this.session.videoCall.addEventListener("t2s", (e) => {
             const {data} = e;
             if (typeof data === "string") {
-                this.speak(data, true);
+                this.speak(data, false);
+            } 
+        })
+        this.session.videoCall.addEventListener("t2s-name", (e) => {
+            const {data} = e;
+            if (typeof data === "string") {
+                this.speakName(data, false);
             } 
         })
 
@@ -274,7 +280,7 @@ export class Text2Speech extends Features {
                 if (group == "access" && setting == "voice") {
                     if (value in MY_VOICES && tempVoice !== value) {
                         tempVoice = value;
-                        this.speakName(value, false);
+                        this.speakName(value, true);
                     }
                 } else if (group == "volume" && setting == "level") {
                     VOLUME = value/100;
