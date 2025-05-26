@@ -350,8 +350,8 @@ const ActionsTemplate = [
     {
         row: 3,
         col: -1,
-        displayValue: "Quick Talk",
-        iconSource: "msg",
+        displayValue: "Search",
+        iconSource: "search",
         key: "quick"
     },
 ]
@@ -440,9 +440,11 @@ class AACGridBoard extends OccupiableWindow {
             "clear": () => this.output.clear(),
             "backspace": () => this.output.deleteWord(),      
             "speak": () => this.output.speak(),
-            "quick": async () => {
-                await this.setTopic(this.quickTalk);
-                this.aacGrid._updateTopics(this.topicPath);
+            "quick": async (e) => {
+                e.waitFor(this.aacGrid.searchTopics());
+                // console.log(await this.aacGrid.getAllTopics());
+                // await this.setTopic(this.quickTalk);
+                // this.aacGrid._updateTopics(this.topicPath);
             },
         }
     }
@@ -555,7 +557,6 @@ export class AACGrid extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
     _updateTopics(path){
-        // console.log("updating", path);
         this.sdata.set("topics", path);
     }
 
@@ -600,6 +601,32 @@ export class AACGrid extends Features {
             this.board.currentGrid.waitForLoad(),
             quickTalkProm
         ]);
+    }
+
+    async searchTopics(){
+        let topics = await Topics.getAllTopics(this.sdata.hostUID);
+        let searchList = Object.keys(topics).map(id => {
+            let topic = topics[id];
+            return {
+                id,
+                matches: topic.name,
+                icon: {
+                    displayValue: topic.name,
+                    type: "topic",
+                    subtitle: topic.ownerName,
+                }
+            }
+        })
+        await this.session.search.startSearch(searchList, async (result) => {
+            if (result) {
+                let topicID = result.id;
+                if (topicID && topicID !== this.board.currentTopic) {
+                    this.board.topicPath = [];
+                    await this.board.setTopic(topicID);
+                    this._updateTopics(this.board.topicPath);
+                }
+            }
+        });
     }
 
     static get firebaseName(){

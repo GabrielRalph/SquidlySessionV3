@@ -83,3 +83,60 @@ export class Rotater extends SvgPlus {
     }
 }
 
+export class Slider extends SvgPlus {
+    contentSets = []
+    constructor(){
+        super("div");
+        this.class = "slider";
+        this.slot1 = this.createChild("div", {class: "slot-1"});
+        this.slot2 = this.createChild("div", {class: "slot-2", styles: {"--t": 1}});
+        this.transitionTime = 0.8;
+        this.toggleAttribute("y", true);
+        this._shownSlot = 1;
+    }
+
+    async setContent(content, direction = 1) {
+        let immediate = !(direction === 1 || direction === -1);
+        // If a current set is in progress add the set request to a buffer.
+        if (this._settingContent) {
+            this.contentSets.push([content, direction]);
+        
+        // Otherwise set the content
+        } else {
+            this._settingContent = true;
+            let element = immediate ? this.shownSlot : this.hiddenSlot;
+            
+            element.innerHTML = "";
+            if (content instanceof Element) {
+                element.appendChild(content);
+            }
+    
+            if (!immediate) {
+                await this.slide(direction);
+            }
+            
+            this._settingContent = false;
+            if (this.contentSets.length > 0) {
+                this.setContent(...this.contentSets.pop());
+                this.contentSets = [];
+            }
+        }
+    }
+
+
+    get shownSlot(){
+        return this._shownSlot === 1 ? this.slot1 : this.slot2;
+    }
+    get hiddenSlot() {
+        return this._shownSlot === 1 ? this.slot2 : this.slot1;
+    }
+
+    async slide(direction = false){
+        let {shownSlot, hiddenSlot} = this;
+        await this.waveTransition((t) => {
+            shownSlot.style.setProperty("--t", -1 * direction * t);
+            hiddenSlot.style.setProperty("--t", direction * (1 - t));
+        }, this.transitionTime * 1000, true);
+        this._shownSlot = this._shownSlot === 1 ? 2 : 1;
+    }
+}

@@ -295,6 +295,8 @@ export class Text2Speech extends Features {
             }
         });
 
+        await changeVoice(voice);
+
         
     }
 }

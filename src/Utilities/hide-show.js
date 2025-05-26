@@ -6,7 +6,7 @@ export class HideShow extends SvgPlus {
     super(el);
     this.transState = new WaveStateVariable(false, 0.400, (t) => {
       
-      this.opacity = t;
+      this.setTransitionVariable(t);
       if (t == 0) {
         this.applyHiddenState();
         this._shown = false;
@@ -17,6 +17,10 @@ export class HideShow extends SvgPlus {
         this.applyIntermediateState(t);
       }
     });
+  }
+
+  setTransitionVariable(state) { 
+    this.opacity = state;
   }
 
   applyIntermediateState(t) {

@@ -122,6 +122,48 @@ export async function getTopic(id){
     return topic;
 }
 
+export async function getAllTopics(uid) {
+    let publicQuery = FB.query(FB.ref("grid-topics"), FB.orderByChild('public'), FB.equalTo(true));
+    let ownedQuery = FB.query(FB.ref("grid-topics"), FB.orderByChild('owner'), FB.equalTo(uid));
+    let [s1, s2] = await Promise.all([
+        (await FB.get(publicQuery)).val(),
+        (await FB.get(ownedQuery)).val()
+    ]);
+
+
+    let users = {};
+
+    let all = {};
+    Object.keys(s1 || {}).forEach(id => {
+        all[id] = s1[id];
+        TOPICS[id] = s1[id]; // Cache the topic
+        users[s1[id].owner] = true; // Cache the owner
+    });
+
+    Object.keys(s2 || {}).forEach(id => {
+        all[id] = s2[id];
+        TOPICS[id] = s2[id]; // Cache the topic
+        users[s2[id].owner] = true; // Cache the owner
+    });
+
+    await Promise.all(Object.keys(users).map(async uid => {
+        let [firstName, lastName, displayName] = await Promise.all([
+            (await FB.get(FB.ref(`users/${uid}/info/firstName`))).val(),
+            (await FB.get(FB.ref(`users/${uid}/info/lastName`))).val(),
+            (await FB.get(FB.ref(`users/${uid}/info/displayName`))).val()
+        ]);
+        let name = displayName || (firstName + " " + lastName);
+        users[uid] = name || " - ";
+    }));
+
+    for (let id in all) {
+        let topic = all[id];
+        topic.ownerName = users[topic.owner] || " - ";
+    }
+    return all;
+}
+
+
 /**
  * @param {string} id;
  * @return {boolean}
@@ -262,7 +304,6 @@ export async function getQuickTalk() {
     let quickTalk = await getTopic(QUICK_TALK);
     return [QUICK_TALK, quickTalk]
 }
-
 
 export async function speakUtterance(item){
     if (Text2Speech) {

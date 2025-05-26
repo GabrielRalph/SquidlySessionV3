@@ -43,7 +43,7 @@ export class AccessEvent extends Event {
 
         e.eventPromises.push(promise);
 
-        await promise;
+        return await promise;
     }
 
     async waitAll(){

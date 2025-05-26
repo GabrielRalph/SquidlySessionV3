@@ -132,26 +132,74 @@ export class GridIconSymbol extends SvgPlus{
     }
 }
 
+export class GridCard extends SvgPlus { 
+    constructor(el, type) {
+        super(el);
+        this.class = "grid-icon";
+
+        this.type = type;
+
+        this.cardIcon = this.createChild("svg", {class: "card-icon"});
+        this.content = this.createChild("div", {class: "content"});
+
+
+        if (type in MAKE_CARD_ICON) {
+            let rs = new ResizeObserver(this.onresize.bind(this));
+            rs.observe(this);
+        }
+    }
+
+    /** @param {boolean} disabled */
+    set disabled(disabled) {
+        this.toggleAttribute("i-disabled", disabled);
+        this._disabled = disabled;
+    }
+
+    /** @return {boolean} */
+    get disabled() {
+        return this._disabled;
+    }
+
+    /** @param {string} type */
+    set type(type) {
+        this._type = type;
+        this.classList.remove(this.type);
+        this.classList.add(type);
+    }
+
+    get type(){
+        return this._type
+    }
+
+     // Called when the size of the icon changes.
+     onresize(e){
+        let bbox = e[0]?.contentRect;
+        if (bbox) {
+            let {width, height} = bbox;
+            if (width > 0 && height > 0) {
+                let size = new Vector(width, height);
+                this.cardIcon.props = {
+                    viewBox: `0 0 ${size.x} ${size.y}`,      // Update the svg viewBox.
+                    content: MAKE_CARD_ICON[this.type](size) // Recompute the svg content.
+                }
+            }
+        }
+    }
+}
+
 /** A GridIcon represents an item from a topic. */
-export class GridIcon extends AccessButton {
+export class GridIcon extends GridCard {
     symbolLoaded = false;
 
     /** @param {GridIconOptions} item */
     constructor(item, accessGroup) {
-        super(accessGroup);
+        super("access-button", item.type);
+        this.group = accessGroup || "default";
         this.item = item;
-
-        // Set class to type
-        this.class = "grid-icon";
-
-        this.type = item.type;
-
+    
         // Toggle attribute 'i-hidden' if icon is hidden.
         this.toggleAttribute("i-hidden", !!item.hidden);
 
-        // Create card background svg, and icon content box.
-        this.cardIcon = this.createChild("svg", {class: "card-icon"});
-        this.content = this.createChild("div", {class: "content"});
 
         // Add symbol to content box.
         if ("symbol" in item) {
@@ -168,26 +216,15 @@ export class GridIcon extends AccessButton {
             this.subtitleElement = this.content.createChild("div", {class: "subtitle"});
             this.subtitle = item.subtitle;
         }
-        // Set up resize observer to re render the card when the size of the 
-        // grid icon changes.
-        if (this.item.type in MAKE_CARD_ICON) {
-            let rs = new ResizeObserver(this.onresize.bind(this));
-            rs.observe(this);
-        }
-
+       
         this.disabled = item.disabled || false;
+
+        if ("events" in item) {
+            this.events = item.events;
+        }
     }
 
-    /** @param {boolean} disabled */
-    set disabled(disabled) {
-        this.toggleAttribute("i-disabled", disabled);
-        this._disabled = disabled;
-    }
-
-    /** @return {boolean} */
-    get disabled() {
-        return this._disabled;
-    }
+   
 
     /** @param {IconSymbol} symbol*/
     set symbol(symbol) {
@@ -214,19 +251,9 @@ export class GridIcon extends AccessButton {
             this.symbolLoaded = true;
         }
     }
+
     get symbol() {
         return this._symbol;
-    }
-
-    /** @param {string} type */
-    set type(type) {
-        this._type = type;
-        this.classList.remove(this.type);
-        this.classList.add(type);
-    }
-
-    get type(){
-        return this._type
     }
 
     /** @param {boolean} hidden */
@@ -276,23 +303,61 @@ export class GridIcon extends AccessButton {
             await new Promise((r) => this.onload = () => r());
         }
     }
+   
+    static get styleSheet(){
+        return relURL("./grid-icon.css", import.meta);
+    }
+}
 
-    // Called when the size of the icon changes.
-    onresize(e){
-        let bbox = e[0]?.contentRect;
-        if (bbox) {
-            let {width, height} = bbox;
-            if (width > 0 && height > 0) {
-                let size = new Vector(width, height);
-                this.cardIcon.props = {
-                    viewBox: `0 0 ${size.x} ${size.y}`,      // Update the svg viewBox.
-                    content: MAKE_CARD_ICON[this.type](size) // Recompute the svg content.
-                }
+/**
+ * A GridLayout represents a grid of GridIcons.
+ * It allows adding GridIcons to specific rows and columns.
+ * @extends SvgPlus
+*/
+export class GridLayout extends SvgPlus {
+    /**
+     * @param {number} rows - Number of rows in the grid.
+     * @param {number} cols - Number of columns in the grid.
+     */
+    constructor(rows, cols) {
+        super("grid-layout");
+        if (typeof rows === "number" && typeof cols === "number") {
+            this.elements = new Array(rows).fill(0).map(() => new Array(cols).fill(null));
+            this.styles = {
+                "grid-template-rows": `repeat(${rows}, 1fr)`,
+                "grid-template-columns": `repeat(${cols}, 1fr)`,
+                "--rows": rows,
+                "--cols": cols
             }
         }
     }
 
-    static get styleSheet(){
-        return relURL("./grid-icon.css", import.meta);
+    /**
+     * Adds an item to the grid at the specified row and column.
+     * @param {GridIcon|SvgPlus} item - The item to add to the grid.
+     * @param {number} row - The starting row index (0-based).
+     * @param {number} col - The starting column index (0-based).
+     * @param {number} [rowEnd] - The ending row index (0-based, inclusive).
+     * @param {number} [colEnd] - The ending column index (0-based, inclusive).
+     */
+    add(item, row, col, rowEnd, colEnd) {
+        if (SvgPlus.is(item, SvgPlus) && typeof row === "number" && typeof col === "number") {
+            rowEnd = typeof rowEnd === "number" ? rowEnd+1 : row;
+            colEnd = typeof colEnd === "number" ? colEnd+1 : col;
+            item.styles = {
+                "grid-row-start": row + 1,
+                "grid-column-start": col + 1,
+                "grid-row-end": rowEnd + 1,
+                "grid-column-end": colEnd + 1
+            }
+
+            
+            // for (let r = row; r < rowEnd; r++) {
+            //     for (let c = col; c < colEnd; c++) {
+            //         this.elements[r][c] = item;
+            //     }
+            // }
+            this.appendChild(item);
+        }
     }
 }

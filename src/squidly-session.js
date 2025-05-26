@@ -23,6 +23,7 @@ const parallel = (...args) => Promise.all(...args);
 /** @typedef {import('./Features/EyeGaze/eye-gaze.js').EyeGazeFeature} EyeGazeFeature*/
 /** @typedef {import('./Features/Settings/settings.js').SettingsFeature} SettingsFeature*/
 /** @typedef {import('./Features/VideoCall/video-call.js').VideoCall} VideoCall*/
+/** @typedef {import('./Features/SearchTesting/search.js').Search} Search*/
 /** @typedef {import('./Features/Text2Speech/text2speech.js').Text2Speech} Text2Speech*/
 /** @typedef {import('./Features/Notifications/notifications.js').Notifications} Notifications*/
 /** @typedef {import('./Features/AccessControl/access-control.js').AccessControl} AccessControl*/
@@ -503,7 +504,7 @@ export class SquidlySessionElement extends ShadowElement {
             if (this.accessControl.isSwitching) {
                 this.accessControl.endSwitching();
             } else {
-                this.accessControl.startSwitching();
+                this.accessControl.startSwitching(!this.occupier);
             }
         }
     }
@@ -512,7 +513,6 @@ export class SquidlySessionElement extends ShadowElement {
             let notInInput = document.activeElement === document.body;
             let validKey = e.key in this.keyboardShortcuts;
             let enabled = this.settings.get(`${this.sdata.me}/keyboardShortcuts/${e.key}`);
-            console.log("key", e.key, "notInInput", notInInput, "validKey", validKey, "enabled", enabled);
             
             if(notInInput && validKey && enabled) {
                 e.preventDefault();
@@ -608,6 +608,11 @@ export class SquidlySession {
         return $$.get(this).settingsPublic;
     }
 
+     /** @return {?Search} */
+     get search(){
+        return $$.get(this).searchPublic;
+    }
+
     /** @return {?Text2Speech} */
     get text2speech(){
         return $$.get(this).text2speechPublic;
@@ -631,6 +636,10 @@ export class SquidlySession {
     /** @return {boolean} */
     get isHost(){
         return sessionConnection.isHost;
+    }
+
+    get isOccupied() {
+        return $$.get(this).occupier !== null;
     }
 
 

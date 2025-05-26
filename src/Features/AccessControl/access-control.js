@@ -389,7 +389,7 @@ export class AccessControl extends Features {
         // Clear endSwitching function unfix the 
         // tool bar and bring back mouse cursor.
         this.endSwitching = () => {}
-        this.session.toolBar.fixToolbar(false);
+        this.session.toolBar.fixToolbar(this.session.isOccupied);
         this.overlay.hideMouse = false;
         this._isSwitching = false;
     }
