@@ -8,6 +8,8 @@ import { filterAndSort, SearchWindow } from "../../Utilities/search.js";
 import { Action, ActionHistory } from "./actions.js";
 import { formatReport } from "./results.js";
 import { GridCard, GridIcon, GridLayout } from "../../Utilities/grid-icon.js";
+import { SvgPlus, Vector } from "../../SvgPlus/4.js";
+import { Heatmap } from "../EyeGaze/heatmap.js";
 
 /**
  * @typedef {import("./quizzes.js").Question} Question
@@ -29,6 +31,8 @@ function savePDF(base64) {
     a.download = "quiz-results.pdf";
     a.click();
 }
+
+
 
 class QuizResults extends GridLayout {
     constructor() {
@@ -185,8 +189,6 @@ class SQuizView extends QuizView {
         }
     }
 
-   
-
     async showQuizResults(forceUpdate){
         let {results, resultsPage} = this;
         let {total_score, total_questions} = results;
@@ -210,6 +212,69 @@ class SQuizView extends QuizView {
         this.info.content = "Get ready to begin";
     }
 
+    createRender(heatmap){
+        let width = heatmap.length;
+        let height = heatmap[0].length;
+        let canvas = new SvgPlus("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        let c = canvas.getContext("2d");
+
+        let [quizPos, quizSize] = this.bbox;
+        let screenSize = new Vector(window.innerWidth, window.innerHeight);
+        let renderSize = new Vector(width, height);
+        
+        let relQuizPos = quizPos.div(screenSize);
+        let relQuizSize = quizSize.div(screenSize);
+
+        let rqPos = relQuizPos.mul(renderSize);
+        let rqSize = relQuizSize.mul(renderSize);
+
+        let drawRR = (pos, size, col, rad) => {
+            if (rad) {
+                c.fillStyle = col;
+                c.beginPath();
+                c.roundRect(pos.x, pos.y, size.x, size.y, rad);
+                c.fill();
+            } else {
+                c.fillStyle = col;
+                c.fillRect(pos.x, pos.y, size.x, size.y);
+            }
+        }
+        
+        let space = 0.015 * Math.min(renderSize.x, renderSize.y);
+
+        let topCellSpaceX = (rqSize.x - 6 * space) / 5;
+        let topCellSpaceY = (rqSize.y - 4 * space) / 3;
+        let topCellSize = new Vector(topCellSpaceX, topCellSpaceY);
+        let p0 = rqPos.add(space);
+
+        let p1 = p0.addV(topCellSpaceY + space);
+
+        drawRR(new Vector(0, 0), renderSize, "black");
+
+        // draw quiz area 
+        drawRR(rqPos, rqSize, "black");
+
+        // draw close icon 
+        drawRR(p0, topCellSize, "#a61f00", space);
+
+        // draw back icon
+        drawRR(p0.addH(topCellSpaceX + space), topCellSize, "#ff9ca7", space);
+
+        
+        drawRR(p0.addH(2*(topCellSpaceX + space)), topCellSize.addH(topCellSpaceX + space), "white", space);
+        
+        // draw next icon
+        drawRR(p0.addH(4*(topCellSpaceX + space)), topCellSize, "#aeef93", space);
+
+        // draw question area
+        drawRR(p1, new Vector(rqSize.x - 2 * space, 2 * topCellSpaceY + space), "white", space);
+
+        heatmap.render(canvas);
+
+        return canvas.toDataURL("image/png");
+    }
   
     /** @param {QuizFeatureState} state*/
     set state(state) {
@@ -249,6 +314,11 @@ class SQuizView extends QuizView {
         // There has been a change in index, or force update is requested
         if (forceUpdate || i !== this.index) {
 
+            if (this.index == -1 && i == 0) {
+                this.heatmap = new Heatmap(400, 40);
+                this.heatmap.start();
+            }
+
             // The change is valid
             if (i >= -1 && i <= max) {
                 this.info.max = max;
@@ -262,6 +332,15 @@ class SQuizView extends QuizView {
                 if (i == -1) {
                     this.showQuizStart();
                 } else if (i == max) {
+                    if (!this.locked) {
+                        this.heatmap.stop();
+                        this.createRender(this.heatmap);
+                        if (this.heatmap.counts > 20) {
+                            const aEvent = new Event("heatmap", {bubbles: true});
+                            aEvent.data = this.createRender(this.heatmap);
+                            this.dispatchEvent(aEvent);
+                        }
+                    }
                     this.transitionPromise = this.showQuizResults(forceUpdate);
                 } else {
                     // Transition to choosen answer
@@ -333,7 +412,6 @@ class SQuizView extends QuizView {
     }
    
 }
-
 
 
 class QuizSearch extends SearchWindow {
@@ -491,7 +569,18 @@ export class QuizFeature  extends Features {
         this.board = new QuizWindow(this, sdata);
 
         this.board.quizView.resultsPage.sid = sdata.sid;
-        
+
+        this.board.quizView.addEventListener("heatmap", (e) => {
+            console.log(e);
+            
+            let dataURL = e.data;
+            let base64 = dataURL.split(",")[1];
+            sdata.set("heatmaps/" + sdata.me, base64);
+        });
+
+        window.deletePDF = () => {
+            sdata.set("pdf", null);
+        }
     }
 
 

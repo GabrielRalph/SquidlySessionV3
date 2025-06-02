@@ -10,6 +10,7 @@ import { Features } from "../features-interface.js";
 import { FaceLandmarks, load } from "./Algorithm/Utils/face-mesh.js";
 import { CalibrationFrame } from "./calibration-frame.js";
 import { FeedbackWindow } from "./feedback-frame.js";
+import { addPointToHeatmaps, Heatmap } from "./heatmap.js";
 
 
 class CalibrationScreenArea extends ShadowElement {
@@ -295,6 +296,7 @@ export class EyeGazeFeature extends Features {
             try {
                 let me = this.sdata.isHost ? "host" : "participant";
                 this.session.cursors.updateCursorPosition(me + "-eyes", v, bbox)
+                addPointToHeatmaps(v.x, v.y, 1);
             } catch (e) {
 
             }
@@ -420,6 +422,10 @@ export class EyeGazeFeature extends Features {
         this.sdata.onValue("test-screen", (val) => {
             this._showTestScreen(val);
         })
+    }
+
+    createHeatmap(resolution = 300, kernal = 30) {
+        return new Heatmap(resolution, kernal);
     }
 
     get me() { return this.sdata.me } 
