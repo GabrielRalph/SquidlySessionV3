@@ -23,7 +23,6 @@ const parallel = (...args) => Promise.all(...args);
 /** @typedef {import('./Features/EyeGaze/eye-gaze.js').EyeGazeFeature} EyeGazeFeature*/
 /** @typedef {import('./Features/Settings/settings.js').SettingsFeature} SettingsFeature*/
 /** @typedef {import('./Features/VideoCall/video-call.js').VideoCall} VideoCall*/
-/** @typedef {import('./Features/SearchTesting/search.js').Search} Search*/
 /** @typedef {import('./Features/Text2Speech/text2speech.js').Text2Speech} Text2Speech*/
 /** @typedef {import('./Features/Notifications/notifications.js').Notifications} Notifications*/
 /** @typedef {import('./Features/AccessControl/access-control.js').AccessControl} AccessControl*/
@@ -43,20 +42,6 @@ let SessionView;
 let Features;
 
 const $$ = new WeakMap();
-
-// async function loadResources() {
-//     console.log("loading resources");
-    
-//     let a = async () => {
-        
-//     }
-//     let b = async () => {
-//         
-//         await Features.loadResources();
-//     }
-
-//     await parallel([a(), b()]);
-// }
 
 const LoadState = {}
 function logState(){
@@ -234,8 +219,6 @@ export class SquidlySessionElement extends ShadowElement {
     panelMode = "sidePanel"
 
     async openWindow(name){
-        console.log("open window", name, this.panelMode);
-        
         if (name != this.occupier) {
             let nextOccupier = name in this.occupiables ? this.occupiables[name] : null;
             name = name in this.occupiables ? name : null;
@@ -314,6 +297,7 @@ export class SquidlySessionElement extends ShadowElement {
                         console.warn(`The feature element "${key}" is not a shadow element.`)
                     } else {
                         let res = this.sessionView[func](layer.area, element);
+                        if (res instanceof Element) res.setAttribute("name", featureInfo.name + "." + key);
                         if (layer.index) {
                             res.styles = {"z-index": layer.index}
                         }
@@ -606,11 +590,6 @@ export class SquidlySession {
     /** @return {?SettingsFeature} */
     get settings(){
         return $$.get(this).settingsPublic;
-    }
-
-     /** @return {?Search} */
-     get search(){
-        return $$.get(this).searchPublic;
     }
 
     /** @return {?Text2Speech} */

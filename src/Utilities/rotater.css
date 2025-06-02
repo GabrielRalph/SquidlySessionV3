@@ -21,6 +21,7 @@
     transform-style: preserve-3d;
     transform: rotateY(var(--angle));
     transition: transform var(--transition-time) cubic-bezier(0.32, 0.0, 0.68, 1);
+    will-change: transform;
 }
 
 .rotater[flip] > div > .slot-2 * {
@@ -48,6 +49,9 @@
     transform: rotateY(180deg);
 }
 
+.slider .slot-1, .slider .slot-2 {
+    will-change: transform;;
+}
 
 .slider[y] > .slot-1, .slider[y] > .slot-2 {
     transform: translateY(calc(100% * var(--t)));

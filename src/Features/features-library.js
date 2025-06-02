@@ -9,7 +9,6 @@ import { VideoCall } from "./VideoCall/video-call.js"
 import { Text2Speech } from "./Text2Speech/text2speech.js"
 import { ShareContent } from "./ShareContent/share-content.js"
 import { SettingsFeature } from "./Settings/settings.js"
-import { Search } from "./SearchTesting/search.js"
 
 export const FEATURES = [
     {
@@ -146,17 +145,6 @@ export const FEATURES = [
                 mode: "overlay",
                 index: -1,
             }
-        }
-    },
-    {
-        class: Search,
-        name: "search",
-        layers: {
-            searchWindow: { // Search window
-                type: "area",
-                area: "fullAspectArea",
-                index: 95,
-            },
         }
     },
     {

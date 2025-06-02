@@ -19,7 +19,6 @@ try {
 
 
 async function newCSSStyleSheet(text) {
-    
     if (isCSSConstructor) {
         let style = new CSSStyleSheet()
         style.replaceSync(text);
@@ -73,39 +72,33 @@ export class ShadowElement extends SvgPlus {
         if (isCSSConstructor) {
             this.shadowRoot.adoptedStyleSheets = [...this.shadowRoot.adoptedStyleSheets, ...styles];
         } else {
-            for (let s of styles) {
-                this.shadowRoot.appendChild(s())
+            for (let style of styles) {
+                this.shadowRoot.appendChild(style())
             }
         }
         return styles;
     }
 
-    static async loadStyleSheets(url = this.usedStyleSheets){
+    static async loadStyleSheets(urls = this.usedStyleSheets){
         let styles = []
-        if (typeof url === "string") url = [url];
-        if (Array.isArray(url)) {
-            let proms = url.map(async a => {
-                if (!(a in LOADED_STYLES)) {
-    
+        if (typeof urls === "string") urls = [urls];
+        if (Array.isArray(urls)) {
+            let proms = [...new Set(urls)].map(async url => {
+                if (!(url in LOADED_STYLES)) {
                     let prom = async () => {
                         try {
-                            // console.log(`loading style from ${a}`);
-                            
-                            let res = await fetch(a);
+                            let res = await fetch(url);
                             let text = await res.text();
                             let style = await newCSSStyleSheet(text)
-                            // console.log(`loaded style from ${a}`);
-                            
                             return style;
                         } catch (e) {
-                            console.log(e);
+                            console.warn(`Failed to load style sheet: ${url}`, e);
                             return null;
-                            
                         }
                     }
-                    LOADED_STYLES[a] = prom();
+                    LOADED_STYLES[url] = prom();
                 }
-                return LOADED_STYLES[a]
+                return LOADED_STYLES[url]
             });
             styles = await Promise.all(proms);
         }

@@ -373,6 +373,7 @@ export class EyeGazeFeature extends Features {
                 this.calibrationFrame[setting] = e.value;
             }
         })
+        this.calibrationFrame.guide = this.session.settings.get(`${this.sdata.me}/calibration/guide`);
         this.calibrationFrame.size = this.session.settings.get(`${this.sdata.me}/calibration/size`);
         this.calibrationFrame.speed = this.session.settings.get(`${this.sdata.me}/calibration/speed`);
 

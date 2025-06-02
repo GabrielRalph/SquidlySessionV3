@@ -1,22 +1,6 @@
 aac-board {
     --rows: 4;
     --cols: 5;
-    /* --folder-color: #ffddad;
-    --folder-tab-color: #d69b48;
-    --word-color: #a7d2ff;
-    --word-color-dark: #5a9ce2;
-    --word-starter-color: #aeef93;
-    --word-starter-color-dark: #80e157;
-    --action-color: var(--action-red);
-    --word-noun: #d6c6ff;
-    --word-noun-dark: #8d6fd7;
-    --word-adjective-dark: #f0cf56;
-    --word-adjective: #ffe792;
-    --word-verb-dark: #e36c7a;
-    --word-verb: #ff9ca7; */
-    /* --color-danger: #8f53c9;
-    --color-danger-light: #c091ee;
-    --color-danger-lighter: #d7b9f4; */
     --gap: 0.5em;
 
     position: absolute;
@@ -29,8 +13,10 @@ aac-board {
     background-color: white;
     gap: var(--gap);
     pointer-events: all;
-    transition: transform 0.5s cubic-bezier(0, 0.32, 0.68, 1);
+    transition: transform 0.5s cubic-bezier(0.32, 0, 0.68, 1);
 }
+
+
 
 aac-board:not([shown]) {
     pointer-events: none;

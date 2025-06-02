@@ -1,266 +1,380 @@
-import { SvgPlus, Vector } from "../../SvgPlus/4.js";
-// import * as showdown from "https://unpkg.com/showdown/dist/showdown.min.js";
-import markdownIt from 'https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/+esm'
-import { MarkdownElement } from "./markdown.js";
-// console.log(showdown);
 /**
- * @typedef {import("../Firebase/quizzes.js").Answer} Answer
- * @typedef {import("../Firebase/quizzes.js").Question} Question
- * @typedef {import("../Firebase/quizzes.js").Quiz} Quiz
- * @typedef {import("../Firebase/quizzes.js").Action} Action
- * @typedef {import("../Firebase/quizzes.js").QuizResults} QuizResults
- * @typedef {import("../Firebase/quizzes.js").AnswerResponse} AnswerResponse
+ * @typedef {import("./test.js").Question} Question
+ * @typedef {import("./test.js").Quiz} Quiz
+ * @typedef {import("./test.js").Answer} Answer
+ * @typedef {import("./actions.js").Action} Action
+ * @typedef {import("./actions.js").AnswerResult} AnswerResult
+ * @typedef {import("./actions.js").QuizResults} QuizResults
  */
 
+const {log} = console;
+const TEMPLATE = `
+\\documentclass[12pt]{article}
+\\usepackage[a4paper, left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm]{geometry}
+\\usepackage[T1]{fontenc}
+\\usepackage{mathptmx}
+\\usepackage{amsmath}
+\\usepackage{amssymb}
+\\usepackage{xcolor}
+\\usepackage{amsfonts}
+\\usepackage{graphicx}
+\\usepackage{subcaption}
+\\usepackage{listings}
+\\usepackage{multicol}
+\\usepackage{pgfplots}
 
-function findBestTickInterval(minValue, maxValue, minInterval) {
-    if (minValue >= maxValue) {
-        throw new Error("minValue must be less than maxValue");
-    }
-    
-    const range = maxValue - minValue;
-    const roughInterval = range / 10; // Aim for around 10 ticks
-    let bestInterval = Math.max(roughInterval, minInterval);
-    
-    // Choose a nice round number for the interval (1, 2, 5, 10, etc.)
-    const niceNumbers = [1, 2, 5, 10];
-    const magnitude = Math.pow(10, Math.floor(Math.log10(bestInterval)));
-    
-    bestInterval = niceNumbers.find(n => n * magnitude >= bestInterval) * magnitude;
-    
-    return bestInterval;
+\\usepackage{charter}
+
+
+\\newcommand{\\mat}[1]{\\ensuremath{\\begin{pmatrix}#1\\end{pmatrix}}}
+\\newcommand{\\mycirc}[1][black]{{\\Large\\textcolor{#1}{\\ensuremath\\bullet}}}
+\\renewcommand{\\theenumi}{\\Alph{enumi}}
+\\pgfplotsset{compat=1.8}
+\\usepgfplotslibrary{statistics}
+
+\\begin{document}
+\\centerline{ \\huge \\bfseries |||QUIZ_NAME||| results}
+
+\\centerline{ \\large  Quiz Author:|||QUIZ_CREATOR|||}
+
+    \\begin{multicols}{2}
+        \\section*{Quiz Questions}
+        |||QUIZ|||
+    \\end{multicols}
+
+    \\section*{Actions}
+    Actions represent interactions with buttons on the quiz board. Each row in the table below represents an action. The columns of the actions table describe the following properties of an action:
+    \\begin{itemize}
+        \\item {\\bf Type} The type of button used either an answer or navigation button i.e. back or next.
+        \\item {\\bf Chosen} The set of selected answers after the interaction.
+        \\item {\\bf Time} The time since the quiz was started.
+        \\item {\\bf Mode} The method of interaction used either:
+        \\begin{itemize}
+            \\item {\\bf Click} using the mouse cursor.
+            \\item {\\bf Switch} using switch access.
+            \\item {\\bf Dwell} using eye gaze dwell click.
+        \\end{itemize}
+        \\item {\\bf User} The user who made the interaction.
+    \\end{itemize}
+    |||ACTIONS|||
+    \\section*{Results}
+    |||RESULTS|||
+    \\section*{Data Visualisation}
+    \\begin{multicols}{2}
+        \\subsection*{Total Time per Question}
+        |||TIME|||
+        |||SCORE_VS_TIME|||
+    \\end{multicols}
+    |||SUMMARY|||
+\\end{document}
+`
+function markup2latex(text) {
+    // replace single dollar signs with literal dollar signs
+    text = text.replace(/(?<!\$)\$(?!\$)/g, "\\$");
+
+    // replace double dollar signs with single dollar signs
+    text = text.replace(/\$\$/g, "$");
+
+    // replace markdown bold syntax with LaTeX bold syntax
+    text = text.replace(/\*\*(.*?)\*\*/g, "\\textbf{$1}");
+
+    // replace markdown italic syntax with LaTeX italic syntax
+    text = text.replace(/\*(.*?)\*/g, "\\textit{$1}");
+
+    // replace markdown bold italic syntax with LaTeX bold italic syntax
+    text = text.replace(/\*\*\*(.*?)\*\*\*/g, "\\textbf{\\textit{$1}}");
+
+    return text;
 }
 
-class BarGraph extends SvgPlus {
-    padding = 10;
-    padding2 = 15;
-    size = new Vector(300, 200)
-    fontSize = 16;
-    fontSize2 = 20;
-    constructor(data, xaxis, yaxis) {
-        super("svg") 
-        this.x_axis = xaxis;
-        this.y_axis = yaxis;
-        let {padding, size, fontSize} = this;
-        let x_labels = Object.keys(data).slice(0, 18);
-        let tickScale = Math.min(16*0.07+1 - 0.07 * x_labels.length, 1)
-        
-        let y_vals = x_labels.map(k => data[k]);
-        let bar_width = (size.x - (x_labels.length + 1) * padding) / x_labels.length;
-
-        let max_val = Math.max(...y_vals);
-        let scale = (size.y - padding) / max_val;
-
-        let scaled_y_vals = y_vals.map(y => y * scale);
-
-        let min_y_dist = fontSize * 1.5 / scale;
-
-
-        let bars = scaled_y_vals.map((y, i) => {
-            let x = padding + (bar_width + padding) * i;
-            this.createChild("rect", {
-                x, y: size.y - y, width: bar_width, height: y
-            });
-        })
-
-        this.createChild("path", {class: "axis", d: `M0,0v${size.y}h${size.x}`});
-
-        x_labels.forEach((tick, i) => {
-            this.createChild("text", {
-                content: tick,
-                x: padding + (bar_width + padding) * i + bar_width / 2,
-                y: size.y + padding + fontSize * 0.4,
-                "font-size": fontSize * tickScale,
-                "text-anchor": "middle"
-            })
-        })
-
-
-        let y_tick_intv = findBestTickInterval(0, max_val, min_y_dist);
-        let y_tick_intv_s = y_tick_intv * scale;
-        let n_yt = Math.floor(size.y / y_tick_intv_s) + 1;
-        console.log(n_yt);
-        
-        for (let i = 1; i < n_yt; i++) {
-            let y = size.y - i * y_tick_intv_s;
-            this.createChild("path", {
-                d: `M0,${y}h-${padding}`,
-                class: "axis"
-            })
-            this.createChild("text", {
-                content: (i * y_tick_intv).toPrecision(2),
-                "font-size": 20,
-                x: -padding * 1.5,
-                y: y + fontSize * 0.3,
-                "font-size": fontSize,
-                "text-anchor": "end"
-            })
-        }
-
-        this.resize();
-    }
-
-    async resize(){
-        await new Promise((r) => window.requestAnimationFrame(r))
-        let [pos0,size0] = this.svgBBox;
-        this.createChild("text", {
-            "font-size": this.fontSize2,
-            content: this.x_axis,
-            y: pos0.y + size0.y + this.padding2 + this.fontSize2 * 0.3,
-            x: this.size.x/2,
-            "text-anchor": "middle"
-        })
-        this.createChild("text", {
-            "font-size": this.fontSize2,
-            content: this.y_axis,
-            y: this.fontSize2 * 0.3,
-            x: 0,
-            "text-anchor": "middle",
-            transform: `translate(${pos0.x - this.padding2}, ${this.size.y/2}) rotate(-90) `
-        })
-        await new Promise((r) => window.requestAnimationFrame(r))
-        let [pos,size] = this.svgBBox;
-        size = size.add(this.padding*2);
-        pos = pos.sub(this.padding);
-        this.props = {viewBox: `${pos.x} ${pos.y} ${size.x} ${size.y}`}
-    }
+function fAnswer(num) {
+    if (Array.isArray(num)) return num.map(fAnswer).join(", ")
+    return (typeof num !== "number" || Number.isNaN(num)) ? "-" : "ABCDEFGHIJKLMN"[num];
 }
-
-class QuizList extends SvgPlus{
-    /** @param {Quiz} quiz */
-    constructor(quiz) {
-        super("div")
-
-        quiz.questions.map((q, i) => {
-            let r = this.createChild("div", {class: " q-title"})
-            r.createChild("h4", {content: `Q${i+1}:`});
-            r.createChild(MarkdownElement, {}, "div", q.question, true);
-            let l = this.createChild("ol");
-            q.answers.map(a => {
-                l.createChild("li", {content: a.title}).toggleAttribute("correct", a.correct)
-            })
-        })
-    }
-}
-
-const answersKeys = {
-    "question": {
+const actionKeys = [
+    {
+        key: "question",
         title: "Question",
         format: d => `Q${d+1}`
     },
-    "choosen": {
-        title: "Choosen",
-    },
-    "correct": {
-        title: "Correct",
-    },
-}
-
-const actionKeys = {
-    "question": {
-        title: "Question",
-        format: d => `Q${d+1}`
-    },
-    "type": {
+    {
+        key: "type",
         title: "Action",
     },
-    "duration": {
-        title: "Response<br>time (s)",
+    {
+        key: "time", 
+        title: "Time",
+        subtitle: "time (s)",
         format: (d) => Math.round(d/10)/100
     },
-    "answers": {
-        title: "Selected<br>answers"
+    {
+        key: "answers",
+        title: "Chosen",
+        subtitle: "answers",
+        format: fAnswer
+    },
+    {
+        key: "mode",
+        title: "Mode",
+    },
+    {
+        key: "user",
+        title: "User",
     }
+]
+
+const resultsKeys = [
+    {
+        key: "question",
+        title: "Question",
+        format: d => `Q${d+1}`
+    },
+    {
+        key: "correct",
+        title: "Correct",
+        format: fAnswer
+    },
+    {
+        key: "chosen",
+        title: "Chosen",
+        format: fAnswer
+    },
+    {
+        key: "score",
+        title: "Score",
+    },
+    {
+        key: "time",
+        title: "Duration",
+        subtitle: "time (s)",
+        format: (d) => (d/1000).toFixed(2)
+    }
+]
+
+function pgfBarPlot(data, xlabel) {
+    return `\\begin{tikzpicture}
+\\begin{axis}[
+xbar,
+y=-0.7cm,
+xmax=${Math.max(...data.map(r=>r[0])) * 1.2},
+bar width=0.5cm,
+enlarge y limits={abs=0.75cm},
+xlabel={${xlabel}},
+symbolic y coords={${data.map(r => r[1]).join(",")}},
+ytick=data,
+nodes near coords, nodes near coords align={horizontal},
+]
+\\addplot coordinates {${data.map(r => `(${r})`).join(" ")}};
+\\end{axis}
+\\end{tikzpicture}`
 }
 
-class Table extends SvgPlus {
-    constructor(actions, keyType) {
-        super("table");
-        let head = this.createChild("thead");
-        let tr = head.createChild("tr")
-        let keys = Object.keys(keyType)
-        keys.map(k => tr.createChild("th", {content: keyType[k].title}));
+function texTable(objArr, keys) {
+    let sub = keys.map(k => "subtitle" in k).reduce((a,b) => a||b)
+    keys = keys.map(k => {
+        if (!(k.format instanceof Function)) k.format = (t) => t;
+        if (!k.subtitle) k.subtitle = "";
+        return k;
+    })
+    let cellLayout = "|"+keys.map(a => 'c').join("|")+"|"
+    let contents = 
+        "\\hline\n" + 
+        keys.map(k => `{\\bf ${k.title}}`).join(" & ") + 
+       (sub ? "\\\\\n" +keys.map(k => k.subtitle).join(" & ") : "") +
+        "\\\\\n\\hline\n" + 
+        objArr.map(obj => keys.map(k => k.format(obj[k.key])).join(" & ")).join("\\\\\n\\hline\n") + 
+        "\\\\ \\hline"
 
-        let body = this.createChild("tbody");
-        actions.map(e => {
-            let tr0 = body.createChild("tr");
-            keys.map(k => {
-                let val = e[k];
-                if (keyType[k].format) val = keyType[k].format(val);
-                tr0.createChild("td", {content: val});
-            })
-        })
-    }
+    return `
+    \\begin{center}
+    \\begin{tabular}{ ${cellLayout} } 
+    ${contents}
+    \\end{tabular}
+    \\end{center}`
 }
 
-export class QuizResultsPage extends SvgPlus {
-    /** 
-     * @param {Quiz} quiz 
-     * @param {QuizResults} results 
-     * */
-    constructor(quiz, results) {
-        super("div")
-        this.createChild("h1", {content: quiz.name + " Results"})
-        let main = this.createChild("div", {class: "results"})
-        this.main = main;
+function getP(data, p) {
+    let i = p * (data.length - 1)
+    let h_i = Math.ceil(i);
+    let l_i = Math.floor(i);
 
-        this.createSection("Quiz Questions")
-            .createChild(QuizList, {}, quiz);
+    let t = i - l_i;
 
+    return  data[l_i] * (1 -t) + data[h_i] * t;
+}
 
-        this.createSection("Responses")
-            .createChild(Table, {}, results.actions, actionKeys);
+function boxPlot(data, keys, colors = ["red", "green"]) {
+    // let l_w = 1;
+    // let l_q = 1.3;
+    // let m = 3;
+    // let u_q = 4.5
+    // let u_w = 6;
+    let coords = data.map((col, i) => col.map(e => `(${i}, ${e})`).join(" "));
 
-        this.createSection("Answers")
-            .createChild(Table, {}, results.answers, answersKeys);
+    return `
+\\begin{tikzpicture}
+  \\begin{axis}
+    [ylabel = {Time (s)},
+    boxplot/draw direction=y,
+    xtick={${keys.map((k,i)=>i+1)}},
+    xticklabel style = {align=center, font=\\small, rotate=60},
+    xticklabels={${keys.join(", ")}},
+    ]   
+    ${
+        data.map((col, i) => {
+            let colS = [...col].sort((a, b) => a-b)
+            const Q_1 = getP(colS, 0.25);
+            const Q_3 = getP(colS, 0.75);
+            let high_w = 2.5 * Q_3 - Q_1 * 1.5;
+            let low_w = 2.5 * Q_1 - Q_3 * 1.5;
+            low_w = low_w < 0 ? 0 : low_w;
 
-        let time = {};
-        results.actions.forEach((a, i) => {
-            let key = a.question + 1;
-            if (!(key in time)) time[key] = 0;
-            time[key] += a.duration / 1000;
+            return `\\addplot+[mark = *, mark options = {${colors[i]}},
+                boxplot prepared={
+                    lower whisker=${low_w.toPrecision(3)},
+                    lower quartile=${Q_1},
+                    median=${getP(colS, 0.5)},
+                    upper quartile=${Q_3},
+                    upper whisker=${high_w.toPrecision(3)}
+                }, color = ${colors[i]}
+            ] coordinates{${coords[i]}};`
         })
-        this.createSection("Plots")
-            .createChild(BarGraph, {}, time, "Question", "Response Time (s)");
-
-        let md = new markdownIt();
-        const result = md.render(results.summary);
-        let div = new SvgPlus("div");
-        div.innerHTML = result;
-
-        let section = []
-        let i =0;
+    }
         
-        for (let child of [...div.children]) {
-            
-            if (section.length == 0 || child.tagName !== "H3") section.push(child);
-            else {
-                let s;
-                if (i == 0) {
-                    s = this.createSection("AI Insights");
-                    i = 1;
-                } else {
-                    s = main.createChild("div", {class:"section"});
-                }
-                for (let el of section) s.appendChild(el);
-                section = [child];
+    \\end{axis}
+\\end{tikzpicture}`
+}
+
+function toScatter(data) {
+    let max = Math.max(...data.map(d => d[1]));
+    let min = Math.min(...data.map(d => d[1]));
+    let dy = max - min;
+    return `\\begin{tikzpicture}
+            \\begin{axis}[
+                enlargelimits=false,
+                xmin=-0.5,
+                xmax=1.5,
+                ymax=${max + dy/10},
+                ymin=${min - dy/10}
+            ]
+            \\addplot+ [
+            only marks,
+            scatter,
+            mark size=2pt,
+            ]
+            table [meta=label] {
+            x y label
+            ${data.map(row => row.join(" ")).join("\n")}
+            };
+            \\end{axis}
+            \\end{tikzpicture}`
+}
+
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const letters_lower = letters.toLowerCase();
+function isTitleValid(title, i) {
+    if (title == letters[i] || title == letters_lower[i] || title == i+"") return false;
+    return true;
+}
+function toAnswerString(answer, i, choosen) {
+    let values = []
+    if (isTitleValid(answer.title, i)) {
+        values.push(markup2latex(answer.title));
+    }
+    if (answer.subtitle) {
+        values.push((values.length > 0 ? ", " : "") + markup2latex(answer.subtitle));
+    }
+
+    if (answer.correct === true) {
+        values.push("\\mycirc[green]");
+    }
+
+    if (choosen && choosen.has(i)) {
+        values.push("\\mycirc[blue]");
+    }
+
+    values.unshift(`\\item`);
+
+    return values.join(" ");
+}
+    
+
+
+/**
+ * @type {Object<string, (QuizResults) => string>}
+ */
+const TABLES = {
+    /** @param {QuizResults} data */
+    "ACTIONS": (data) => {
+        return texTable(data.actions, actionKeys)
+    },
+
+    /** @param {QuizResults} data */
+    "RESULTS": (data) => {
+        return texTable(data.results_by_question, resultsKeys)
+    },
+
+    /** @param {QuizResults} data */
+    "TIME": (data) => {
+        let coords = data.results_by_question.map((a,i) => [(a.time / 1000).toPrecision(3), "Q"+(i+1)])
+        return pgfBarPlot(coords, "Time (s)")
+    },
+
+    /** @param {QuizResults} data */
+    "SCORE_VS_TIME": (data) => {
+        let correct = [[], []];
+        data.results_by_question.map(a => correct[Math.floor(a.score)].push(a.time/1000));
+        let res =  `
+        \\subsection*{Response Time vs Accuracy}
+            ${boxPlot(correct, ["incorrect", "correct"])}
+        `
+        if (correct[0].length == 0 || correct[1].length == 0) res = ""
+        return res;
+    },
+
+    /** @param {QuizResults} data */
+    "QUIZ_NAME": (data) => {
+        return data.quiz.name
+    },
+
+    /** @param {QuizResults} data */
+    "QUIZ_CREATOR": (data) => {
+        return data.quiz.ownerName
+    },
+
+    /** @param {QuizResults} data */
+    "QUIZ": (data) => {
+        let cSet = data.results_by_question.map(a => new Set(a.chosen));
+        return `
+        \\begin{description}
+            ${
+                data.quiz.questions.map((q, i) => 
+                    `\\item[Q${i+1}] ${markup2latex(q.question)} \n ${
+                        `
+                        \\begin{enumerate}
+                            ${q.answers.map((a,j) => toAnswerString(a, j, cSet[i])).join("\n")}
+                        \\end{enumerate}
+                        `
+                }`
+                ).join("\n")
             }
-        }
-        let s;
-        if (i == 0) {
-            s = this.createSection("AI Insights");
-            i = 1;
-        } else {
-            s = main.createChild("div", {class:"section"});
-        }
-        for (let el of section) s.appendChild(el);
+        \\end{description}`
+    },
 
+    "SUMMARY": (data) => {
+        if (!data.summary) return "";
+       
+        return " \\section*{AI Summary}" + data.summary;
     }
+}
 
-    createSection(name, cname = "") {
-        let section = this.main.createChild("div", {class: "section "+cname});
-        section.createChild("h2", {content: name});
-        return section
-    }
 
+/**
+ * @param {QuizResults} results
+ * @return {string}
+ * */
+export function formatReport(results) {
+    return TEMPLATE.replace(/\|\|\|(\w+)\|\|\|/g, (a, b) => {
+        if (b in TABLES) return TABLES[b](results)
+    })
 }

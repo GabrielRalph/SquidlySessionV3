@@ -139,4 +139,8 @@ export class Slider extends SvgPlus {
         }, this.transitionTime * 1000, true);
         this._shownSlot = this._shownSlot === 1 ? 2 : 1;
     }
+
+    static get styleSheet(){
+        return [relURL("./rotater.css", import.meta)];
+    }
 }

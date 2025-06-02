@@ -427,7 +427,6 @@ export class AccessControl extends Features {
 
     initialise(){
         this.session.eyeGaze.addEyeDataListener(this._onEyeData.bind(this));
-
         this.session.settings.addEventListener("change", (e) => {
             let path = e.path.split("/");
             let [user, type, setting] = path;

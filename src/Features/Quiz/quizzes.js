@@ -27,30 +27,7 @@
  */
 
 
-/**
- * @typedef {Object} Action
- * @property {string} type
- * @property {number} question
- * @property {number} duration
- * @property {Array<number>} answer
- */
-
-/**
- * @typedef {Object} AnswerResponse
- * @property {number} question
- * @property {Array<number>} correct
- * @property {Array<number>} choosen
- */
-
-/**
- * @typedef {Object} QuizResults
- * @property {Action[]} actions
- * @property {AnswerResponse[]} answers
- * @property {string} csv
- * @property {string} summary
- */
-
-import { query, get, set, onChildAdded, onChildChanged, onChildRemoved, callFunction, child, ref, orderByChild, equalTo, getUID } from "../../Firebase/firebase.js"
+import { query, get, set, onChildAdded, onChildChanged, onChildRemoved, callFunction, child, ref, orderByChild, equalTo, getUID, onValue } from "../../Firebase/firebase.js"
 
 
 const MAX_TITLE_LENGTH = 1024;
@@ -260,10 +237,65 @@ export function getEmptyQuiz(n = 4){
 /** Get's the chat gpt summary for the data in csv format.
  * @param {string} csv
  */
-export async function getSummary(csv) {
-    let data = {quizResultsCSV: csv};
-    let res = await callFunction("quizzes-summarise", data, "australia-southeast1");
-    return res;
+export async function getSummary(sid, progressCallback = null, onlySummary = false) {
+    let callProgress = (status) => {
+        if (progressCallback instanceof Function) {
+            progressCallback(status);
+        }
+    }
+
+    callProgress("Creating Report");
+
+
+    let watchers = [];
+    let result = await new Promise(async (resolve, reject) => {
+        let summary = null;
+        watchers = [
+            onValue(ref("session-data/" + sid + "/quiz/proccessing"), (snapshot) => {
+                if (snapshot.val()) {
+                    callProgress("Summarising Quiz Results") 
+                }
+            }),
+            onValue(ref("session-data/" + sid + "/quiz/summary"), (snapshot) => {
+                summary = snapshot.val();
+                if (summary) {
+                    if (onlySummary) {
+                        callProgress("Quiz Summary Ready");
+                        resolve({
+                            pdf: null,
+                            errors: [],
+                            summary: summary
+                        });
+                    } else {
+                        callProgress("Formatting PDF Report");
+                    }
+                }
+            })
+        ]
+        if (!onlySummary) {
+            watchers.push(onValue(ref("session-data/" + sid + "/quiz/pdf"), (snapshot) => {
+                let pdfBase64 = snapshot.val();
+                if (pdfBase64) {
+                    callProgress("PDF Report Ready");
+                    resolve({
+                        summary: summary,
+                        pdf: pdfBase64,
+                        errors: [],
+                    })
+                }
+            }))
+        }
+
+        let res = await callFunction("quizzes-summarise", {sid: sid, onlySummary}, "australia-southeast1");
+        if (res.data.errors.length > 0) {
+            resolve({errors: res.data.errors, pdf: null, summary});
+        }
+    })
+    for (let watcher of watchers) {
+        watcher();
+    }
+
+    return result;
 }
 
 /** Saves a quiz to firebase, if quiz is invalid it will through an error.

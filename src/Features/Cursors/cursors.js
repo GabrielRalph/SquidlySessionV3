@@ -101,14 +101,17 @@ export class Cursors extends Features {
      *                                the position vector is relative too.
     */
     updateCursorPosition(name, position, bbox) {
+        if (position !== null) {
+            position = this.rel_bbox2rel_ref(position, bbox);
+        }
+
        if (position == null) {
            this.sdata.set(`positions/${name}`, null);
            this._updatePosition(null, name)
         } else {
-            let relFixed = this.rel_bbox2rel_ref(position, bbox);
-            relFixed.timeStamp = new Date().getTime()
-            this.sdata.set(`positions/${name}`, {x: relFixed.x, y: relFixed.y, timeStamp: relFixed.timeStamp});
-            this._updatePosition(relFixed, name)
+            position.timeStamp = new Date().getTime()
+            this.sdata.set(`positions/${name}`, {x: position.x, y: position.y, timeStamp: position.timeStamp});
+            this._updatePosition(position, name)
         }
     }
     

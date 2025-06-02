@@ -24,132 +24,138 @@ quiz-view {
     --button-text-color: black;
 }
 
-quiz-view[locked] .answers {
+quiz-view[locked] .answers .grid-icon.normal {
     pointer-events: none;
 }
 
-/* [aria-hidden="true"] {
-    display: none;
-} */
 
-[colorf="light-blue"] {
-    --button-color: var(--sky-blue);
-    --button-text-color: black;
-    --button-color-select: var(--sky-blue-darker);
-    --icon-color: var(--evening-blue);
-    --icon-color-hover: var(--evening-blue-darker);
-}
-[colorf="red"] {
-    --button-color: var(--action-red);
-    --button-color-select: var(--action-red-dark);
-    --button-text-color: white;
-}
 
-[color] {
-    --adj: 1;
-    --light: calc(var(--light-0) * var(--adj));
-    --sat: 100%;
-    --button-color: hsl(var(--hue), var(--sat), var(--light));
-    --button-color-select: hsl(var(--hue), var(--sat), calc(var(--light) * 0.85));
-    --button-color-outline: hsl(var(--hue), var(--sat), calc(var(--light) * 0.5));
-}
-[color="white"] {
-    --button-color: rgb(251, 251, 251);
-    --button-color-select: rgb(217, 217, 217);
-    --button-color-outline: rgb(91, 85, 85);
-
-}
-[color="light-red"] {
+.grid-icon.normal[color="light-red"] {
     --hue: 0;
     --light-0: 89%;
 }
-[color="dark-red"] {
+.grid-icon.normal[color="dark-red"] {
     --hue: 0;
     --light-0: 38%;
     --sat: 70%;
 }
-[color="light-orange"] {
+.grid-icon.normal[color="light-orange"] {
     --hue: 30;
     --light-0: 85%;
 }
-[color="dark-orange"] {
+.grid-icon.normal[color="dark-orange"] {
     --light-0: 45%;
     --sat: 80%;
     --hue: 25;
 }
-[color="light-gold"] {
+.grid-icon.normal[color="light-gold"] {
     --hue: 42;
     --light-0: 81%;
 }
-[color="dark-gold"] {
+.grid-icon.normal[color="dark-gold"] {
     --hue: 42;
     --light-0: 48%;
     --sat: 75%;
 }
-[color="light-green"] {
+.grid-icon.normal[color="light-green"] {
     --light-0: 83%;
     --hue: 108;
 }
-[color="dark-green"] {
+.grid-icon.normal[color="dark-green"] {
     --sat: 50%;
     --light-0: 40%;
     --hue: 95;
 }
-[color="light-teal"] {
+.grid-icon.normal[color="light-teal"] {
     --hue: 150;
     --light-0: 81%;
 }
-[color="dark-teal"] {
+.grid-icon.normal[color="dark-teal"] {
     --hue: 150;
     --sat: 90%;
     --light-0: 33%;
 }
-[color="light-blue"] {
+.grid-icon.normal[color="light-blue"] {
     --hue: 190;
     --light-0: 85%;
 }
-[color="dark-blue"] {
+.grid-icon.normal[color="dark-blue"] {
     --hue: 190;
     --light-0: 33%;
     --sat: 85%;
 }
-[color="light-indigo"] {
+.grid-icon.normal[color="light-indigo"] {
     --hue: 220;
     --light-0: 89%;
 }
-[color="dark-indigo"] {
+.grid-icon.normal[color="dark-indigo"] {
     --hue: 220;
     --light-0: 45%;
     --sat: 50%;
 }
 
-[color="light-purple"] {
+.grid-icon.normal[color="light-purple"] {
     --hue: 270;
     --light-0: 91%;
 }
-[color="dark-purple"]{
+.grid-icon.normal[color="dark-purple"]{
     --hue: 270;
     --light-0: 45%;
     --sat: 35%;
 
 }
 
-[color="dark-red"],
-[color="dark-orange"],
-[color="dark-gold"],
-[color="dark-green"],
-[color="dark-teal"],
-[color="dark-blue"],
-[color="dark-indigo"],
-[color="dark-purple"] {
-    --button-text-color: white;
-    --button-color-select: hsl(var(--hue), var(--sat), calc(var(--light) * 0.7));
-    --button-color-outline: hsl(var(--hue), var(--sat), calc(var(--light) * 1.5));
-
+.grid-icon.normal[color] {
+    --adj: 1;
+    --light: calc(var(--light-0) * var(--adj));
+    --sat: 100%;
+    --card-color: hsl(var(--hue), var(--sat), var(--light));
+    --card-color-select: hsl(var(--hue), var(--sat), calc(var(--light) * 0.85));
+    --tab-color: hsl(var(--hue), var(--sat), calc(var(--light) * 0.5));
 }
-[color="empty"] {
+.grid-icon.normal[color="dark-red"],
+.grid-icon.normal[color="dark-orange"],
+.grid-icon.normal[color="dark-gold"],
+.grid-icon.normal[color="dark-green"],
+.grid-icon.normal[color="dark-teal"],
+.grid-icon.normal[color="dark-blue"],
+.grid-icon.normal[color="dark-indigo"],
+.grid-icon.normal[color="dark-purple"] {
+    --button-text-color: white;
+    --card-color: hsl(var(--hue), var(--sat), calc(var(--light) * 0.7));
+    --tab-color: hsl(var(--hue), var(--sat), calc(var(--light) * 1.5));
+}
+*[aria-hidden="true"] {
+    display: none;
+}
+.grid-icon.normal[color="empty"] {
     pointer-events: none;
     opacity: 0;
+}
+.grid-icon.normal[color="white"] {
+    --card-color: rgb(251, 251, 251);
+    --card-color-select: rgb(217, 217, 217);
+    --tab-color: rgb(91, 85, 85);
+}
+
+.grid-icon.normal[quiz-icon][selected] {
+    --card-color: var(--card-color-select);
+}
+.grid-icon.normal[quiz-icon][selected] .outline {
+    stroke: var(--tab-color);
+}
+
+quiz-view .grid-icon {
+    color: var(--button-text-color);
+    --shadow-color: #00000000;
+}
+
+quiz-view .aswers .grid-icon {
+    font-size: 1.2em;
+}
+
+.grid-icon[quiz-icon] .subtitle {
+    font-size: 0.95em;
 }
 
 .quiz-info {
@@ -238,7 +244,6 @@ quiz-view[locked] .answers {
 }
 
 .answers {
-
     --offset: 0;
     display: grid;
     gap: 0.5em;
@@ -247,85 +252,32 @@ quiz-view[locked] .answers {
     left: 0;
     bottom: 0;
     right: 0;
-
     transform: translateX(calc((100% + 1em) * var(--offset)));
 }
 
-access-button[quiz-icon] {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.5em;
-    align-items: center;
-    border-radius: 1em;
-    cursor: pointer;
-    text-align: center;
-    background-color: var(--button-color);
-    color: var(--button-text-color);
-}
-
-.answers access-button[quiz-icon] {
-    font-size: 1.3em;
-    border: 3px solid transparent;
-}
-
-.answers access-button[quiz-icon][selected] {
-    background-color: var(--button-color-select);
-    border: 3px solid var(--button-color-outline);
-
-}
-
+/* 
 quiz-view[locked] .answers access-button[action] {
     pointer-events: all;
-}
+} */
 
-quiz-view[locked] .answers access-button[emphasize]::after {
+quiz-view[locked] .answers .grid-icon.normal[emphasize]::after {
+
+    --w: max(8px, calc(3vmin - 12px));
     display: block;
     content: " ";
-    width: 1em;
-    height: 1em;
-    background: var(--button-color-outline);
-    border-radius: 1em;
-    top: 1em;
-    right: 1em;
+    width: var(--w);
+    height: var(--w);
+    border-radius: var(--w);
+    top: 8px;
+    right: 8px;
     position: absolute;
+    background-color: var(--tab-color);
+    
 }
 
-
-access-button[quiz-icon] .title {
-    font-size: 1.2em;
-    font-weight: bold;
-}
-.subtitle {
-    margin: 0 0.2em;
-}
-access-button[quiz-icon] img {
-    max-width: 80%;
-    max-height: 50%;
-}
-.img-area {
-    display: contents;
-}
-access-button[quiz-icon] .icon {
-    height: 20%;
-    max-width: 90%;
-}
 
 quiz-view > access-button[quiz-icon] {
     grid-row: 1;
-}
-
-access-button[quiz-icon]:hover {
-    --icon-color: var(--icon-color-hover);
-}
-access-button[quiz-icon]:hover .icon {
-    transform: scale(1.2);
-}
-
-access-button[disable] {
-    opacity: 0.5;
-    pointer-events: none;
 }
 
 .popup-prompt {

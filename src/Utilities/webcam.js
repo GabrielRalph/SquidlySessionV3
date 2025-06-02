@@ -252,7 +252,6 @@ Video.onunmute = () => {
   
   let starting_webcam = false;
   export async function startWebcam(params = camParams1){
-    console.log("WEBCAM: starting webcam [webcam_on", webcam_on, "starting_webcam", starting_webcam);
     if (webcam_on || starting_webcam) {
       return true;
     }

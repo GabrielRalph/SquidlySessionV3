@@ -7,7 +7,8 @@ import { SvgPlus, Vector } from "../../SvgPlus/4.js";
 import { AccessClickEvent, AccessEvent } from "../../Utilities/access-buttons.js";
 import { GridIconSymbol, GridIcon } from "../../Utilities/grid-icon.js";
 import { Rotater } from "../../Utilities/rotater.js";
-import { relURL, isExactSame } from "../../Utilities/usefull-funcs.js";
+import { filterAndSort, SearchWindow } from "../../Utilities/search.js";
+import { relURL, isExactSame, delay } from "../../Utilities/usefull-funcs.js";
 import { Features, OccupiableWindow } from "../features-interface.js";
 import * as Topics from "./topics.js"
 
@@ -320,6 +321,7 @@ class AACOutput extends SvgPlus {
 }
 
 
+
 const ActionsTemplate = [
     {
         row: 0,
@@ -441,13 +443,36 @@ class AACGridBoard extends OccupiableWindow {
             "backspace": () => this.output.deleteWord(),      
             "speak": () => this.output.speak(),
             "quick": async (e) => {
-                e.waitFor(this.aacGrid.searchTopics());
-                // console.log(await this.aacGrid.getAllTopics());
-                // await this.setTopic(this.quickTalk);
-                // this.aacGrid._updateTopics(this.topicPath);
+                e.waitFor(this.startSearch());
             },
         }
+
+        this.searchWindow = this.createChild(SearchWindow, {
+            events: {
+                "value": async (e) => {
+                    await e.waitFor(this.onSearchValue(e.value));
+                }
+            }
+        })
+        this.searchWindow.getSearchResults = async (phrase) => {
+            phrase = phrase.toLowerCase();
+            let results = await Topics.getAllTopics(this.aacGrid.sdata.hostUID);
+            results = Object.keys(results).map((id) => {
+                let item = results[id];
+                return {
+                    id,
+                    item,
+                    icon: {
+                        displayValue: item.name,
+                        type: "topic",
+                        subtitle: item.ownerName,
+                    },
+                }
+            });
+            return filterAndSort(results, phrase, ({item}) => [item.name, item.ownerName]);
+        }
     }
+
 
     async open(){
         this.root.toggleAttribute("shown", true);
@@ -456,20 +481,59 @@ class AACGridBoard extends OccupiableWindow {
 
     async close(){
         this.root.toggleAttribute("shown", false);
-        await new Promise((r) => setTimeout(r, 550))
+        await Promise.all([
+            this.searchWindow.hide(550),
+            delay(550)
+        ]);
+    }
+
+    async startSearch(){
+        await this.searchWindow.resetSearchItems(true);
+        await this.searchWindow.show(500);
+    }
+
+    async onSearchValue(value) {
+        let p1 = null;
+        if (value) {
+            let topicID = value.id;
+            if (topicID && topicID !== this.currentTopic) {
+                p1 = this.setRootTopic(topicID);
+            }
+        }
+        await Promise.all([
+            p1,
+            this.searchWindow.hide(500)
+        ]);
+    }
+
+    async setRootTopic(topicUID, immediate = false) {
+        let path = [topicUID]
+        await Topics.getTopicCC(topicUID);
+        if (topicUID !== this.currentTopic) {
+            let topic = await Topics.getTopic(topicUID);
+            if (topic) {
+                this.currentTopic = topicUID;
+                this.topicPath = [topicUID];
+
+                this.aacGrid._updateTopics(this.topicPath);
+
+                Topics.loadTopicUtterances(topic);
+                this.currentGrid = new Grid();
+                this.currentGrid.topic = topic;
+
+                await this.gridArea.setContent(this.currentGrid, immediate);
+                this.updateBack();
+            }
+        }
     }
 
 
     async setTopicPath(path, immediate) {
-        // console.log(path);
-        
         this.topicPath = path;
-
         this.updateBack();
         await Topics.getTopicCC(path[0]);
         await this.setTopic(path[path.length-1], immediate, true)
     }
-
   
     /** @param {IconSelectionEvent} event */
     async onIconSelect(event) {
@@ -487,6 +551,7 @@ class AACGridBoard extends OccupiableWindow {
     }
 
 
+  
     async setTopic(topicUID, immediate, noHist) {
         if (topicUID !== this.currentTopic) {
             let topic = await Topics.getTopic(topicUID);
@@ -496,7 +561,8 @@ class AACGridBoard extends OccupiableWindow {
                 Topics.loadTopicUtterances(topic);
                 this.currentGrid = new Grid();
                 this.currentGrid.topic = topic;
-                this.gridArea.setContent(this.currentGrid, immediate);
+    
+                await this.gridArea.setContent(this.currentGrid, immediate);
                 this.updateBack();
             }
         }
@@ -532,7 +598,7 @@ class AACGridBoard extends OccupiableWindow {
     }
     
     static get fixToolBarWhenOpen() {return true}
-    static get usedStyleSheets() {return [relURL("grid.css", import.meta), GridIcon.styleSheet, Rotater.styleSheet]}
+    static get usedStyleSheets() {return [relURL("grid.css", import.meta), GridIcon.styleSheet, ...SearchWindow.usedStyleSheets, Rotater.styleSheet]}
 }
 
 export class AACGrid extends Features {
@@ -598,36 +664,36 @@ export class AACGrid extends Features {
         })
 
         await Promise.all([
-            this.board.currentGrid.waitForLoad(),
+            // this.board.currentGrid.waitForLoad(),
             quickTalkProm
         ]);
     }
 
-    async searchTopics(){
-        let topics = await Topics.getAllTopics(this.sdata.hostUID);
-        let searchList = Object.keys(topics).map(id => {
-            let topic = topics[id];
-            return {
-                id,
-                matches: topic.name,
-                icon: {
-                    displayValue: topic.name,
-                    type: "topic",
-                    subtitle: topic.ownerName,
-                }
-            }
-        })
-        await this.session.search.startSearch(searchList, async (result) => {
-            if (result) {
-                let topicID = result.id;
-                if (topicID && topicID !== this.board.currentTopic) {
-                    this.board.topicPath = [];
-                    await this.board.setTopic(topicID);
-                    this._updateTopics(this.board.topicPath);
-                }
-            }
-        });
-    }
+    // async searchTopics(){
+    //     let topics = await Topics.getAllTopics(this.sdata.hostUID);
+    //     let searchList = Object.keys(topics).map(id => {
+    //         let topic = topics[id];
+    //         return {
+    //             id,
+    //             matches: topic.name,
+    //             icon: {
+    //                 displayValue: topic.name,
+    //                 type: "topic",
+    //                 subtitle: topic.ownerName,
+    //             }
+    //         }
+    //     })
+    //     await this.session.search.startSearch(searchList, async (result) => {
+    //         if (result) {
+    //             let topicID = result.id;
+    //             if (topicID && topicID !== this.board.currentTopic) {
+    //                 this.board.topicPath = [];
+    //                 await this.board.setTopic(topicID);
+    //                 this._updateTopics(this.board.topicPath);
+    //             }
+    //         }
+    //     });
+    // }
 
     static get firebaseName(){
         return "aac";

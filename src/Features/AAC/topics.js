@@ -102,10 +102,10 @@ const GITEM_TYPES = {
 const DEFAULT_BOARD = "-OLqvyYjEIPALztTqM1N"
 const QUICK_TALK = "-OGKBtJUfonWnJijpL2O"
 
-
 /**@type {Text2Speech} */
 let Text2Speech = null;
 let TOPICS = {};
+let NAMES = {};
 
 /**
  * @param {string} id;
@@ -122,44 +122,71 @@ export async function getTopic(id){
     return topic;
 }
 
+
+async function addTopicOwnerName(id) {
+    let topic = await getTopic(id);
+    if (topic && !("ownerName" in topic)) {
+        let name = " - ";
+        if (topic.owner in NAMES) {
+            name = NAMES[topic.owner];
+        } else {
+            let [first, last, display] = await Promise.all([
+                FB.get(FB.ref(`users/${topic.owner}/info/firstName`)),
+                FB.get(FB.ref(`users/${topic.owner}/info/lastName`)),
+                FB.get(FB.ref(`users/${topic.owner}/info/displayName`))
+            ]);
+            name = display.val() || `${first.val()} ${last.val()}`.trim();
+            NAMES[topic.owner] = name;
+        }
+        topic.ownerName = name;
+    }
+    return topic;
+}
+
+const databaseWatchers = [];
+let watchingAll = false;
 export async function getAllTopics(uid) {
-    let publicQuery = FB.query(FB.ref("grid-topics"), FB.orderByChild('public'), FB.equalTo(true));
-    let ownedQuery = FB.query(FB.ref("grid-topics"), FB.orderByChild('owner'), FB.equalTo(uid));
-    let [s1, s2] = await Promise.all([
-        (await FB.get(publicQuery)).val(),
-        (await FB.get(ownedQuery)).val()
-    ]);
+    if (!watchingAll) {
+        while (databaseWatchers.length > 0) databaseWatchers.pop()();
+        let publicQuery = FB.query(FB.ref(`grid-topics`), FB.orderByChild('public'),FB.equalTo(true));
+        let ownedQuery = FB.query(FB.ref(`grid-topics`), FB.orderByChild('owner'), FB.equalTo(uid));
+        let proms = [["public", publicQuery], ["owned", ownedQuery]].map(async ([type, query]) => {
+            let allTopics = (await FB.get(query)).val();
+            await Promise.all(Object.keys(allTopics).map(async (topicUID) => {
+                    TOPICS[topicUID] = allTopics[topicUID];
+                    await addTopicOwnerName(topicUID);
+            }))
+    
+            databaseWatchers.push(FB.onChildAdded(query, (snapshot) => {
+                let topicUID = snapshot.key;
+                TOPICS[topicUID] = snapshot.val();
+                addTopicOwnerName(topicUID);
 
-
-    let users = {};
+            }));
+    
+            databaseWatchers.push(FB.onChildChanged(query, (snapshot) => {
+                let topicUID = snapshot.key;
+                TOPICS[topicUID] = snapshot.val();
+                addTopicOwnerName(topicUID);
+            }));
+    
+            databaseWatchers.push(FB.onChildRemoved(query, (snapshot) => {
+                let topicUID = snapshot.key;
+                if (topicUID in TOPICS) {
+                    delete TOPICS[topicUID]
+                    // callUpdates();
+                }
+            }));
+        });
+        await Promise.all(proms);
+        watchingAll = true;
+    }
 
     let all = {};
-    Object.keys(s1 || {}).forEach(id => {
-        all[id] = s1[id];
-        TOPICS[id] = s1[id]; // Cache the topic
-        users[s1[id].owner] = true; // Cache the owner
+    Object.keys(TOPICS).forEach(id => {
+        all[id] = TOPICS[id];
     });
 
-    Object.keys(s2 || {}).forEach(id => {
-        all[id] = s2[id];
-        TOPICS[id] = s2[id]; // Cache the topic
-        users[s2[id].owner] = true; // Cache the owner
-    });
-
-    await Promise.all(Object.keys(users).map(async uid => {
-        let [firstName, lastName, displayName] = await Promise.all([
-            (await FB.get(FB.ref(`users/${uid}/info/firstName`))).val(),
-            (await FB.get(FB.ref(`users/${uid}/info/lastName`))).val(),
-            (await FB.get(FB.ref(`users/${uid}/info/displayName`))).val()
-        ]);
-        let name = displayName || (firstName + " " + lastName);
-        users[uid] = name || " - ";
-    }));
-
-    for (let id in all) {
-        let topic = all[id];
-        topic.ownerName = users[topic.owner] || " - ";
-    }
     return all;
 }
 

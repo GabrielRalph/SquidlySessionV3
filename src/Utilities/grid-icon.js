@@ -1,8 +1,8 @@
 import { SvgPlus, Vector } from "../SvgPlus/4.js";
 import { AccessButton } from "./access-buttons.js";
 import { Icon, isIconName } from "./Icons/icons.js";
+import { MarkdownElement } from "./markdown.js";
 import { relURL } from "./usefull-funcs.js";
-
 
 /**
  * @typedef {string | {url: string}} IconSymbol
@@ -12,7 +12,8 @@ import { relURL } from "./usefull-funcs.js";
  * @typedef {Object} GridIconOptions
  * @param {("topic"|"normal"|"starter"|"noun"|"verb"|"adjective"|"action"|"topic-normal"|"topic-starter"|"topic-verb"|"topic-adjective")} type
  * @param {string} displayValue 
- * @param {symbol} [symbol]
+ * @param {string} [subtitle] - The icon symbol, can be a string or an object with a url.
+ * @param {IconSymbol} [symbol]
  * @param {boolean} [hidden] - If true, the icon will be hidden.
  */
 
@@ -118,7 +119,7 @@ export class GridIconSymbol extends SvgPlus{
                             load: () => this.dispatchEvent(new Event("load")),
                             error: () => this.dispatchEvent(new Event("load")),
                         },
-                        src: symbol.url
+                        src: url
                     });
                 }
             } else if ("text" in symbol) {
@@ -141,7 +142,6 @@ export class GridCard extends SvgPlus {
 
         this.cardIcon = this.createChild("svg", {class: "card-icon"});
         this.content = this.createChild("div", {class: "content"});
-
 
         if (type in MAKE_CARD_ICON) {
             let rs = new ResizeObserver(this.onresize.bind(this));
@@ -172,7 +172,7 @@ export class GridCard extends SvgPlus {
     }
 
      // Called when the size of the icon changes.
-     onresize(e){
+    onresize(e){
         let bbox = e[0]?.contentRect;
         if (bbox) {
             let {width, height} = bbox;
@@ -185,11 +185,19 @@ export class GridCard extends SvgPlus {
             }
         }
     }
+
+    
 }
 
 /** A GridIcon represents an item from a topic. */
 export class GridIcon extends GridCard {
     symbolLoaded = false;
+
+    /** @type {?MarkdownElement} */
+    subtitleElement = null;
+
+    /** @type {MarkdownElement} */
+    displayValueElement = null;
 
     /** @param {GridIconOptions} item */
     constructor(item, accessGroup) {
@@ -209,13 +217,10 @@ export class GridIcon extends GridCard {
         }
         
         // Add text box with display value to content box.
-        this.displayValueElement = this.content.createChild("div", {class: "display-value"});
+        this.displayValueElement = this.makeDisplayValueElement();
         this.displayValue = item.displayValue || "";
 
-        if ("subtitle" in item) {
-            this.subtitleElement = this.content.createChild("div", {class: "subtitle"});
-            this.subtitle = item.subtitle;
-        }
+        this.subtitle = item.subtitle;
        
         this.disabled = item.disabled || false;
 
@@ -224,7 +229,22 @@ export class GridIcon extends GridCard {
         }
     }
 
-   
+    makeSubtitleElement() {
+        return this.content.createChild(MarkdownElement, {class: "subtitle"}, "div");
+    }
+
+    makeDisplayValueElement() {
+        return this.content.createChild(MarkdownElement, {class: "display-value"}, "div");
+    }
+
+    set(item) {
+        for (let key of ["symbol", "displayValue", "subtitle", "hidden", "disabled"]) {
+            if (key in item) {
+                this[key] = item[key];
+            }
+        }
+    }
+    
 
     /** @param {IconSymbol} symbol*/
     set symbol(symbol) {
@@ -261,6 +281,7 @@ export class GridIcon extends GridCard {
         this._hidden = hidden;
         this.toggleAttribute("i-hidden", hidden);
     }
+
     get hidden() {
         return this._hidden;
     }
@@ -274,11 +295,11 @@ export class GridIcon extends GridCard {
                 this.subtitleElement = null;
             }
         } else {
-            if (this.subtitleElement) {
-                this.subtitleElement.innerHTML = value;
-            } else {
-                this.subtitleElement = this.content.createChild("div", {content: value, class: "subtitle"});
+            if (!this.subtitleElement) {
+                this.subtitleElement = this.makeSubtitleElement();
             }
+            this.subtitleElement.set(value);
+
         }
     }
     get subtitle() {
@@ -289,7 +310,7 @@ export class GridIcon extends GridCard {
     /** @param {string} value */
     set displayValue(value) {
         this._displayValue = value;
-        this.displayValueElement.innerHTML = value;
+        this.displayValueElement.set(value);
     }
     get displayValue() {
         return this._displayValue;
@@ -340,7 +361,7 @@ export class GridLayout extends SvgPlus {
      * @param {number} [rowEnd] - The ending row index (0-based, inclusive).
      * @param {number} [colEnd] - The ending column index (0-based, inclusive).
      */
-    add(item, row, col, rowEnd, colEnd) {
+    add(item, row, col, rowEnd = row, colEnd = col) {
         if (SvgPlus.is(item, SvgPlus) && typeof row === "number" && typeof col === "number") {
             rowEnd = typeof rowEnd === "number" ? rowEnd+1 : row;
             colEnd = typeof colEnd === "number" ? colEnd+1 : col;

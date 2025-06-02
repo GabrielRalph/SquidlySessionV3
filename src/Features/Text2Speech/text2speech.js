@@ -3,7 +3,7 @@ import * as FB from "../../Firebase/firebase.js";
 import { Features } from "../features-interface.js";
 import { getSelectedDevice } from "../../Utilities/device-manager.js";
 
-const DEBUG = true;
+const DEBUG = false;
 const cmodes = {
     "normal": ["rgb(214, 109, 22)", "rgb(183, 61, 17)"],
     "load": ["rgb(64, 195, 21)", "rgb(14, 127, 31)"]
