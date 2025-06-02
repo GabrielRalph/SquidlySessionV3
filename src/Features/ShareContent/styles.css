@@ -145,8 +145,11 @@ content-viewer[display-type="pdf"][pages="1"] access-button[name="back"] {
 access-button {
     pointer-events: all;
 }
-access-button[name="back"], access-button[name="next"], access-button[name="exit"], access-button[name="reset"] {
+access-button[name="exit"], access-button[name="reset"] {
     grid-column: 1;
+}
+access-button[name="back"], access-button[name="next"] {
+    grid-column: 5;
 }
 
 access-button[name="up"] {

@@ -7,7 +7,6 @@
  * @typedef {import("./actions.js").QuizResults} QuizResults
  */
 
-const {log} = console;
 const TEMPLATE = `
 \\documentclass[12pt]{article}
 \\usepackage[a4paper, left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm]{geometry}
@@ -37,8 +36,8 @@ const TEMPLATE = `
 
 \\centerline{ \\large  Quiz Author:|||QUIZ_CREATOR|||}
 
+\\section*{Quiz Questions}
     \\begin{multicols}{2}
-        \\section*{Quiz Questions}
         |||QUIZ|||
     \\end{multicols}
 
@@ -58,6 +57,11 @@ const TEMPLATE = `
     \\end{itemize}
     |||ACTIONS|||
     \\section*{Results}
+    The final results are shown in the table below. A score of 1 is awarded if the chosen answer is the same as the correct answer, or if there are no correct answers. Questions with multiple correct answers are scored based on the formula:
+    $$\\text{score} = \\cfrac{\\text{\\# correct choices}}{\\text{\\# correct answers}} - \\cfrac{\\# \\text{incorrect choices}}{\\# \\text{incorrect answers}}$$
+    and if all answers are correct 
+    $$\\text{score} = \\cfrac{\\text{\\# chosen}}{\\text{\\# answers}}.$$
+    The total score was \\textbf{|||TOTAL_SCORE|||} out of \\textbf{|||TOTAL_QUESTIONS|||} questions with an accuracy of \\textbf{|||ACCURACY|||\\%}.
     |||RESULTS|||
     \\section*{Data Visualisation}
     \\begin{multicols}{2}
@@ -204,11 +208,6 @@ function getP(data, p) {
 }
 
 function boxPlot(data, keys, colors = ["red", "green"]) {
-    // let l_w = 1;
-    // let l_q = 1.3;
-    // let m = 3;
-    // let u_q = 4.5
-    // let u_w = 6;
     let coords = data.map((col, i) => col.map(e => `(${i}, ${e})`).join(" "));
 
     return `
@@ -307,6 +306,22 @@ const TABLES = {
     /** @param {QuizResults} data */
     "ACTIONS": (data) => {
         return texTable(data.actions, actionKeys)
+    },
+
+    "TOTAL_SCORE": (data) => {
+        let score = data.results_by_question.reduce((a, b) => a + b.score, 0)
+        let isInt = score % 1 < 0.01;
+        return isInt ? Math.round(score) : score.toFixed(2);
+    },
+
+    "TOTAL_QUESTIONS": (data) => {
+        return data.results_by_question.length;
+    },
+
+    "ACCURACY": (data) => {
+        let correct = data.results_by_question.reduce((a, b) => a + b.score, 0)
+        let total = data.results_by_question.length;
+        return total == 0 ? "0" : Math.round(100 * correct / total);
     },
 
     /** @param {QuizResults} data */

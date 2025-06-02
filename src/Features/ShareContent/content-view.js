@@ -332,6 +332,7 @@ export class ContentViewer extends OccupiableWindow {
 
   /** @type {Object<string, MediaStream>} */
   stream = {};
+  
 
   constructor(feature) {
     let root = new HideShow("content-viewer");
@@ -575,10 +576,12 @@ export class ContentViewer extends OccupiableWindow {
   }
 
   open(){
+    this.shareContent.session.cursors.updateReferenceArea("fixedAspectArea");
     this.root.show(300);
   }
 
   close(){
+    this.shareContent.session.cursors.updateReferenceArea("entireScreen");
     this.shareContent.stopSharing();
     this.root.hide(300);
   }
