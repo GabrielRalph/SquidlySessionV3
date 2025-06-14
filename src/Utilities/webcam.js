@@ -1,4 +1,3 @@
-import { set } from "../Firebase/firebase.js";
 import { createDenoisedTrack, makeDenoisedStream } from "./Denoise/makeDenoisedStream.js";
 import { getSelectedDevice, setSelectedDevice } from "./device-manager.js";
 const camParams2 = {
@@ -261,9 +260,7 @@ Video.onunmute = () => {
       await updateSelectedDevice();
       let stream = await navigator.mediaDevices.getUserMedia( params );
       let stream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
-      await makeDenoisedStream(stream2);
       
-      // stream2 = createAudioFilteredStream(stream2);
       if (!stream) {
         webcam_on = false;
         throw 'no stream'
@@ -399,7 +396,7 @@ Video.onunmute = () => {
           if (newStream2) {
             if (VideoAudioStream) {
               const oldAudioTrack = VideoAudioStream.getAudioTracks()[0]
-              const newAudioTrack = createDenoisedTrack(newStream2.getAudioTracks()[0]);
+              const newAudioTrack = newStream2.getAudioTracks()[0];
               oldAudioTrack.stop();
               VideoAudioStream.removeTrack(oldAudioTrack);
               VideoAudioStream.addTrack(newAudioTrack);
