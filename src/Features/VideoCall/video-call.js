@@ -270,7 +270,8 @@ export class VideoCall extends Features {
             
             // set up the connection
             let signaler = new RTCSignaler(this.sdata);
-            let config = getDefaulIceServers(); // get configuration ice servers from firebase
+            let config = this.sdata.iceServers; //getDefaulIceServers(); // get configuration ice servers from firebase
+            console.log("Using ICE servers:", config);
             connection.start(config, stream, signaler);
             this._mainConnection = connection;
 

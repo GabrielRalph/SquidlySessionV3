@@ -167,6 +167,18 @@ export class SessionConnection extends FirebaseFrame {
         return this.hostUID === getUID();
     }
 
+    get iceServers(){
+        return this._iceServers || {
+            iceServers: [
+                {urls: "stun:stun.l.google.com:19302"},
+                {urls: "stun:stun1.l.google.com:19302"},
+                {urls: "stun:stun2.l.google.com:19302"},
+                {urls: "stun:stun3.l.google.com:19302"},
+                {urls: "stun:stun4.l.google.com:19302"},
+            ]
+        }
+    }
+
     async join(){
         if (this.hasJoined || this.isJoining) return [ERROR_CODES.JOINING_IN_PROCESS];
         this.isJoining = true;
@@ -179,40 +191,61 @@ export class SessionConnection extends FirebaseFrame {
 
         this.hostUID = host;
         
+        // If the session is not active
         if (!isActive) {
             
+            // If the session has no host then the session does not exist
             if (host === null) {
-                
                 error = [ERROR_CODES.NO_SESSION, "This session no longer exists."]
+            
+            // Otherwise if the user is the host of the session
             } else if (isHost) {
                 // start session if host 
-                let {data: {errors}} = await callFunction("sessions-start", {sid: this.sid});
+                let {data} = await callFunction("sessions-start", {sid: this.sid});
                 
+                let errors = data.errors || [];
                 if (errors.length === 0) {
                     start = true;
+                    this._iceServers = {iceServers: data.iceServers};
                 } else {
                     error = errors;
                 }
+
+            // Otherwise the user is a participant and the session has not started
             } else {
                 // session has not started and participant requesting
                 // to join session
                 error = [ERROR_CODES.SESSION_NOT_STARTED, "Host has not started the session."]
             }
+            
+
+        // The session is active
         } else {
+            // If the user is not the host, check if they are already in the session
             if (!isHost) {
+                // Check the 
                 let participant = await this.get("participants/"+getUID());
 
-                // If user is not approved
+                // If user is not approved make a request to join
                 if (participant == null) {
                     try {
                         await this.set("requests/"+getUID(), "anon");
                     } catch (e) {}
-                    error = [ERROR_CODES.WAITING_APPROVAL, "The host has not yet approved you."]
+                    error = [ERROR_CODES.WAITING_APPROVAL, "The host has not yet approved you."];
+
+                // If the user is already in the session, then they can join
                 } else {
                     start = true;
                 }
             } else {
                 start = true
+            }
+
+            if (start) {
+                let iceServers = await this.get("iceServers");
+                if (iceServers != null) {
+                    this._iceServers = iceServers;
+                }
             }
         }
 

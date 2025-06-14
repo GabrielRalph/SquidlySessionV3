@@ -172,7 +172,7 @@ export class ShareContent extends Features {
                 this.contentView.setStream(data.remoteStream, this.sdata.them);
             }
         })
-        this._shareScreen.start(getDefaulIceServers(), stream, signaler);
+        this._shareScreen.start(this.sdata.iceServers, stream, signaler);
 
         let contentInfo = await this.sdata.get("content-info");
         if (contentInfo !== null && contentInfo.type === "stream" && contentInfo.page === this.sdata.me) {

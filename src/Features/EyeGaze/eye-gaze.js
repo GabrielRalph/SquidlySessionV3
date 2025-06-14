@@ -285,7 +285,7 @@ export class EyeGazeFeature extends Features {
             let bbox = this.calibrationFrame.bbox;
 
             // Update rest watcher
-            this.restWatcher.set(eyeP.y > 1 ? 1 : 0)
+            this.restWatcher.set(eyeP.y > 1 ? 1 : 0);
 
             // Update the pointers
             let v = this.eyeDataDisabled ? null : eyeP.clone();
@@ -352,8 +352,6 @@ export class EyeGazeFeature extends Features {
     async initialise(){
         await Promise.all([load(), FeedbackWindow.loadStyleSheets(), this.calibrationFrame.loadGuides()])
         if (!await startWebcam()) {
-            console.log("LOOOOOOG");
-            
             throw new Error("Please allow webcam access")
         }
 
@@ -366,7 +364,7 @@ export class EyeGazeFeature extends Features {
             size: 50,
             class: "blob",
             text: "participant"
-        })
+        });
 
         this.session.settings.addEventListener("change", (e) => {
             let path = e.path.split("/");
@@ -374,7 +372,8 @@ export class EyeGazeFeature extends Features {
             if (user == this.sdata.me && type == "calibration") {
                 this.calibrationFrame[setting] = e.value;
             }
-        })
+        });
+
         this.calibrationFrame.guide = this.session.settings.get(`${this.sdata.me}/calibration/guide`);
         this.calibrationFrame.size = this.session.settings.get(`${this.sdata.me}/calibration/size`);
         this.calibrationFrame.speed = this.session.settings.get(`${this.sdata.me}/calibration/speed`);

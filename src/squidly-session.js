@@ -138,6 +138,13 @@ export class SessionDataFrame extends FirebaseFrame {
         }
     }
 
+    get iceServers(){
+        if (sessionConnection == null) {
+            return null;
+        }
+        return sessionConnection.iceServers;
+    }
+
     get me() { return this.isHost ? "host": "participant" } 
     get them() { return this.isHost ? "participant": "host"; }
 }

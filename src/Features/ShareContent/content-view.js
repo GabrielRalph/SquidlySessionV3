@@ -477,11 +477,7 @@ export class ContentViewer extends OccupiableWindow {
 
   setStream(stream, user) {
     this.stream[user] = stream;
-    // console.log(stream, user);
-    // console.log(this.displayType, this.streamUser);
-    
     if (this.displayType == "stream" && this.streamUser == user) {
-      // console.log("re updating stream");
       this.content.stream = stream;
     }
   }
