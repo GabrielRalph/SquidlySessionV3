@@ -3,7 +3,7 @@ const GetTrackMethods = {
     "video": "getVideoTracks",
     "audio": "getAudioTracks"
 }
-const MinTimeTillRestart = 20000; // 5 seconds
+const MinTimeTillRestart = 10000; // 5 seconds
 
 console.log(`%cWebRTC Base Loaded ${MinTimeTillRestart}`, 'color:rgb(252, 113, 7); background:rgb(27, 30, 33); padding: 10px; border-radius: 10px;');
 
@@ -450,17 +450,17 @@ export class ConnectionManager {
         await this.connection.start();
         signaler.on("restart", () => {
             clearTimeout(this.restartTimeout);
-            let dtime = new Date().getTime() - this.connection.timeOfStart;
+            let timeSinceStart = new Date().getTime() - this.connection.timeOfStart;
             let restart = () => {
                 rtc_l1_log("restarting")
                 this.start();
             }
-            if (dtime < MinTimeTillRestart) {
+            if (timeSinceStart < MinTimeTillRestart) {
                 this.restartTimeout = setTimeout(() => {
                     if (this.connection.sessionState !== "open") {
                         restart();
                     }
-                }, dtime);
+                }, MinTimeTillRestart - timeSinceStart);
             } else {
                 restart();
             }
