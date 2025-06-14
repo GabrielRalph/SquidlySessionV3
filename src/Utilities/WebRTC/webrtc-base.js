@@ -3,7 +3,7 @@ const GetTrackMethods = {
     "video": "getVideoTracks",
     "audio": "getAudioTracks"
 }
-const MinTimeTillRestart = 15000; // 5 seconds
+const MinTimeTillRestart = 20000; // 5 seconds
 
 console.log(`%cWebRTC Base Loaded ${MinTimeTillRestart}`, 'color:rgb(252, 113, 7); background:rgb(27, 30, 33); padding: 10px; border-radius: 10px;');
 
