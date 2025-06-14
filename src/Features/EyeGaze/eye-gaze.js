@@ -397,18 +397,21 @@ export class EyeGazeFeature extends Features {
             this.disableEyeData(val)
         });
 
+        
+        await this.sdata.set(`calibrating/${me}`, null);
+
+        this.sdata.onValue(`calibrating/${me}`, this._beginCalibrationSequence.bind(this));
+
         // Calibration states
         let init = true;
-        await this.sdata.set(`calibrating/${me}`, false);
-        this.sdata.onValue(`calibrating/${me}`, this._beginCalibrationSequence.bind(this));
-        this.sdata.onValue(`calibrating/${them}`, async (val) => {
-            if (!init) {
-                if (val) {
+        this.sdata.onValue(`calibrating/${them}`, async (isCalibrating) => {
+            if (!init && isCalibrating !== null) {
+                if (isCalibrating === true) {
                     this.session.notifications.notify(`The ${them} is calibrating`, "info");
                 } else {
-                    let val = await this.sdata.get(`validation/${them}`);
-                    if (val) {
-                        this.session.notifications.notify(`The ${them} has completed calibration with a score of ${Math.round((1 - 2 * val) * 100)}%`, "success");
+                    let validationData = await this.sdata.get(`validation/${them}`);
+                    if (validationData) {
+                        this.session.notifications.notify(`The ${them} has completed calibration with a score of ${Math.round((1 - 2 * validationData) * 100)}%`, "success");
                     }else {
                         this.session.notifications.notify(`The ${them} has cancelled calibration`, "error");
                     }
