@@ -244,7 +244,7 @@ export class SessionConnection extends FirebaseFrame {
             if (start) {
                 let iceServers = await this.get("iceServers");
                 if (iceServers != null) {
-                    this._iceServers = iceServers;
+                    this._iceServers = {iceServers};
                 }
             }
         }
