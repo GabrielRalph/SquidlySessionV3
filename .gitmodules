@@ -1,3 +1,6 @@
 [submodule "SvgPlus"]
 	path = src/SvgPlus
 	url = https://github.com/GabrielRalph/SvgPlus.git
+[submodule "src/Utilities/Denoise"]
+	path = src/Utilities/Denoise
+	url = https://github.com/G-R-Li/Denoise.git

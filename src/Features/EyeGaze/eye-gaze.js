@@ -398,20 +398,32 @@ export class EyeGazeFeature extends Features {
         });
 
         
+        // Set calibrating state to null
         await this.sdata.set(`calibrating/${me}`, null);
 
+        // On calibration state change, start the calibration sequence
         this.sdata.onValue(`calibrating/${me}`, this._beginCalibrationSequence.bind(this));
 
-        // Calibration states
         let init = true;
+        
+        // Calibration state of the other user
         this.sdata.onValue(`calibrating/${them}`, async (isCalibrating) => {
+            // If it isn't the initial onValue call and isCalibrating is either true or false
             if (!init && isCalibrating !== null) {
+                // The other user is calibrating
                 if (isCalibrating === true) {
                     this.session.notifications.notify(`The ${them} is calibrating`, "info");
+                
+                // The other has finished calibrating
                 } else {
+                    // Check if there is validation data
                     let validationData = await this.sdata.get(`validation/${them}`);
+
+                    // If there is validation data, notify the user of the score
                     if (validationData) {
                         this.session.notifications.notify(`The ${them} has completed calibration with a score of ${Math.round((1 - 2 * validationData) * 100)}%`, "success");
+                    
+                    // Otherwise, notify the user that the calibration was cancelled
                     }else {
                         this.session.notifications.notify(`The ${them} has cancelled calibration`, "error");
                     }

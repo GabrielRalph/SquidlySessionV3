@@ -261,7 +261,6 @@ export class SessionConnection extends FirebaseFrame {
                 this.onValue("requests", async (value) => {
                     if (value != null) {
                         console.log("approving requests");
-                        
                         let res = await Promise.all(Object.keys(value).map(async uid => {
                             return await callFunction("sessions-approveRequest", {uid, sid: this.sid})
                         }));
