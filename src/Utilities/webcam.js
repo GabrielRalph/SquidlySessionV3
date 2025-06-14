@@ -260,7 +260,7 @@ Video.onunmute = () => {
       await updateSelectedDevice();
       let stream = await navigator.mediaDevices.getUserMedia( params );
       let stream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
-      
+      // stream2 = await makeDenoisedStream(stream2);
       if (!stream) {
         webcam_on = false;
         throw 'no stream'
