@@ -122,6 +122,7 @@ export class ShareContent extends Features {
         let input = new SvgPlus("input");
         input.props = {
             type: "file",
+            accept: "image/*,application/pdf",
         }
         input.click();
         
