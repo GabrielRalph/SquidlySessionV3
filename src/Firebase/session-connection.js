@@ -61,7 +61,8 @@ export class SessionConnection extends FirebaseFrame {
 
     async waitForApproval(){
         await new Promise((resolve) => {
-            let end = this.onValue("participants/"+getUID(), (value) => {
+            let refs = "participants/"+getUID()
+            let end = this.onValue(refs, (value) => {
                 if (value != null) {
                     end();
                     resolve(true);

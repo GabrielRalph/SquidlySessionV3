@@ -22,8 +22,9 @@ class SettingsIcon extends GridIcon {
             this.setAttribute("setting", this.setting);
             this.updateDynamicTemplate();
         }
-    }
 
+        this.active = icon.active || false;
+    }
 
 
     set active(value) {
@@ -444,8 +445,6 @@ export class SettingsFeature extends Features {
         this.sdata.set("devices/"+this.sdata.me, await getDevices(true));
 
         this.sdata.onValue("path", (path) => {
-            console.log("path", path);
-            
             if (path === null) {
                 path = ["home"];
             }

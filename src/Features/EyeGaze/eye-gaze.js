@@ -388,7 +388,7 @@ export class EyeGazeFeature extends Features {
         })
         
         this.sdata.onValue(`on/${me}`, (bool) => {
-            this.toggleEyeGazeProcess(bool);
+            this.toggleEyeGazeProcess(bool || false);
 
         })
         
@@ -405,7 +405,7 @@ export class EyeGazeFeature extends Features {
         this.sdata.onValue(`calibrating/${me}`, this._beginCalibrationSequence.bind(this));
 
         let init = true;
-        
+
         // Calibration state of the other user
         this.sdata.onValue(`calibrating/${them}`, async (isCalibrating) => {
             // If it isn't the initial onValue call and isCalibrating is either true or false

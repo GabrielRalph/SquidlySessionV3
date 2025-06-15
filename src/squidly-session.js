@@ -374,19 +374,17 @@ export class SquidlySessionElement extends ShadowElement {
                     this.loaderText = `The session has not been started, please wait for the </br>
                     host to start the session.`
                     await sessionConnection.waitForStart();
-                    this.initialiseSessionConnection();
+                    await this.initialiseSessionConnection();
                     break;
                 case ERROR_CODES.WAITING_APPROVAL: 
                     this.loaderText = `The host has not yet granted you approval to join. </br> Please wait for the host to approve your request.`
                     await sessionConnection.waitForApproval();
-                    this.initialiseSessionConnection();
+                    await this.initialiseSessionConnection();
                     break;
                 case ERROR_CODES.IN_SESSION:
                     this.loaderText = `You are currently in another session please end this session before joining a new session.`
-                    await sessionConnection.waitForApproval();
                     break;
                 default:
-                    console.log(error);
                     this.loaderText = `An unexpected error occured please refresh and try again. </br> ${error}`
             }
         } else {

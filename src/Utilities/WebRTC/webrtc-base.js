@@ -456,6 +456,7 @@ export class ConnectionManager {
                 this.start();
             }
             if (timeSinceStart < MinTimeTillRestart) {
+                
                 this.restartTimeout = setTimeout(() => {
                     if (this.connection.sessionState !== "open") {
                         restart();

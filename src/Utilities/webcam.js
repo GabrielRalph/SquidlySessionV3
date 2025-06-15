@@ -1,4 +1,4 @@
-import { createDenoisedTrack, makeDenoisedStream } from "./Denoise/makeDenoisedStream.js";
+// import { createDenoisedTrack, makeDenoisedStream } from "./Denoise/makeDenoisedStream.js";
 import { getSelectedDevice, setSelectedDevice } from "./device-manager.js";
 const camParams2 = {
     video: {
@@ -260,7 +260,7 @@ Video.onunmute = () => {
       await updateSelectedDevice();
       let stream = await navigator.mediaDevices.getUserMedia( params );
       let stream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
-      stream2 = await makeDenoisedStream(stream2);
+      // stream2 = await makeDenoisedStream(stream2);
       if (!stream) {
         webcam_on = false;
         throw 'no stream'
