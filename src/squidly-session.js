@@ -218,6 +218,21 @@ export class SquidlySessionElement extends ShadowElement {
                 console.log(e);
                 this.loaderText = e+"";
             }
+
+            this.toolBar.addSelectionListener("end", (e) => {
+                sessionConnection.leave();
+            })
+
+            this.toolBar.addSelectionListener("key", async (e) => {
+                // Copy the key to clipboard
+                try {
+                    let link = window.location.origin + "/?" + sessionConnection.sid;
+                    await navigator.clipboard.writeText(link)
+                    this.notifications.notify("Session key copied to clipboard", "success");
+                } catch (e) {
+                    this.notifications.notify("Failed to copy session key to clipboard", "error");
+                }
+            })
         } else {
 
         }
@@ -390,6 +405,9 @@ export class SquidlySessionElement extends ShadowElement {
         } else {
             setLoadState("connection", 2);
         }
+
+        this.endlinkHost = this.endlinkHost;
+        this.endlinkParticipant = this.endlinkParticipant;
     }
 
     async initialiseFixedAspect(){
@@ -526,6 +544,40 @@ export class SquidlySessionElement extends ShadowElement {
         
     }
 
+    set endlinkHost(link) {
+        this["endlink-host"] = link;
+    }
+    set ["endlink-host"](link) {
+        this._endLinkHost = link;
+        console.log("host link - ", link);
+        
+        if (sessionConnection !== null && sessionConnection.isHost) {
+            sessionConnection.onleave = () => {
+                window.location.href = link;
+            }
+        }
+    }
+    get endlinkHost() {
+        return this._endLinkHost;
+    }
+
+    set endlinkParticipant(link) {
+        this["endlink-participant"] = link;
+    }
+    set ["endlink-participant"](link) {
+        this._endLinkParticipant = link;
+        console.log("participant link - ", link);
+        
+        if (sessionConnection !== null && !sessionConnection.isHost) {
+            sessionConnection.onleave = () => {
+                window.location.href = link;
+            }
+        }
+    }
+    get endlinkParticipant() {
+        return this._endLinkParticipant;
+    }
+
     get squidlyLoader(){
         return document.querySelector("squidly-loader")
     }
@@ -556,6 +608,10 @@ export class SquidlySessionElement extends ShadowElement {
             }
             this._loaderTextEl.innerHTML = text
         }
+    }
+
+    static get observedAttributes() {
+        return ["endlink-host", "endlink-participant"];
     }
   
     /** 

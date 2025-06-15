@@ -237,7 +237,11 @@ export class FirebaseFrame {
   
     /** Ends all listeners and removes the app database */
     close(remove = true) {
-        for (let listener of this.listeners) listener();
+        for (let listener of this.listeners) {
+          if (listener instanceof Function ) {
+            listener();
+          }
+        }
         if (remove) set(this.appRef(), null);
     }
   

@@ -449,6 +449,8 @@ export class ConnectionManager {
         this.connection.EventListeners = this.EventListeners;
         await this.connection.start();
         signaler.on("restart", () => {
+            rtc_l1_log("restart received");
+            
             clearTimeout(this.restartTimeout);
             let timeSinceStart = new Date().getTime() - this.connection.timeOfStart;
             let restart = () => {
@@ -458,6 +460,8 @@ export class ConnectionManager {
             if (timeSinceStart < MinTimeTillRestart) {
                 
                 this.restartTimeout = setTimeout(() => {
+                    rtc_l1_log("timeout ended")
+                    
                     if (this.connection.sessionState !== "open") {
                         restart();
                     }

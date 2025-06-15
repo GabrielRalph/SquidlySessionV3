@@ -254,6 +254,8 @@ export class SessionConnection extends FirebaseFrame {
         if (start) {
             this.hasJoined = true;
             this.onValue("active", (value) => {
+                console.log("active = ", value);
+                
                 if (value === null) this._onLeave()
             })
 
@@ -266,7 +268,6 @@ export class SessionConnection extends FirebaseFrame {
                             return await callFunction("sessions-approveRequest", {uid, sid: this.sid})
                         }));
                         console.log(res);
-                        
                     }
                 })
             }
@@ -282,7 +283,7 @@ export class SessionConnection extends FirebaseFrame {
         if (this.onleave instanceof Function) {
             this.onleave();
         }
-
+        
         this.close();
         this.hasJoined = false;
     }
@@ -290,6 +291,8 @@ export class SessionConnection extends FirebaseFrame {
     async leave(){
         if (this.isHost) {
             await callFunction("sessions-end", {sid: this.sid});
+        } else {
+            this._onLeave();
         }
     }
 }
