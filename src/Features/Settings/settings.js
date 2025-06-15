@@ -16,14 +16,13 @@ class SettingsIcon extends GridIcon {
         super(icon, type);
         this.sideDotsElement = this.createChild("div", {class: "side-dots"})
         this.activeIcon = this.createChild(Icon, {class: "icon active"}, "radioTick");
+        this.active = icon.active || false;
 
         if (Array.isArray(icon.path) && icon.setting) {
             this.setting = icon.path.join("/") + "/" + icon.setting
             this.setAttribute("setting", this.setting);
             this.updateDynamicTemplate();
         }
-
-        this.active = icon.active || false;
     }
 
 
