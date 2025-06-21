@@ -12,7 +12,7 @@ console.log(`%cWebRTC Base Loaded ${MinTimeTillRestart}`, 'color:rgb(252, 113, 7
 window.show_rtc_base = false;
 function rtc_base_log(str) {
     if (window.show_rtc_base) {
-      console.log("%c\t" + str, 'color: #bada55; background:rgb(27, 30, 33); padding: 10px; border-radius: 10px;');
+      console.log("%c\t" + str, 'color:rgb(186, 218, 85); background:rgb(27, 30, 33); padding: 10px; border-radius: 10px;');
     }
 }
 
@@ -145,22 +145,25 @@ class WebRTCConnection {
     }
 
     get isRemoteStreamReady(){
-        const {video, audio, data_send, data_receive, ice_state} = this.RemoteContentStatus;
-        return this.RemoteStream instanceof MediaStream && 
+        const {RemoteContentStatus: {video, audio, ice_state}, RemoteStream} = this;
+        return RemoteStream instanceof MediaStream && 
             ("video" in this.monitorTracks ? video : true) &&
             ("audio" in this.monitorTracks ? audio : true) &&
             ice_state == "connected";
     }
+
+     get isDataChannelReady(){
+        const {useDataChannel} = this;
+        const {data_send, data_receive} = this.RemoteContentStatus;
+        return (!useDataChannel) || (data_send == "open" && data_receive == "open");
+    }
     
     get isStatusReady(){
-        const {isRemoteStreamReady, isDataChannelReady} = this.RemoteContentStatus;
+        const {isRemoteStreamReady, isDataChannelReady} = this;
         return isDataChannelReady && isRemoteStreamReady;
     }
 
-    get isDataChannelReady(){
-        const {useDataChanel, data_send, data_receive} = this.RemoteContentStatus;
-        return (!useDataChanel) || (data_send == "open" && data_receive == "open");
-    }
+   
 
 
     logState(){
@@ -174,9 +177,20 @@ class WebRTCConnection {
             values.push(["out", this.RemoteContentStatus.data_send == "open"]);
         }
 
-        let cc = (val) => `color: ${val ? "#bada55" : "#eb5533"}; background:rgb(27, 30, 33); padding: 3px; ]`
+        let cc = (val, isLast) => `color: ${val ? "#bada55" : "#eb5533"}; background: rgb(18, 17, 17); padding: 3px; ${isLast ? "border-radius: 0px 10px 10px 0px; padding-right: 5px;" : ""}`;
 
-        console.log(`${this.id}: ${values.map(v => `%c${v[0]}`).join(" ")}`, ...values.map(v => cc(v[1])));
+        console.log(
+        `%c${this.id}: ${values.map(v => `%c${v[0]}`).join(" ")}`, 
+        `background: ${this.isStatusReady ? "rgb(8, 143, 17)" : "rgb(203, 13, 13)"}; padding: 3px 3px 3px 5px; color: white; border-radius: 10px 0px 0px 10px;`,
+        ...values.map((v, i) => cc(v[1], i == values.length - 1)));
+    }
+
+    log(string, color = "rgb(7, 166, 252)") {
+        console.log(
+        `%c${this.id}: %c${string}`, 
+        `background: ${this.isStatusReady ? "rgb(8, 143, 17)" : "rgb(203, 13, 13)"}; padding: 3px 3px 3px 5px; color: white; border-radius: 10px 0px 0px 10px;`,
+        `color: ${color}; background: rgb(18, 17, 17); padding: 3px; border-radius: 0px 10px 10px 0px; padding-right: 5px;`
+        );
     }
       
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -451,28 +465,29 @@ export class ConnectionManager {
         this.signaler = signaler;
     
         this.connection = new WebRTCConnection(config, stream, signaler, this.useDataChannel);
-        this.connection.monitorTracks = this.monitorTracks;
-        this.connection.id = signaler.fb.getFirebaseName() + "-" + this.connection.id
-        this.connection.EventListeners = this.EventListeners;
-        await this.connection.start();
+        const {connection} = this;
+        connection.monitorTracks = this.monitorTracks;
+        connection.id = signaler.fb.getFirebaseName() + "-" + connection.id
+        connection.EventListeners = this.EventListeners;
+        await connection.start();
 
         signaler.on("restart", (timeOfStart) => {
             
             clearTimeout(this.restartTimeout);
 
             let timeSinceStart = new Date().getTime() - timeOfStart;
-            rtc_l1_log(`${signaler.fb.them} started ${(timeSinceStart/1000).toFixed()}s ago`);
+            connection.log(`${signaler.fb.them} started ${(timeSinceStart/1000).toFixed()}s ago`);
 
             let restart = () => {
-                rtc_l1_log("restarting")
+                connection.log("restarting")
                 this.start();
             }
 
             if (timeSinceStart < MinTimeTillRestart) {
                 this.restartTimeout = setTimeout(() => {
-                    rtc_l1_log("timeout ended")
+                    connection.log("timeout ended")
                     
-                    if (this.connection.sessionState !== "open") {
+                    if (connection.sessionState !== "open") {
                         restart();
                     }
                 }, MinTimeTillRestart - timeSinceStart);
