@@ -336,9 +336,6 @@ export class FeedbackWindow extends OccupiableWindow {
             }, MaxTimeTillFade)
         });
 
-        // sdata.onValue(`feedback-points/${sdata.them}`, (str) => {
-            
-        // });
 
         sdata.onValue(`onion/${sdata.them}`, (str) => {
             let onion = FaceLandmarks.deserialise(str, used_points);

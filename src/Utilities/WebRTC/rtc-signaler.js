@@ -76,15 +76,16 @@ export class RTCSignaler {
             fb.set(candidateRef + "/" + key, null);
         })
 
+        let initRS = true;
         return await new Promise((r) => {
             this.restartListener = fb.onValue(`${fb.them}/restart-connection`, (val) => {
-                console.log(`%c ${fb.getFirebaseName()} Time since restart: ${val}`, "color: red")
-                let time = new Date().getTime();
-                if (time - val < RESTART_TIME) {
-                    this._dispatchEvent("restart");
+                if (initRS) {
+                    initRS = false;
+                    r()
+                } else {
+                    let time = val == null ? new Date().getTime() : val;
+                    this._dispatchEvent("restart", time);
                 }
-                
-                r(time - val < RESTART_TIME);
             })
             this._listening = true;
         })

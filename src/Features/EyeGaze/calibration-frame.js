@@ -568,7 +568,11 @@ export class CalibrationFrame extends HideShow {
 
 		let validation = null;
 		if (!this.stop) {
-			validation = await Algorithm.trainModel();
+			try {
+				validation = await Algorithm.trainModel();
+			} catch (e) {
+				console.log(e);
+			}
 		}
 		return validation;
 	}

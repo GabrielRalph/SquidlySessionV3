@@ -448,17 +448,20 @@ export class ConnectionManager {
         this.connection.id = signaler.fb.getFirebaseName() + "-" + this.connection.id
         this.connection.EventListeners = this.EventListeners;
         await this.connection.start();
-        signaler.on("restart", () => {
-            rtc_l1_log("restart received");
+
+        signaler.on("restart", (timeOfStart) => {
             
             clearTimeout(this.restartTimeout);
-            let timeSinceStart = new Date().getTime() - this.connection.timeOfStart;
+
+            let timeSinceStart = new Date().getTime() - timeOfStart;
+            rtc_l1_log(`${signaler.fb.them} started ${(timeSinceStart/1000).toFixed()}s ago`);
+
             let restart = () => {
                 rtc_l1_log("restarting")
                 this.start();
             }
+
             if (timeSinceStart < MinTimeTillRestart) {
-                
                 this.restartTimeout = setTimeout(() => {
                     rtc_l1_log("timeout ended")
                     

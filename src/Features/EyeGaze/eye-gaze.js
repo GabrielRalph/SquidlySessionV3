@@ -20,6 +20,16 @@ class CalibrationScreenArea extends ShadowElement {
    }
 }
 
+function clampV(v, min, max) {
+    return new Vector(
+        v.x < min.x ? min.x : (v.x > max.x ? max.x : v.x),
+        v.y < min.y ? min.y : (v.y > max.y ? max.y : v.y)
+    );
+}
+function clampV0_1(v) {
+    return clampV(v, new Vector(0, 0), new Vector(1, 1));
+}
+
 class TestScreen extends ShadowElement {
     dotSize = 0.08;
     constructor(){
@@ -59,7 +69,7 @@ class TestScreen extends ShadowElement {
         await this.root.show();
    }
 
-   setEyeData(pos, user) {
+    setEyeData(pos, user) {
         if (this.shownUser == user) {
             this.eyePosition = pos;
         }
@@ -193,72 +203,106 @@ export class EyeGazeFeature extends Features {
         })
 
         this.session.toolBar.addSelectionListener("eye", (e) => {
-            let bool = !this.isProcessing;
-        
-            this.sdata.set(`on/participant`, bool);
-            this.sdata.set(`on/host`, bool);
-        })
+            this.toggleEyeGazeProcess();
+        });
 
         this.restButton.button.addEventListener("access-click", (e) => {
             let bool = !this.eyeDataDisabled;
-            this.disableEyeData(bool, e)
-        })
+            this.disableEyeData(bool, e);
+        });
 
         this.restWatcher = new TransitionVariable(0, 1, (v) => {
-            this.session.toggleRestBar(v==1)
+            this.session.toggleRestBar(v==1);
+        });
+
+        // Add cursor eye data listener
+        this.addEyeDataListener((eyeP, bbox, disabled) => {
+            let key = (this.sdata.isHost ? "host" : "participant") + "-eyes";
+            if (eyeP == null || disabled) {
+                this.session.cursors.updateCursorPosition(key, null);
+            } else {
+                this.session.cursors.updateCursorPosition(key, clampV0_1(eyeP), bbox)
+            }
+        });
+
+        // Add heatmap eye data listener
+        this.addEyeDataListener((eyeP,bbox, disabled) => {
+            // add point to heatmaps if the eye position is a Vector
+            if (eyeP instanceof Vector && !disabled) {
+                let v = clampV0_1(eyeP);
+                addPointToHeatmaps(v.x, v.y, 1);
+            }
         })
     }
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
     addEyeDataListener(cb) {
         if (cb instanceof Function) {
-            this.eyeDataListeners.add(cb)
+            this.eyeDataListeners.add(cb);
         }
     }
 
     disableEyeData(bool, e) {
         let me = this.sdata.isHost ? "host": "participant";
         if (bool != this.eyeDataDisabled) {
-            this.eyeDataDisabled = bool
-            this.sdata.set(`disabled/${me}`, bool)
+            this.eyeDataDisabled = bool;
+            this.sdata.set(`disabled/${me}`, bool);
         }
     }
 
     toggleEyeGazeProcess(bool) {
-        if (typeof bool !== "boolean") {
-            bool = !this.isProcessing;
-        }
-        if (bool !== this.isProcessing) {
-            this.session.toolBar.setIcon("access/eye/name", bool ? "eye" : "noeye")
-            this._isProcessing = bool;
-            this.sdata.set(`on/${this.me}`, bool);
-            if (bool) startProcessing();
-            else {
-                stopProcessing();
-                this.restWatcher.set(false);
-                this.session.cursors.updateCursorPosition(this.me + "-eyes", null);
+        console.log(`feedback: ${this._feedbackIsOpen ? "open" : "false"},\nme calibrating: ${this._calibrating == true},\nthey calibrating: ${this._areTheyCalibrating == true}`);
+        
+        if (!this._feedbackIsOpen && this._calibrating !== true && this._areTheyCalibrating !== true) {
+            if (typeof bool !== "boolean") {
+                bool = !this.isProcessing;
             }
+            console.log("toggle eye gaze process", bool);
+            
+            this.sdata.set(`on/participant`, bool);
+            this.sdata.set(`on/host`, bool);
         }
-    }   
-
+    }
+    
     startCalibration(user, e) {
         let p = this.sdata.set(`calibrating/${user}`, true);
         if (e instanceof AccessEvent) e.waitFor(p);
     }
-
+    
     get isProcessing() {
-        return this._isProcessing;
+        return this.__isProcessing;
     }
-
+    
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    set _isProcessing(bool) {
+        if (bool != this.__isProcessing) {
+            if (bool) {
+                startProcessing();
+            } else {
+                stopProcessing();
+                this.restWatcher.set(false);
+                this._onEyeData(null); // Clear eye data
+            }
+        }
+        this.__isProcessing = bool;
+    }
+
+    _onToggleEyeGazeProcess(bool) {
+        this.session.toolBar.setIcon("access/eye/name", bool ? "eye" : "noeye");
+        this._isProcessing = bool;
+    }   
+
     _openCloseFeedback(state){
         if (state) {
             this.toggleEyeGazeProcess(true);
         }
+        this._feedbackIsOpen = state;
     }
 
     async _showTestScreen(user){
@@ -276,43 +320,42 @@ export class EyeGazeFeature extends Features {
     }
 
     _onEyeData(data){
+        let eyeP = null;
+        let bbox = null;
+        
         // If there is a gaze position and the user isn't calibrating
-        if (data.result && !this._calibrating) {
-            
-            let eyeP = data.result.clone();
+        if (typeof data === "object" && data != null && data.result && !this._calibrating) {
+            eyeP = data.result.clone();
 
-            // Update all the eyeData listeners
-            let bbox = this.calibrationFrame.bbox;
+            // Get the bounding box of the calibration frame
+            bbox = this.calibrationFrame.bbox;
 
             // Update rest watcher
             this.restWatcher.set(eyeP.y > 1 ? 1 : 0);
 
-            // Update the pointers
-            let v = this.eyeDataDisabled ? null : eyeP.clone();
-            if (v instanceof Vector) {
-                v.x = v.x < 0 ? 0 : (v.x > 1 ? 1 : v.x);
-                v.y = v.y < 0 ? 0 : (v.y > 1 ? 1 : v.y);
+            // If the eye data is disabled and the y-coordinate is less than or equal to 1, set eyeP to null
+            if (this.eyeDataDisabled && eyeP.y <= 1) {
+                eyeP = null;
             }
-            try {
-                let me = this.sdata.isHost ? "host" : "participant";
-                this.session.cursors.updateCursorPosition(me + "-eyes", v, bbox)
-                addPointToHeatmaps(v.x, v.y, 1);
-            } catch (e) {
+        }
 
-            }
-            // Update the eye data listeners
-            for (let cb of this.eyeDataListeners) {
-                let v = null;
-                let b = null;
-                if (!this.eyeDataDisabled || eyeP.y > 1) {
-                    v = eyeP.clone()
-                    b = [bbox[0].clone(), bbox[1].clone()]
-                }
-                try {
-                    cb(v, bbox, this.eyeDataDisabled)
-                } catch (e) {
-                    console.error(e);
-                }
+        this._callEyeDataListeners(eyeP, bbox);
+    }
+
+    _callEyeDataListeners(eyeP, bbox) {
+        // Update the eye data listeners
+        for (let cb of this.eyeDataListeners) {
+            try {
+                // If eyeP is a Vector, clone it to avoid mutation
+                let v = eyeP instanceof Vector ? eyeP.clone() : null;
+
+                // If bbox is an array, clone the vectors to avoid mutation
+                let b = Array.isArray(bbox) ? [bbox[0].clone(), bbox[1].clone()] : null;
+
+                // Call the callback with the eye position and bounding box
+                cb(v, b, this.eyeDataDisabled)
+            } catch (e) {
+                // console.error(e);
             }
         }
     }
@@ -388,10 +431,8 @@ export class EyeGazeFeature extends Features {
         })
         
         this.sdata.onValue(`on/${me}`, (bool) => {
-            this.toggleEyeGazeProcess(bool || false);
-
-        })
-        
+            this._onToggleEyeGazeProcess(bool);
+        });
 
         this.sdata.onValue(`disabled/${me}`, (val) => {
             this.disableEyeData(val)
@@ -408,6 +449,8 @@ export class EyeGazeFeature extends Features {
 
         // Calibration state of the other user
         this.sdata.onValue(`calibrating/${them}`, async (isCalibrating) => {
+            this._areTheyCalibrating = isCalibrating;
+
             // If it isn't the initial onValue call and isCalibrating is either true or false
             if (!init && isCalibrating !== null) {
                 // The other user is calibrating
