@@ -74,7 +74,6 @@ class WebRTCConnection {
 
     /** @type {RTCDataChannel?} */
     SendChannel = null;
-
     
     makingOffer = false;
     ignoreOffer = false;
@@ -117,7 +116,6 @@ class WebRTCConnection {
         GlobalCount++;
     }
 
-
     async start() {
         this.timeOfStart = new Date().getTime();
         await this.Signaler.restart();
@@ -144,6 +142,10 @@ class WebRTCConnection {
         this.updateHandler();
     }
 
+    get isICEConnected(){
+        return this.RemoteContentStatus.ice_state === "connected";
+    }
+
     get isRemoteStreamReady(){
         const {RemoteContentStatus: {video, audio, ice_state}, RemoteStream} = this;
         return RemoteStream instanceof MediaStream && 
@@ -152,7 +154,7 @@ class WebRTCConnection {
             ice_state == "connected";
     }
 
-     get isDataChannelReady(){
+    get isDataChannelReady(){
         const {useDataChannel} = this;
         const {data_send, data_receive} = this.RemoteContentStatus;
         return (!useDataChannel) || (data_send == "open" && data_receive == "open");
@@ -162,8 +164,6 @@ class WebRTCConnection {
         const {isRemoteStreamReady, isDataChannelReady} = this;
         return isDataChannelReady && isRemoteStreamReady;
     }
-
-   
 
 
     logState(){
@@ -434,10 +434,14 @@ export class ConnectionManager {
     stream = null;
     signaler = null;
     config = null;
+    restartCondition = (connection) => connection.sessionState !== "open";
 
-    constructor(useDataChannel = true, monitorTracks = {video: true, audio: true}) {
+    constructor(useDataChannel = true, monitorTracks = {video: true, audio: true}, restartCondition = null) {
         this.useDataChannel = useDataChannel;
         this.monitorTracks = monitorTracks;
+        if (restartCondition instanceof Function) {
+            this.restartCondition = restartCondition;
+        }
     }
 
     closeConnection(){
@@ -476,18 +480,17 @@ export class ConnectionManager {
             clearTimeout(this.restartTimeout);
 
             let timeSinceStart = new Date().getTime() - timeOfStart;
-            connection.log(`${signaler.fb.them} started ${(timeSinceStart/1000).toFixed()}s ago`);
+            connection.log(`${signaler.fb.them} started`);
 
             let restart = () => {
-                connection.log("restarting")
                 this.start();
             }
 
             if (timeSinceStart < MinTimeTillRestart) {
                 this.restartTimeout = setTimeout(() => {
-                    connection.log("timeout ended")
-                    
-                    if (connection.sessionState !== "open") {
+                    let isRestart = this.restartCondition(connection);
+                    connection.log("timeout ended" + (isRestart ? ", restart" : ""));
+                    if (isRestart) {
                         restart();
                     }
                 }, MinTimeTillRestart - timeSinceStart);

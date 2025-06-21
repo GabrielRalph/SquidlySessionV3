@@ -167,7 +167,10 @@ export class ShareContent extends Features {
         let stream = canvas.captureStream();
         ctx.fillRect(0, 0, width, height);
 
-        this._shareScreen = new ConnectionManager(false, {video: true});
+        this._shareScreen = new ConnectionManager(false, {video: true}, (connection) => {
+            return !connection.isICEConnected;
+        });
+        
         this._shareScreen.on("state", (data) => {
             if (data.remoteStream && data.video != null) {
                 this.contentView.setStream(data.remoteStream, this.sdata.them);
