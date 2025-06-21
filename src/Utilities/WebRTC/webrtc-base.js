@@ -101,11 +101,11 @@ class WebRTCConnection {
         "N": (d) => {
             this.callEvent("data", d);
         },
-        "A": () => {
-            this.sessionState = "open"
-            this.RemoteContentStatus.recv = true;
-            this.updateHandler();
-        }
+        // "A": () => {
+        //     this.sessionState = "open"
+        //     this.RemoteContentStatus.recv = true;
+        //     this.updateHandler();
+        // }
     }
 
     constructor(config, stream, signaler, useDataChannel = true) {
@@ -153,23 +153,30 @@ class WebRTCConnection {
     }
     
     get isStatusReady(){
-        const {video, audio, data_send, data_receive, ice_state} = this.RemoteContentStatus;
-        return video && audio && data_send == "open" && data_receive == "open" && ice_state == "connected";
+        const {isRemoteStreamReady, isDataChannelReady} = this.RemoteContentStatus;
+        return isDataChannelReady && isRemoteStreamReady;
     }
 
     get isDataChannelReady(){
-        const {recv, sent, data_send, data_receive} = this.RemoteContentStatus;
-        return recv && sent && data_send == "open" && data_receive == "open";
+        const {useDataChanel, data_send, data_receive} = this.RemoteContentStatus;
+        return (!useDataChanel) || (data_send == "open" && data_receive == "open");
     }
 
 
     logState(){
-        let {RemoteContentStatus: {video, audio, data_send, data_receive, ice_state, sent, recv}} = this;
+        let vidAud = Object.keys(this.monitorTracks);
+        const values = vidAud.map((v) => [v.slice(0, 3), this.RemoteContentStatus[v]]);
+
+        values.push(["ice", this.RemoteContentStatus.ice_state == "connected"]);
+
+        if (this.useDataChannel) {
+            values.push(["in", this.RemoteContentStatus.data_receive == "open"]);
+            values.push(["out", this.RemoteContentStatus.data_send == "open"]);
+        }
+
         let cc = (val) => `color: ${val ? "#bada55" : "#eb5533"}; background:rgb(27, 30, 33); padding: 3px; ]`
-        data_send = data_send == "open";
-        data_receive = data_receive == "open";
-        ice_state = ice_state == "connected";
-        console.log(`${this.id}: %cvid %caud %cin %cout %cice %csent %crecv`, cc(video), cc(audio), cc(data_receive), cc(data_send), cc(ice_state), cc(sent), cc(recv));
+
+        console.log(`${this.id}: ${values.map(v => `%c${v[0]}`).join(" ")}`, ...values.map(v => cc(v[1])));
     }
       
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -184,21 +191,21 @@ class WebRTCConnection {
 
     updateHandler(){
         const {sessionState, RemoteContentStatus, isStatusReady, RemoteStream} = this;
-        if (this.useDataChannel) {
-            // Session is open and has now started
-            // Send message to remote caller telling them we are open
-            if (!RemoteContentStatus.sent && isStatusReady) {
-                this.sendMessage("A");
-                RemoteContentStatus.sent = true;
+        // if (this.useDataChannel) {
+        //     // Session is open and has now started
+        //     // Send message to remote caller telling them we are open
+        //     if (!RemoteContentStatus.sent && isStatusReady) {
+        //         this.sendMessage("A");
+        //         RemoteContentStatus.sent = true;
         
-            // Session has closed
-            } else if (sessionState == "open" && !isStatusReady) {
-                this.sessionState = "closed";
-                rtc_l1_log("closed");
-            }
-        } else {
-            this.sessionState = this.isRemoteStreamReady ? "open" : "closed";
-        }
+        //     // Session has closed
+        //     } else if (sessionState == "open" && !isStatusReady) {
+        //         this.sessionState = "closed";
+        //         rtc_l1_log("closed");
+        //     }
+        // } else {
+        this.sessionState = this.isStatusReady ? "open" : "closed";
+        // }
     
         this.logState();
         let copy = {};
@@ -485,7 +492,7 @@ export class ConnectionManager {
     }
 
     send(data) {
-        if (this.connection !== null && this.connection.isDataChannelReady) {
+        if (this.connection !== null ) {
             if (typeof data === "object" && data !== null) {
                 data = JSON.stringify(data);
                 this.connection.sendMessage("J"+data);
