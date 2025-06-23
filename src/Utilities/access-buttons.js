@@ -4,14 +4,14 @@ export class AccessEvent extends Event {
     /** @type {?("click"|"dwell"|"switch")} */
     clickMode = null;
 
-    /** @type {?AccessClickEvent} oldEvent  */ 
+    /** @type {?AccessEvent} oldEvent  */ 
     initialEvent = null
 
     /** @type {Promise[]} */
     eventPromises = [];
 
      /** 
-     * @param {?("click"|"dwell"|"switch"|AccessClickEvent)} mode
+     * @param {?("click"|"dwell"|"switch"|AccessEvent)} mode
      * @param {Event} oldEvent
      * */
      constructor(eventName, mode, config) {
@@ -23,8 +23,8 @@ export class AccessEvent extends Event {
         }
         super(eventName, Config);
         let oldEvent = this;
-        if (mode instanceof AccessClickEvent) {
-            if (mode.initialEvent instanceof AccessClickEvent) {
+        if (mode instanceof AccessEvent) {
+            if (mode.initialEvent instanceof AccessEvent) {
                 mode = mode.initialEvent;
             }
             oldEvent = mode;

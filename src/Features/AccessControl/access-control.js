@@ -194,10 +194,19 @@ class ControlOverlay extends ShadowElement {
             for (let sl of switchLoaders) sl.pause();
             await endProm;
         }
+
+        this.cancelSwitch = async () => {
+            selected = "cancel";
+            for (let sl of switchLoaders) sl.force();
+            await endProm;
+        }
+
         await endProm;
 
         this.selectSwitch = ()=>{}
         this.endSwitch = ()=>{}
+        this.cancelSwitch = ()=>{};
+
         this._switching = false;
         return selected;
     }
@@ -205,7 +214,7 @@ class ControlOverlay extends ShadowElement {
     
     async selectSwitch(){}
     async endSwitch(){}
-
+    async cancelSwitch(){}
 
     set hideMouse(bool){
         this.styles = {
@@ -245,8 +254,11 @@ export class AccessControl extends Features {
         window.onkeydown =  (e) => {
             if (e.key == " ") {
                 this.overlay.selectSwitch();
+            } else if (e.key == "Backspace") {
+                this.overlay.cancelSwitch();
             }
         }
+
 
     }
 
@@ -266,18 +278,16 @@ export class AccessControl extends Features {
     }
 
     /** @param {boolean} showToolBar whether to show the toolbar when switching begins */
-    async startSwitching(showToolBar = true) {
+    async startSwitching() {
         // If switching is already in process return
         if (this._isSwitching) return;
 
-        console.log("starting switching");
-        
         // Fix the toolbar, hide the mouse cursor 
         // and bring up the toolbar.
         this._isSwitching = true;
         this.overlay.hideMouse = true;
         this.session.toolBar.fixToolbar(true);
-        if (showToolBar) {
+        if (!this.session.isOccupied && !this.session.toolBar.isRingShown) {
             await this.session.togglePanel("toolBarArea", true);
         }
 
@@ -321,7 +331,7 @@ export class AccessControl extends Features {
                                 if (res == group) {
                                     selectedGroup = group;
                                     selectedGroupName = key
-                                } else { 
+                                } else if (res == null) { 
                                     quit = true;
                                 }
                                 break;
@@ -347,12 +357,14 @@ export class AccessControl extends Features {
                     // Cycle through all the buttons of the group until one is
                     // selected or the switching is ended.
                     while (!selectedButton && !quit) {
-                        
                         for (let button of selectedGroup) {
                             selectedButton = await this.overlay.addSwichLoader(button)
+                            
                             if (selectedButton !== false) {
-                                if (selectedButton == null) {
+                                if (selectedButton === null) {
                                     quit = true;
+                                } else if (selectedButton === "cancel") {
+                                    selectedButton = true;
                                 }
                                 break;
                             }
@@ -364,8 +376,11 @@ export class AccessControl extends Features {
                     // the toolbar.
                     if (selectedButton instanceof Element) {
                         await selectedButton.accessClick("switch");
-                        selectedButton = null;
+                        if (!this.session.isOccupied && !this.session.toolBar.isRingShown) {
+                            await this.session.togglePanel("toolBarArea", true);
+                        }
                     }
+                    selectedButton = null;
                 }
 
                 

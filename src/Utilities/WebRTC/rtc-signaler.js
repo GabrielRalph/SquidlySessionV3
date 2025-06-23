@@ -18,8 +18,6 @@ export class RTCSignaler {
             key = "candidates";
             value = value.toJSON();
         } else {
-            console.warn("invalid object", value);
-            // throw "invalid send object "
             return;
         }
 

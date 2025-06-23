@@ -279,11 +279,11 @@ export class VideoCall extends Features {
             this._setupMuteStateListeners(presets);
             
             // add toolbar listeners
-            this.session.toolBar.addSelectionListener("audio", () => {
-                this.toggleMuted("audio", this.sdata.me)
+            this.session.toolBar.addSelectionListener("audio", (e) => {
+                this.toggleMuted("audio", this.sdata.me);
             })
-            this.session.toolBar.addSelectionListener("video", () => {
-                this.toggleMuted("video", this.sdata.me)
+            this.session.toolBar.addSelectionListener("video", (e) => {
+                this.toggleMuted("video", this.sdata.me);
             })
 
             this.session.settings.addEventListener("change", (e) => {

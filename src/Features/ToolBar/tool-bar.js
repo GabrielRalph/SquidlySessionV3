@@ -51,6 +51,10 @@ const ICONS_SMALL = [
             },
             {name: "key"},
             {
+                name: "tools-unlocked",
+                key: "lock-tools"
+            },
+            {
                 name: "mute",
                 key: "audio",
             },
@@ -777,6 +781,10 @@ export class ToolBarFeature extends Features {
     }
     get toolbarFixed(){
         return this._toolbarFixed;
+    }
+
+    get isRingShown() {
+        return this.toolBarRing.shown;
     }
 
     async toggleToolBar(bool) {

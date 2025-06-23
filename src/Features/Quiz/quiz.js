@@ -596,7 +596,7 @@ export class QuizFeature  extends Features {
         await this.board.initialising;
         
         this.session.toolBar.addSelectionListener("quiz", (e) => {
-            this.session.openWindow("quiz");
+            e.waitFor(this.session.openWindow("quiz"));
         });
     }
 

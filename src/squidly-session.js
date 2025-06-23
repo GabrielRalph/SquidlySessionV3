@@ -45,7 +45,7 @@ const $$ = new WeakMap();
 
 const LoadState = {}
 function logState(){
-    let sum = Object.values(LoadState).reduce((a,b)=>a+b)/20;
+    let sum = Object.values(LoadState).reduce((a,b)=>a+b)/28;
     let maxstr = Math.max(...Object.keys(LoadState).map(a=>a.length));
     let hue = sum * 97;
     let str = `%c LOAD STATE ${Math.round(sum*100)}%\n\t` +Object.keys(LoadState).map(k => `${k.padStart(maxstr)}: ${"".padStart((LoadState[k]+1)*3, LoadState[k]==2?"-":"~")}`).join("\n\t");
@@ -244,6 +244,7 @@ export class SquidlySessionElement extends ShadowElement {
         if (name != this.occupier) {
             let nextOccupier = name in this.occupiables ? this.occupiables[name] : null;
             name = name in this.occupiables ? name : null;
+            
 
             let proms = [
                 this.currentOccupier instanceof Element ? this.currentOccupier.close() : null,
@@ -254,14 +255,13 @@ export class SquidlySessionElement extends ShadowElement {
             this.toolBar.toolbarFixed = !!nextOccupier?.fixToolBarWhenOpen
             if (nextOccupier == null && this.accessControl.isSwitching) {
                 this.toolBar.toolbarFixed = true;
-                // console.log("toggle tool bar for access control", this.toolBar.toolbarFixed);
                 proms.push(this.togglePanel("toolBarArea", true));
-                // proms.push(this.toolBar.toggleToolBar(true));
             }
             this.occupier = name;
             this.currentOccupier = nextOccupier;
             this.sdata.set("occupier", name);
             await Promise.all(proms);
+            
         }
     }
 
@@ -498,15 +498,24 @@ export class SquidlySessionElement extends ShadowElement {
         })
     }   
 
+    async toggleOpenByKey(window) {
+      let wasSwitching = this.accessControl.isSwitching;
+        if (wasSwitching) {
+            await this.accessControl.endSwitching();
+        }
+        await this.openWindow(this.occupier === window ? "default" : window);
+        if (wasSwitching) this.accessControl.startSwitching();
+    }
+
     keyboardShortcuts = {
         "v": () => this.videoCall.toggleMuted("video", this.sdata.me),
         "a": () => this.videoCall.toggleMuted("audio", this.sdata.me),
         "e": () => this.eyeGaze.toggleEyeGazeProcess(),
-        "g": () => this.openWindow(this.occupier === "aacGrid" ? "default" : "aacGrid"),
-        "q": () => this.openWindow(this.occupier === "quiz" ? "default" : "quiz"),
-        "s": () => this.openWindow(this.occupier === "settings" ? "default" : "settings"),
-        "c": () => this.openWindow(this.occupier === "eyeGaze" ? "default" : "eyeGaze"),
-        "f": () => this.openWindow(this.occupier === "shareContent" ? "default" : "shareContent"),
+        "g": () => this.toggleOpenByKey("aacGrid"),
+        "q": () => this.toggleOpenByKey("quiz"),
+        "s": () => this.toggleOpenByKey("settings"),
+        "c": () => this.toggleOpenByKey("eyeGaze"),
+        "f": () => this.toggleOpenByKey("shareContent"),
         "x": () => {
             if (this.accessControl.isSwitching) {
                 this.accessControl.endSwitching();
@@ -681,7 +690,6 @@ export class SquidlySession {
     get isOccupied() {
         return $$.get(this).occupier !== null;
     }
-
 
     async openWindow(name) {
         await $$.get(this).openWindow(name)

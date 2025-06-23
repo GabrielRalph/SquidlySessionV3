@@ -18,7 +18,7 @@ function range(end) {
     return new Array(end).fill(0).map((...a)=>a[1])
 }
 
-class IconSelectionEvent extends Event {
+class IconSelectionEvent extends AccessEvent {
     /** @type {GItem} */
     selectedItem = 0;
 
@@ -34,10 +34,9 @@ class IconSelectionEvent extends Event {
      * @param {("click"|"switch"|"dwell")} mode
      */
     constructor(item, idx, mode = "click") {
-        super("icon-select", {bubbles: true});
+        super("icon-select", mode, {bubbles: true});
         this.selectedItemIndex = idx;
         this.selectedItem = item;
-        this.selectMode = mode;
     }
 }
 
@@ -117,7 +116,7 @@ class Grid extends SvgPlus {
      * @param {[number, number]} pos
      * @param {?number} idx
      */
-    selectIcon(pos, idx){
+    selectIcon(pos, idx, e){
         /** Un highlight last selected icon */
         if (this.lastSelected) {
             let [r, c] = this.lastSelected;
@@ -133,7 +132,7 @@ class Grid extends SvgPlus {
 
             // Dispatch event with details of icon selection
             if (typeof idx === "number") {
-                cell.dispatchEvent(new IconSelectionEvent(this.topicItems[idx], idx));
+                cell.dispatchEvent(new IconSelectionEvent(this.topicItems[idx], idx, e));
             }
         }
         this.lastSelected = pos;
@@ -168,7 +167,7 @@ class Grid extends SvgPlus {
                     this.cells[r][c].value = item;
 
                     // Add click events to icon
-                    this.cells[r][c].onAccessClick = () => this.selectIcon(position, idx);
+                    this.cells[r][c].onAccessClick = (e) => this.selectIcon(position, idx, e);
                 }
             }
         }
@@ -437,8 +436,8 @@ class AACGridBoard extends OccupiableWindow {
 
 
         this.root.events = {
-            "icon-select": (e) => this.onIconSelect(e),
-            "exit": (e) => this.goBack(e),
+            "icon-select": (e) => e.waitFor(this.onIconSelect(e)),
+            "exit": (e) => e.waitFor(this.goBack(e)),
             "clear": () => this.output.clear(),
             "backspace": () => this.output.deleteWord(),      
             "speak": () => this.output.speak(),
@@ -547,9 +546,7 @@ class AACGridBoard extends OccupiableWindow {
             await this.setTopic(item.topicUID);
             this.aacGrid._updateTopics(this.topicPath);
         }
-        // console.log(this.output.items);
     }
-
 
   
     async setTopic(topicUID, immediate, noHist) {

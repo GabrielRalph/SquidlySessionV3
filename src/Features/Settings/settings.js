@@ -212,7 +212,7 @@ class SettingsWindow extends OccupiableWindow {
         
         this.settingsFeature = settings;
         this.root.events = {
-            "settings-click": this.onSettingsClick.bind(this),
+            "settings-click": (e) => e.waitFor(this.onSettingsClick(e)),
         };
 
         this.rotater = this.createChild(Rotater);
@@ -261,15 +261,15 @@ class SettingsWindow extends OccupiableWindow {
     async onSettingsClick(e) {
        let {icon} = e;
        if (icon.action === "exit") return ;
-       let res = await e.waitFor(this.gotoLink(icon.link, e));
+       let res = await this.gotoLink(icon.link, e);
        if (!res) {
              if (icon?.action in this.actions) {
-                e.waitFor(this.actions[icon.action](e));
+                await this.actions[icon.action](e);
             } else {
-                    const event = new AccessEvent("settings-click", e);
-                    event.icon = icon;
-                    event.iconElement = e.iconElement;
-                    this.dispatchEvent(event);
+                const event = new AccessEvent("settings-click", e);
+                event.icon = icon;
+                event.iconElement = e.iconElement;
+                this.dispatchEvent(event);
             }
         }
     }
@@ -313,11 +313,17 @@ class SettingsWindow extends OccupiableWindow {
         return grid !== null;
     }
 
+    /**
+     * @param {AccessEvent} e
+     * @return {Promise<void>}
+     */
     async gotoBack(e) {
         if (this.history.length > 1) {
+            
             this.history.pop();
             let link = this.history.pop();
             await this.gotoLink(link);
+
             this.dispatchEvent(new AccessEvent("navigation", e));
         }
     }
@@ -348,13 +354,13 @@ class SettingsWindow extends OccupiableWindow {
         return this._settings;
     }
 
-    open(){
-        this.root.show(400)
+    async open(){
+        await this.root.show(400)
     }
 
-    close(){
-        this.root.hide(400)
+    async close(){
         this.dispatchEvent(new Event("exit"));
+        await this.root.hide(400)
     }
 
     static get usedStyleSheets() {

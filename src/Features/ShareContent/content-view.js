@@ -571,15 +571,15 @@ export class ContentViewer extends OccupiableWindow {
     this.loadingPDFPromise = null;
   }
 
-  open(){
+  async open(){
     this.shareContent.session.cursors.updateReferenceArea("fixedAspectArea");
-    this.root.show(300);
+    await this.root.show(300);
   }
 
-  close(){
+  async close(){
     this.shareContent.session.cursors.updateReferenceArea("entireScreen");
     this.shareContent.stopSharing();
-    this.root.hide(300);
+    await this.root.hide(300);
   }
 
   get url() {
