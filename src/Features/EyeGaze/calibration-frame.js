@@ -365,9 +365,9 @@ function makeDefaultCSeqs(speed, size) {
 			},
 			{
 				type: "message",
-				time: 4,
+				time: 6,
 				isCount: false,
-				message: "<span style = 'white-space:pre'>Follow the targets. Relax, it's okay to blink.</span></br></br>Press Esc to cancel at any time."
+				message: "<span style = 'white-space:pre'>Follow the targets.\n\nRelax, it's okay to blink and\nmove your head freely.\n\nPress Esc to cancel at any time.</span>"
 			},
 			{
 				type: "scanX",
