@@ -49,8 +49,10 @@ class AACGridIcon extends GridIcon {
         this.getUtterance(item);
     }
     async getUtterance(item) {
-        this.utteranceProm = Topics.getUtterance(item);
-        this.utteranceURL = await this.utteranceProm;
+        if (item.type !== "action" || item.type === "topic") { 
+            this.utteranceProm = Topics.getUtterance(item);
+            this.utteranceURL = await this.utteranceProm;
+        }
     }
 
     async waitForLoad(){
@@ -538,7 +540,7 @@ class AACGridBoard extends OccupiableWindow {
     async onIconSelect(event) {
         
         let item = event.selectedItem;
-        if (item.type !== "topic") {
+        if (item.type !== "topic" && item.type !== "action") {
             speakUtterance(item);
             this.output.addItem(item);
         }

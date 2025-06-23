@@ -69,6 +69,8 @@ async function playUtterance(utterance, isName) {
 
 
 async function playAudioURL(url) {
+    log(`Playing audio from URL: ${url}`, [], "load");
+    
     const audio = new Audio(url);
     audio.volume = VOLUME;
     let sinkID = await getSelectedDevice("audiooutput");
@@ -103,6 +105,12 @@ async function getUtteranceURL(utterance, isName) {
         voiceName = utt;
     }
 
+    if (!(voiceName in UTTERANCES)) {
+        console.warn(`Text2Speech: Voice '${voiceName}' has no utterances loaded.`);
+    } else if (!(utt in UTTERANCES[voiceName])) {
+        console.warn(`Text2Speech: Utterance '${utt}' not found for voice '${voiceName}'`);
+    }
+
     if (voiceName in UTTERANCES && utt in UTTERANCES[voiceName]) {
         let utterance = UTTERANCES[voiceName][utt];
         if (utterance instanceof Promise) await utterance;
@@ -116,17 +124,19 @@ async function getUtteranceURL(utterance, isName) {
 /** @param {string} voiceName */
 async function changeVoice(voiceName) {
 
+    log(`Changing voice to '${voiceName}'`, [], "load");
     const old = VOICE_NAME in UTTERANCES ? UTTERANCES[VOICE_NAME] : {};
     const oldPhrases = Object.keys(old);
+    
 
     const newp = voiceName in UTTERANCES ? UTTERANCES[voiceName] : {};
     const newPhrases = new Set(Object.keys(newp));
 
     const notLoaded = oldPhrases.filter(p => !newPhrases.has(p));
 
-    await loadUtterances(notLoaded, voiceName);
-
     VOICE_NAME = voiceName;
+    
+    await loadUtterances(notLoaded, voiceName);
 }
 
 /**
