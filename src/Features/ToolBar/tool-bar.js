@@ -52,7 +52,8 @@ const ICONS_SMALL = [
             {name: "key"},
             {
                 name: "tools-unlocked",
-                key: "lock-tools"
+                key: "lock-tools",
+                text: "lock tools",
             },
             {
                 name: "mute",
@@ -637,10 +638,11 @@ export class ToolBarFeature extends Features {
 
     mouseY = null;
     eyeY = null;
+    _locked = false;
 
     /** @param {import("../features-interface.js").SquidlySession} session */
-    constructor(session){
-        super(session);
+    constructor(session, sdata){
+        super(session, sdata);
 
         let toolBar = new ToolBar(this);
         let toolBarRing = new ToolBarRing(this);
@@ -783,6 +785,8 @@ export class ToolBarFeature extends Features {
         return this._toolbarFixed;
     }
 
+    
+
     get isRingShown() {
         return this.toolBarRing.shown;
     }
@@ -828,6 +832,19 @@ export class ToolBarFeature extends Features {
             this.eyeY = eyeY;
         })
 
+        this.sdata.onValue("locked", (locked) => {
+            this._locked = locked;
+            this.session.toolBar.setIcon("control/lock-tools/name", locked ? "tools-locked" : "tools-unlocked");
+            this.session.toolBar.setIcon("control/lock-tools/text", locked ? "unlock tools" : "lock tools");
+        });
+        this.session.toolBar.addSelectionListener("lock-tools", (e) => {
+            this._locked = !this._locked;
+            this.session.toolBar.setIcon("control/lock-tools/name", this._locked ? "tools-locked" : "tools-unlocked");
+            this.session.toolBar.setIcon("control/lock-tools/text", this._locked ? "unlock tools" : "lock tools");
+
+            this.sdata.set("locked", this._locked);
+        });
+
         this._start();
 
     }
@@ -842,7 +859,7 @@ export class ToolBarFeature extends Features {
                 let yMin = pos.add(size).sub(size2).y;
                 let isEye = this.eyeY == null ? false : this.eyeY > yMin;
                 let isMouse = this.mouseY == null ? false : this.mouseY > yMin;
-                session.togglePanel("toolBarArea", isEye || isMouse);
+                this.session.togglePanel("toolBarArea", isEye || isMouse || this._locked);
             }
             await delay();
         }
@@ -852,6 +869,9 @@ export class ToolBarFeature extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+    static get firebaseName(){ 
+        return "tool-bar";
+    }
     static get privatePropertyNames() {
         return ["toolbarFixed", "fixToolBar", "toggleRingBar", "toggleToolBar"]
     }
