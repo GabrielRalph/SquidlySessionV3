@@ -6,7 +6,7 @@ tool-bar, tool-bar-ring {
     --tool-bar-size: calc(var(--tool-bar-area-height) - 2 * var(--margin) - 2 * var(--border));
     --tool-bar-width: calc(var(--width) - 2 * var(--margin) - 2 * var(--border));
     --icon-size: min(calc(0.5 * var(--tool-bar-size)), calc(var(--tool-bar-width) / 8));
-    --max-icons: 5;
+    --max-icons: 6;
 
     --tbr: calc(3 * var(--rad-1));
 }

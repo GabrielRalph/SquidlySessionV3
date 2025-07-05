@@ -395,7 +395,7 @@ export class EyeGazeFeature extends Features {
     async initialise(){
         await Promise.all([load(), FeedbackWindow.loadStyleSheets(), this.calibrationFrame.loadGuides()])
         if (!await startWebcam()) {
-            throw new Error("Please allow webcam access")
+            this.throwInitialisationError("Could not start webcam. Please check your camera permissions.");
         }
 
         this.session.cursors.updateCursorProperties("host-eyes", {

@@ -93,6 +93,11 @@ export class Features {
     }
 
 
+    throwInitialisationError(message) {
+        throw new FeatureInitialiserError(this, message);
+    }
+
+
     static get firebaseName(){
         return "feature"
     }
@@ -126,6 +131,14 @@ export class OccupiableWindow extends ShadowElement {
 
     static get fixToolBarWhenOpen() {
         return false;
+    }
+}
+
+export class FeatureInitialiserError extends Error {
+    constructor(feature, message) {
+        super(feature.__proto__.constructor.name + '.initialise()\n\t' + message)
+        this.feature = feature;
+        this.displayMessage = message || "An error occurred while initialising the feature.";
     }
 }
 

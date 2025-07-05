@@ -296,8 +296,9 @@ export class VideoCall extends Features {
             });
 
             this.volume = this.session.settings.get(`${this.sdata.me}/volume/level`);
+        } else {
+            this.throwInitialisationError("Could not start webcam. Please check your camera permissions.");
         }
-
     }
 
     /** @param {number} value */

@@ -1,4 +1,4 @@
-import { createFeatureProxy, OccupiableWindow } from "./Features/features-interface.js";
+import { createFeatureProxy, FeatureInitialiserError, OccupiableWindow } from "./Features/features-interface.js";
 import { FirebaseFrame } from "./Firebase/firebase-frame.js";
 import * as FB from "./Firebase/firebase.js";
 import { ERROR_CODES, SessionConnection } from "./Firebase/session-connection.js";
@@ -72,11 +72,7 @@ async function initialiseFirebaseUser(){
     })
 }
 
-class FeatureInitialiserError extends Error {
-    constructor(feature, e) {
-        super(feature.__proto__.constructor.name + '.initialise()\n\t' + e.message)
-    }
-}
+
 
 export class SessionDataFrame extends FirebaseFrame {
     constructor(firebaseName) {
@@ -215,8 +211,12 @@ export class SquidlySessionElement extends ShadowElement {
                 await this.initialiseKeyboardShortcuts();
                 this.squidlyLoader.hide(0.5);
             } catch (e) {
-                console.log(e);
-                this.loaderText = e+"";
+                console.warn(e);
+                if (e instanceof FeatureInitialiserError) {
+                    this.loaderText = e.displayMessage;
+                } else {
+                    this.loaderText = "An unexpected error occurred while initialising the session. Please refresh and try again.";
+                }
             }
 
             this.toolBar.addSelectionListener("end", (e) => {
@@ -350,12 +350,8 @@ export class SquidlySessionElement extends ShadowElement {
 
         // Initialise all features.
         await Promise.all(features.map(async ([feature, info]) => {
-            try { 
-                await feature.initialise() 
-                setLoadState(info.name, 2);
-            } catch (e) {
-                throw new FeatureInitialiserError(feature, e)
-            }
+            await feature.initialise() 
+            setLoadState(info.name, 2);
         }));
     }
 

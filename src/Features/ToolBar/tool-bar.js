@@ -38,13 +38,10 @@ import { AccessButton, AccessClickEvent } from "../../Utilities/access-buttons.j
  * @type {[IconsDescription]}
  */
 const ICONS_SMALL = [
+    
     {
         name: "control",
         icons: [
-            {
-                name: "end",
-                color: "red"
-            },
             {
                 key: "video",
                 name: "novideo"
@@ -103,12 +100,10 @@ const ICONS_SMALL = [
             },
         ]
     },
+    {name: "settings"},
     {
-        name: "more",
-        icons: [
-            {name: "settings"},
-            {name: "apps"}
-        ]
+        name: "end",
+        color: "red"
     },
 ]
 
