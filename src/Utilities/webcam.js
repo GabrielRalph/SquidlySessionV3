@@ -232,6 +232,18 @@ Video.onunmute = () => {
  
   // ~~~~~~~~ PUBLIC METHODS ~~~~~~~~
 
+  async function checkPermissions() {
+    if (navigator.permissions) {
+      let [micPermission, camPermission] = await Promise.all([
+        navigator.permissions.query({ name: 'microphone' }),
+        navigator.permissions.query({ name: 'camera' }) 
+      ]);
+      return micPermission.state === 'granted' && camPermission.state === 'granted';
+    } else {
+      return false;
+    }
+  }
+
   export async function updateSelectedDevice(type, deviceId) {
     let [audioinput, videoinput, audiooutput] = await Promise.all([getSelectedDevice("audioinput"), getSelectedDevice("videoinput"), getSelectedDevice("audiooutput")]);
     
@@ -257,7 +269,16 @@ Video.onunmute = () => {
     webcam_on = false;
     try {
       setUserMediaVariable();
+
+      if (!(await checkPermissions())) {
+        await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+      }
+
       await updateSelectedDevice();
+      
       let stream = await navigator.mediaDevices.getUserMedia( params );
       let stream2 = await navigator.mediaDevices.getUserMedia( camParams2 );
       // stream2 = await makeDenoisedStream(stream2);
