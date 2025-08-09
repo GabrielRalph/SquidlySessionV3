@@ -634,6 +634,7 @@ export class ToolBarFeature extends Features {
     mouseY = null;
     eyeY = null;
     _locked = false;
+    toolbarHideDelay = 2000;
 
     /** @param {import("../features-interface.js").SquidlySession} session */
     constructor(session, sdata){
@@ -845,18 +846,30 @@ export class ToolBarFeature extends Features {
     }
 
     async _start(){
+        let show = false;
+        let delayTime = 0;
         while (true) {
-            // console.log(this.toolbarFixed);
             if (!this.toolbarFixed) {
-                
                 let [pos, size] = this.toolBarRing.bbox;
                 let [pos2, size2] = this.toolBar.bbox;
                 let yMin = pos.add(size).sub(size2).y;
                 let isEye = this.eyeY == null ? false : this.eyeY > yMin;
                 let isMouse = this.mouseY == null ? false : this.mouseY > yMin;
-                this.session.togglePanel("toolBarArea", isEye || isMouse || this._locked);
+                let nextShow = isEye || isMouse || this._locked;
+
+                if (!show && nextShow) {
+                   delayTime = this.toolbarHideDelay;
+                }
+
+                nextShow = nextShow || delayTime > 0;
+
+                show = nextShow;
+                this.session.togglePanel("toolBarArea", show);
             }
+            let t0 = window.performance.now();
             await delay();
+            delayTime -= window.performance.now() - t0;
+            delayTime = Math.max(0, delayTime);
         }
     }
 
