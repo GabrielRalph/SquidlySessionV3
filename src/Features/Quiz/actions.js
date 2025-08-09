@@ -206,7 +206,7 @@ export class Action {
     }
 
     toString(){
-        return [ActionType2Letter[this.type], toString(this.value), toString(this.question), '[' + this.answers.join("|") + ']', toString(this.timestamp), this.mode, this.user].join(",");
+        return [ActionType2Letter[this.type], toString(this.value), toString(this.question),  this.answers.join("|") , toString(this.timestamp), this.mode, this.user].join(",");
     }
 
     static fromString(str) {
@@ -218,7 +218,7 @@ export class Action {
 
         value = value === "-" ? null : parseInt(value);
         question = question === "-" ? null : parseInt(question);
-        answers = answers.slice(1, -1).split("|").map(parseInt);
+        answers = answers.split("|").map((a) => parseInt(a));
         timestamp = parseInt(timestamp);
         let action = new Action(type, value, question, answers, mode, user);
         action.timestamp = timestamp; // set the timestamp
@@ -293,6 +293,7 @@ export class ActionHistory extends Array {
 
         return result;
     }
+
     getLastActionOf(question = 0) {
         this.sort((a, b) => a.timestamp - b.timestamp);
         

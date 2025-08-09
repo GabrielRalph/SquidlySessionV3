@@ -146,7 +146,7 @@ export class Answers extends SvgPlus {
      * */
     set selected(selected){
         this.selectedAnswers = new Set();
-        [...this.children].map((c, i) => c.toggleAttribute("selected", false))
+        // [...this.children].map((c, i) => c.toggleAttribute("selected", false))
         for (let i of selected) this.selectAnswer(i);
     }
 
@@ -155,8 +155,7 @@ export class Answers extends SvgPlus {
      * @param {boolean} isMulti whether to allow multiple selections
      * */
     selectAnswer(j, isMulti = this.isMulti) {
-
-        if (this.selectedAnswers.has(j)) {
+        if (this.selectedAnswers.has(j) && isMulti) {
             this.selectedAnswers.delete(j);
         } else {
             if (!isMulti && this.selectedAnswers.size > 0) {

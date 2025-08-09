@@ -167,9 +167,10 @@ class SQuizView extends QuizView {
                 this.index += 1;
 
             // If the quiz is in the results state, download results
-            } else if (this.index == this.max) {
-                aEvent.waitFor(this.downloadResults());
-            }
+            } 
+            // else if (this.index == this.max) {
+            //     aEvent.waitFor(this.downloadResults());
+            // }
 
         } else if (type == "close") {
             this.promtClose(aEvent);
@@ -213,67 +214,72 @@ class SQuizView extends QuizView {
     }
 
     createRender(heatmap){
-        let width = heatmap.length;
-        let height = heatmap[0].length;
-        let canvas = new SvgPlus("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        let c = canvas.getContext("2d");
+        if (heatmap) {
 
-        let [quizPos, quizSize] = this.bbox;
-        let screenSize = new Vector(window.innerWidth, window.innerHeight);
-        let renderSize = new Vector(width, height);
-        
-        let relQuizPos = quizPos.div(screenSize);
-        let relQuizSize = quizSize.div(screenSize);
-
-        let rqPos = relQuizPos.mul(renderSize);
-        let rqSize = relQuizSize.mul(renderSize);
-
-        let drawRR = (pos, size, col, rad) => {
-            if (rad) {
-                c.fillStyle = col;
-                c.beginPath();
-                c.roundRect(pos.x, pos.y, size.x, size.y, rad);
-                c.fill();
-            } else {
-                c.fillStyle = col;
-                c.fillRect(pos.x, pos.y, size.x, size.y);
+            let width = heatmap.length;
+            let height = heatmap[0].length;
+            let canvas = new SvgPlus("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            let c = canvas.getContext("2d");
+    
+            let [quizPos, quizSize] = this.bbox;
+            let screenSize = new Vector(window.innerWidth, window.innerHeight);
+            let renderSize = new Vector(width, height);
+            
+            let relQuizPos = quizPos.div(screenSize);
+            let relQuizSize = quizSize.div(screenSize);
+    
+            let rqPos = relQuizPos.mul(renderSize);
+            let rqSize = relQuizSize.mul(renderSize);
+    
+            let drawRR = (pos, size, col, rad) => {
+                if (rad) {
+                    c.fillStyle = col;
+                    c.beginPath();
+                    c.roundRect(pos.x, pos.y, size.x, size.y, rad);
+                    c.fill();
+                } else {
+                    c.fillStyle = col;
+                    c.fillRect(pos.x, pos.y, size.x, size.y);
+                }
             }
+            
+            let space = 0.015 * Math.min(renderSize.x, renderSize.y);
+    
+            let topCellSpaceX = (rqSize.x - 6 * space) / 5;
+            let topCellSpaceY = (rqSize.y - 4 * space) / 3;
+            let topCellSize = new Vector(topCellSpaceX, topCellSpaceY);
+            let p0 = rqPos.add(space);
+    
+            let p1 = p0.addV(topCellSpaceY + space);
+    
+            drawRR(new Vector(0, 0), renderSize, "black");
+    
+            // draw quiz area 
+            drawRR(rqPos, rqSize, "black");
+    
+            // draw close icon 
+            drawRR(p0, topCellSize, "#a61f00", space);
+    
+            // draw back icon
+            drawRR(p0.addH(topCellSpaceX + space), topCellSize, "#ff9ca7", space);
+    
+            
+            drawRR(p0.addH(2*(topCellSpaceX + space)), topCellSize.addH(topCellSpaceX + space), "white", space);
+            
+            // draw next icon
+            drawRR(p0.addH(4*(topCellSpaceX + space)), topCellSize, "#aeef93", space);
+    
+            // draw question area
+            drawRR(p1, new Vector(rqSize.x - 2 * space, 2 * topCellSpaceY + space), "white", space);
+    
+            heatmap.render(canvas);
+    
+            return canvas.toDataURL("image/png");
+        } else {
+            return "";
         }
-        
-        let space = 0.015 * Math.min(renderSize.x, renderSize.y);
-
-        let topCellSpaceX = (rqSize.x - 6 * space) / 5;
-        let topCellSpaceY = (rqSize.y - 4 * space) / 3;
-        let topCellSize = new Vector(topCellSpaceX, topCellSpaceY);
-        let p0 = rqPos.add(space);
-
-        let p1 = p0.addV(topCellSpaceY + space);
-
-        drawRR(new Vector(0, 0), renderSize, "black");
-
-        // draw quiz area 
-        drawRR(rqPos, rqSize, "black");
-
-        // draw close icon 
-        drawRR(p0, topCellSize, "#a61f00", space);
-
-        // draw back icon
-        drawRR(p0.addH(topCellSpaceX + space), topCellSize, "#ff9ca7", space);
-
-        
-        drawRR(p0.addH(2*(topCellSpaceX + space)), topCellSize.addH(topCellSpaceX + space), "white", space);
-        
-        // draw next icon
-        drawRR(p0.addH(4*(topCellSpaceX + space)), topCellSize, "#aeef93", space);
-
-        // draw question area
-        drawRR(p1, new Vector(rqSize.x - 2 * space, 2 * topCellSpaceY + space), "white", space);
-
-        heatmap.render(canvas);
-
-        return canvas.toDataURL("image/png");
     }
   
     /** @param {QuizFeatureState} state*/
@@ -327,18 +333,21 @@ class SQuizView extends QuizView {
                 // Update icons
                 this.next.header = i == this.max-1 && !this.locked ? "Submit" : "Next";
                 this.next.disabled = i == (this.max);
+                this.back.header = i == (this.max) ? "Answers" : "Back";
                 this.back.disabled =  i <= 0;
 
                 if (i == -1) {
                     this.showQuizStart();
                 } else if (i == max) {
                     if (!this.locked) {
-                        this.heatmap.stop();
-                        this.createRender(this.heatmap);
-                        if (this.heatmap.counts > 20) {
-                            const aEvent = new Event("heatmap", {bubbles: true});
-                            aEvent.data = this.createRender(this.heatmap);
-                            this.dispatchEvent(aEvent);
+
+                        if (this.heatmap) {
+                            this.heatmap.stop();
+                            if (this.heatmap.counts > 20) {
+                                const aEvent = new Event("heatmap", {bubbles: true});
+                                aEvent.data = this.createRender(this.heatmap);
+                                this.dispatchEvent(aEvent);
+                            }
                         }
                     }
                     this.transitionPromise = this.showQuizResults(forceUpdate);
@@ -372,11 +381,11 @@ class SQuizView extends QuizView {
     /** @return {Object<number, number[]>} answers */
     get choosenAnswers(){
         let chosen = {};
-        let choshenActions = this.actions.selectedAnswers;
+        let chosenActions = this.actions.selectedAnswers;
         for (let i = 0; i < this.max; i++) {
             chosen[i] = [];
-            if (i in choshenActions) {
-                chosen[i] = choshenActions[i];
+            if (i in chosenActions) {
+                chosen[i] = chosenActions[i];
             } 
         }
         return chosen;
@@ -571,8 +580,6 @@ export class QuizFeature  extends Features {
         this.board.quizView.resultsPage.sid = sdata.sid;
 
         this.board.quizView.addEventListener("heatmap", (e) => {
-            console.log(e);
-            
             let dataURL = e.data;
             let base64 = dataURL.split(",")[1];
             sdata.set("heatmaps/" + sdata.me, base64);
