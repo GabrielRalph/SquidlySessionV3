@@ -297,7 +297,7 @@ export class VideoCall extends Features {
 
             this.volume = this.session.settings.get(`${this.sdata.me}/volume/level`);
         } else {
-            this.throwInitialisationError("Could not start webcam. Please check your camera permissions.");
+            this.throwInitialisationError("Could not start webcam. Please check your camera permissions.", "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/videopermissions.mp4?alt=media&token=743c04cc-974e-4ed9-bb21-8f0ac56c2d83");
         }
     }
 

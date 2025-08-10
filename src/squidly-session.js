@@ -214,6 +214,7 @@ export class SquidlySessionElement extends ShadowElement {
                 console.warn(e);
                 if (e instanceof FeatureInitialiserError) {
                     this.loaderText = e.displayMessage;
+                    this.loaderVideo = e.video;
                 } else {
                     this.loaderText = "An unexpected error occurred while initialising the session. Please refresh and try again.";
                 }
@@ -585,6 +586,40 @@ export class SquidlySessionElement extends ShadowElement {
 
     get squidlyLoader(){
         return document.querySelector("squidly-loader")
+    }
+
+    set loaderVideo(video) {
+        if (this.squidlyLoader) {
+            if (!this._loaderVideoEl) {
+                let videoEl = new SvgPlus("video");
+                videoEl.styles = {
+                    "border-radius": "0.5em",
+                    width: "50%",
+                    height: "50%",
+                    position: "absolute",
+                    transform: "translate(-50%, -50%)",
+                    top: "40%",
+                    "border": "2px solid #8F53C9",
+                    left: "50%",
+                    "object-fit": "cover",
+                    "z-index": 3
+                }
+                videoEl.setAttribute("autoplay", "");
+                videoEl.setAttribute("muted", "");
+                videoEl.setAttribute("playsinline", "");
+                videoEl.setAttribute("loop", "");
+                this.squidlyLoader.appendChild(videoEl);
+                this._loaderVideoEl = videoEl;
+                videoEl.play();
+            }
+            if (video == null || video == "") {
+                this._loaderVideoEl.remove();
+                this._loaderVideoEl = null;
+            } else {
+                this._loaderVideoEl.setAttribute("src", video);
+            }
+
+        }
     }
     
     /** @param {String} text */

@@ -93,8 +93,10 @@ export class Features {
     }
 
 
-    throwInitialisationError(message) {
-        throw new FeatureInitialiserError(this, message);
+    throwInitialisationError(message, video) {
+        let e = new FeatureInitialiserError(this, message);
+        e.video = video || null;
+        throw e;
     }
 
 
