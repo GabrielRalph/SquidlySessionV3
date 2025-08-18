@@ -151,7 +151,7 @@ export async function getAllTopics(uid) {
         let publicQuery = FB.query(FB.ref(`grid-topics`), FB.orderByChild('public'),FB.equalTo(true));
         let ownedQuery = FB.query(FB.ref(`grid-topics`), FB.orderByChild('owner'), FB.equalTo(uid));
         let proms = [["public", publicQuery], ["owned", ownedQuery]].map(async ([type, query]) => {
-            let allTopics = (await FB.get(query)).val();
+            let allTopics = (await FB.get(query)).val() || {};
             await Promise.all(Object.keys(allTopics).map(async (topicUID) => {
                     TOPICS[topicUID] = allTopics[topicUID];
                     await addTopicOwnerName(topicUID);
