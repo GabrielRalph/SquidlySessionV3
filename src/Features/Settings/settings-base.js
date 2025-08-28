@@ -80,8 +80,7 @@ const SettingOptions = [
         toIcon(value) {
             return {
                 symbol: value ? "eye" : "noeye",
-                displayValue: value ? "Disable Eye-gaze" : "Enable Eye-gaze",
-                active: value,
+                displayValue: value ? "Eye-gaze Enabled" : "Eye-gaze Disabled",
             }
         }
     },
