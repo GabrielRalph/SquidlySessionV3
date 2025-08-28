@@ -26,6 +26,7 @@ function clampV(v, min, max) {
         v.y < min.y ? min.y : (v.y > max.y ? max.y : v.y)
     );
 }
+
 function clampV0_1(v) {
     return clampV(v, new Vector(0, 0), new Vector(1, 1));
 }
@@ -166,7 +167,7 @@ export class EyeGazeFeature extends Features {
 
     eyeDataListeners = new Set();
 
-    eyeDataDisabled = false;
+    _eyeDataHidden = false;
 
     constructor(session, sdata) {
         super(session, sdata);
@@ -188,37 +189,41 @@ export class EyeGazeFeature extends Features {
             "close": () => this._openCloseFeedback(false)
         }
 
+        // Pass eye data to the test screen
         this.addEyeDataListener((p) => {
             if (this.eyeDataDisabled) p = null;
             this.testScreen.setEyeData(p, this.me);
          })
 
-
+        // Close the test screen when "close" event is fired
         this.testScreen.events = {
             "close": (e) => e.waitFor(this._showTestScreen(null)),
         }
         
+        // Open calibration window from toolbar
         this.session.toolBar.addSelectionListener("calibrate", (e) => {
             e.waitFor(this.session.openWindow("eyeGaze"));
         })
 
+        // Toggle eye gaze processing
         this.session.toolBar.addSelectionListener("eye", (e) => {
-            this.toggleEyeGazeProcess();
+            this.eyeGazeOn = !this.eyeGazeOn;
+            this.session.toolBar.setIcon("access/eye/name", this.eyeGazeOn ? "eye" : "noeye");
         });
 
-        this.restButton.button.addEventListener("access-click", (e) => {
-            let bool = !this.eyeDataDisabled;
-            this.disableEyeData(bool, e);
-        });
+        // this.restButton.button.addEventListener("access-click", (e) => {
+        //     let bool = !this.eyeDataDisabled;
+        //     this.hideEyeData(bool, e);
+        // });
 
-        this.restWatcher = new TransitionVariable(0, 1, (v) => {
-            this.session.toggleRestBar(v==1);
-        });
+        // this.restWatcher = new TransitionVariable(0, 1, (v) => {
+        //     this.session.toggleRestBar(v==1);
+        // });
 
-        // Add cursor eye data listener
-        this.addEyeDataListener((eyeP, bbox, disabled) => {
-            let key = (this.sdata.isHost ? "host" : "participant") + "-eyes";
-            if (eyeP == null || disabled) {
+        // Update cursor positions
+        this.addEyeDataListener((eyeP, bbox, hidden) => {
+            let key = this.sdata.me + "-eyes";
+            if (eyeP == null || hidden) {
                 this.session.cursors.updateCursorPosition(key, null);
             } else {
                 this.session.cursors.updateCursorPosition(key, clampV0_1(eyeP), bbox)
@@ -226,9 +231,9 @@ export class EyeGazeFeature extends Features {
         });
 
         // Add heatmap eye data listener
-        this.addEyeDataListener((eyeP,bbox, disabled) => {
+        this.addEyeDataListener((eyeP, bbox, hidden) => {
             // add point to heatmaps if the eye position is a Vector
-            if (eyeP instanceof Vector && !disabled) {
+            if (eyeP instanceof Vector && !hidden) {
                 let v = clampV0_1(eyeP);
                 addPointToHeatmaps(v.x, v.y, 1);
             }
@@ -239,34 +244,36 @@ export class EyeGazeFeature extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+    set eyeDataHidden(bool) {
+        if (bool !== this._eyeDataHidden) {
+            this._eyeDataHidden = !!bool;
+            this.sdata.set(`hidden/${this.me}`, this._eyeDataHidden);
+        }
+    }
+    get eyeDataHidden() { return this._eyeDataHidden; }
+
+
+    set eyeGazeOn(bool) {
+        if (bool !== this._eyeGazeOn) {
+            this._eyeGazeOn = !!bool;
+            this._updateProcessingState();
+            this.sdata.set("on", this._eyeGazeOn);
+        }
+    }
+    get eyeGazeOn() { return this._eyeGazeOn; }
+
+    // disableEyeGaze(user, bool) {
+    //     if (user == "host" || user == "participant") {
+    //         this.sdata.set(`disabled/${user}`, !!bool);
+    //     }
+    // }
+
     addEyeDataListener(cb) {
         if (cb instanceof Function) {
             this.eyeDataListeners.add(cb);
         }
     }
 
-    disableEyeData(bool, e) {
-        let me = this.sdata.isHost ? "host": "participant";
-        if (bool != this.eyeDataDisabled) {
-            this.eyeDataDisabled = bool;
-            this.sdata.set(`disabled/${me}`, bool);
-        }
-    }
-
-    toggleEyeGazeProcess(bool) {
-        console.log(`feedback: ${this._feedbackIsOpen ? "open" : "false"},\nme calibrating: ${this._calibrating == true},\nthey calibrating: ${this._areTheyCalibrating == true}`);
-        
-        if (!this._feedbackIsOpen && this._calibrating !== true && this._areTheyCalibrating !== true) {
-            if (typeof bool !== "boolean") {
-                bool = !this.isProcessing;
-            }
-            console.log("toggle eye gaze process", bool);
-            
-            this.sdata.set(`on/participant`, bool);
-            this.sdata.set(`on/host`, bool);
-        }
-    }
-    
     startCalibration(user, e) {
         let p = this.sdata.set(`calibrating/${user}`, true);
         if (e instanceof AccessEvent) e.waitFor(p);
@@ -286,23 +293,19 @@ export class EyeGazeFeature extends Features {
                 startProcessing();
             } else {
                 stopProcessing();
-                this.restWatcher.set(false);
                 this._onEyeData(null); // Clear eye data
             }
         }
         this.__isProcessing = bool;
     }
 
-    _onToggleEyeGazeProcess(bool) {
-        this.session.toolBar.setIcon("access/eye/name", bool ? "eye" : "noeye");
-        this._isProcessing = bool;
-    }   
+    _updateProcessingState() {
+        this._isProcessing = (!this._eyeGazeDisabled) && (this._eyeGazeOn || this._feedbackIsOpen || this._calibrating) ;
+    } 
 
     _openCloseFeedback(state){
-        if (state) {
-            this.toggleEyeGazeProcess(true);
-        }
         this._feedbackIsOpen = state;
+        this._updateProcessingState();
     }
 
     async _showTestScreen(user){
@@ -331,10 +334,10 @@ export class EyeGazeFeature extends Features {
             bbox = this.calibrationFrame.bbox;
 
             // Update rest watcher
-            this.restWatcher.set(eyeP.y > 1 ? 1 : 0);
+            // this.restWatcher.set(eyeP.y > 1 ? 1 : 0);
 
             // If the eye data is disabled and the y-coordinate is less than or equal to 1, set eyeP to null
-            if (this.eyeDataDisabled && eyeP.y <= 1) {
+            if (this.eyeDataHidden && eyeP.y <= 1) {
                 eyeP = null;
             }
         }
@@ -353,7 +356,7 @@ export class EyeGazeFeature extends Features {
                 let b = Array.isArray(bbox) ? [bbox[0].clone(), bbox[1].clone()] : null;
 
                 // Call the callback with the eye position and bounding box
-                cb(v, b, this.eyeDataDisabled)
+                cb(v, b, this.eyeDataHidden)
             } catch (e) {
                 // console.error(e);
             }
@@ -365,6 +368,7 @@ export class EyeGazeFeature extends Features {
 
         if (bool) {
             this._calibrating = true;
+            this._updateProcessingState();
             this.session.accessControl.endSwitching(true);
             
 
@@ -390,6 +394,7 @@ export class EyeGazeFeature extends Features {
 
             this._calibrating = false;
         }
+        this._updateProcessingState();
     }
 
     async initialise(){
@@ -414,12 +419,16 @@ export class EyeGazeFeature extends Features {
             let [user, type, setting] = path;
             if (user == this.sdata.me && type == "calibration") {
                 this.calibrationFrame[setting] = e.value;
-            }
+            } else if (user == this.me && type == "eye-gaze-enabled") {
+                this._eyeGazeDisabled = !e.value;
+                this._updateProcessingState();
+            }   
         });
 
         this.calibrationFrame.guide = this.session.settings.get(`${this.sdata.me}/calibration/guide`);
         this.calibrationFrame.size = this.session.settings.get(`${this.sdata.me}/calibration/size`);
         this.calibrationFrame.speed = this.session.settings.get(`${this.sdata.me}/calibration/speed`);
+        this._eyeGazeDisabled = !this.session.settings.get(`${this.sdata.me}/eye-gaze-enabled`);
 
         addProcessListener(this._onEyeData.bind(this));
 
@@ -430,19 +439,22 @@ export class EyeGazeFeature extends Features {
             this.testScreen.setEyeData(e.screenPos, them);
         })
         
-        this.sdata.onValue(`on/${me}`, (bool) => {
-            this._onToggleEyeGazeProcess(bool);
+        this.sdata.onValue(`on`, (bool) => {
+            if (bool !== null) this._eyeGazeOn = !!bool;
+            this.session.toolBar.setIcon("access/eye/name", this.eyeGazeOn ? "eye" : "noeye");
+            this._updateProcessingState();
         });
 
-        this.sdata.onValue(`disabled/${me}`, (val) => {
-            this.disableEyeData(val)
+        this.sdata.onValue(`hidden/${me}`, (val) => {
+            if (val !== null) this._eyeDataHidden = !!val;   
         });
 
         
         // Set calibrating state to null
         await this.sdata.set(`calibrating/${me}`, null);
 
-        // On calibration state change, start the calibration sequence
+        // On calibration state change, start the calib
+        // ration sequence
         this.sdata.onValue(`calibrating/${me}`, this._beginCalibrationSequence.bind(this));
 
         let init = true;

@@ -72,7 +72,18 @@ const SettingOptions = [
                 active: value,
             }
         }
-
+    },
+    {
+        key: [["host", "participant"], "eye-gaze-enabled"],
+        type: "boolean",
+        default: true,
+        toIcon(value) {
+            return {
+                symbol: value ? "eye" : "noeye",
+                displayValue: value ? "Disable Eye-gaze" : "Enable Eye-gaze",
+                active: value,
+            }
+        }
     },
     {
         key: [["host", "participant"], "volume", "level"],

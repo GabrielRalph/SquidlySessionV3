@@ -364,6 +364,8 @@ export class FeedbackWindow extends OccupiableWindow {
 
     async close(){
         this.isOpen = false;
+        this._setFacePoints(null, this.sdata.me);
+        this._setFacePoints(null, this.sdata.them);
         this.dispatchEvent(new Event("close"));
         await this.root.hide(400);
     }

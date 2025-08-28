@@ -507,7 +507,7 @@ export class SquidlySessionElement extends ShadowElement {
     keyboardShortcuts = {
         "v": () => this.videoCall.toggleMuted("video", this.sdata.me),
         "a": () => this.videoCall.toggleMuted("audio", this.sdata.me),
-        "e": () => this.eyeGaze.toggleEyeGazeProcess(),
+        "e": () => this.eyeGaze.eyeGazeOn = !this.eyeGaze.eyeGazeOn,
         "g": () => this.toggleOpenByKey("aacGrid"),
         "q": () => this.toggleOpenByKey("quiz"),
         "s": () => this.toggleOpenByKey("settings"),

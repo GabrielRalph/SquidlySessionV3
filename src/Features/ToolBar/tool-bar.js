@@ -69,7 +69,8 @@ const ICONS_SMALL = [
             },
             {
                 name: "eye",
-                key: "eye"
+                key: "eye",
+                text: "eye-gaze"
             },
             {
                 name: "switch"

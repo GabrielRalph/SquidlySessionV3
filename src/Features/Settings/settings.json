@@ -51,17 +51,15 @@
                 "utterance": ""
             },
             {
-                "displayValue": "Live Caption",
-                "subtitle": "Coming soon",
-                "disabled": true,
+                "displayValue": "Enable Eye-gaze",
                 "hidden": false,
                 "symbol": {
                     "id": "v6k5CatCQB6lY2xV8UUL",
                     "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2Fv6k5CatCQB6lY2xV8UUL?alt=media&token=78ac63b6-9d46-42bd-88d9-6cbf4d90e790"
                 },
-                "topicUID": "-ON4110YgqrAO4jiD0sF",
-                "type": "topic-adjective",
-                "utterance": ""
+                "type": "adjective",
+                "setting": "eye-gaze-enabled",
+                "action": "toggle-setting"
             }
         ],
         [
