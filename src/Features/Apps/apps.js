@@ -208,15 +208,21 @@ export class Apps extends Features {
         }))
         
         this.appDescriptors = this.appDescriptors.filter(d => d !== null);
-        this.appDescriptors = this.appDescriptors.map((item, idx) => {
-            item.index = idx;
-            return item;
-        })
-        this.appFrame.search.addEventListener("value", (e) => {
-            this._setApp(e.value.app.index);
-            this.appFrame.search.hide();            
-        })
-        this.appFrame.search.apps = this.appDescriptors;
+
+        if (this.appDescriptors.length == 0) {
+            this.session.toolBar.setIcon("share/apps/hidden", true);
+        } else {
+            this.session.toolBar.setIcon("share/apps/hidden", false);
+            this.appDescriptors = this.appDescriptors.map((item, idx) => {
+                item.index = idx;
+                return item;
+            })
+            this.appFrame.search.addEventListener("value", (e) => {
+                this._setApp(e.value.app.index);
+                this.appFrame.search.hide();            
+            })
+            this.appFrame.search.apps = this.appDescriptors;
+        }
     }
 
     async initialise(){
