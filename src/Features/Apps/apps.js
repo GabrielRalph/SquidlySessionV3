@@ -218,8 +218,12 @@ export class Apps extends Features {
                 return item;
             })
             this.appFrame.search.addEventListener("value", (e) => {
-                this._setApp(e.value.app.index);
-                this.appFrame.search.hide();            
+                if (e.value == null) {
+                    e.waitFor(this.session.openWindow("default"));
+                } else {
+                    this._setApp(e.value.app.index);
+                    this.appFrame.search.hide();            
+                }
             })
             this.appFrame.search.apps = this.appDescriptors;
         }
