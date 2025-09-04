@@ -3,6 +3,7 @@ import { FirebaseFrame } from "./Firebase/firebase-frame.js";
 import * as FB from "./Firebase/firebase.js";
 import { ERROR_CODES, SessionConnection } from "./Firebase/session-connection.js";
 import { SvgPlus, Vector } from "./SvgPlus/4.js";
+import { FrameRateMonitor } from "./Utilities/frame-rate-monitor.js";
 import { ShadowElement } from "./Utilities/shadow-element.js";
 import { delay, getQueryKey, PublicProxy, WaveStateVariable } from "./Utilities/usefull-funcs.js";
 
@@ -285,6 +286,12 @@ export class SquidlySessionElement extends ShadowElement {
             "z-index": 1,
             overflow: "hidden"
         }});
+        // this.createChild(FrameRateMonitor, {styles: {
+        //     position: "absolute",
+        //     top: "1em",
+        //     right: "1em",
+        //     "z-index": 3,
+        // }});
         
         window.sv = this.sessionView
         setLoadState("sessionView", 2);

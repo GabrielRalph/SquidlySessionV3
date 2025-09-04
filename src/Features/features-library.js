@@ -9,6 +9,7 @@ import { VideoCall } from "./VideoCall/video-call.js"
 import { Text2Speech } from "./Text2Speech/text2speech.js"
 import { ShareContent } from "./ShareContent/share-content.js"
 import { SettingsFeature } from "./Settings/settings.js"
+import { Apps } from "./Apps/apps.js"
 
 export const FEATURES = [
     {
@@ -76,18 +77,6 @@ export const FEATURES = [
         }
     },
     {
-        class: AACGrid,
-        name: "aacGrid",
-        layers: {
-            board: {
-                type: "area",
-                area: "fullAspectArea",
-                index: 80,
-                mode: "occupy",
-            }
-        }
-    },
-    {
         class: QuizFeature,
         name: "quiz",
         layers: {
@@ -100,6 +89,19 @@ export const FEATURES = [
             }
         }
     },
+    {
+        class: AACGrid,
+        name: "aacGrid",
+        layers: {
+            board: {
+                type: "area",
+                area: "fullAspectArea",
+                index: 80,
+                mode: "occupy",
+            }
+        }
+    },
+   
     {
         class: AccessControl,
         name: "accessControl",
@@ -123,6 +125,7 @@ export const FEATURES = [
             }
         }
     },
+    
     {
         class: Cursors,
         name: "cursors",
@@ -178,7 +181,18 @@ export const FEATURES = [
                 area: "bottom",
             }
         }
-    }
+    },
+    {
+        class: Apps,
+        name: "apps",
+        layers: {
+            appFrame: {
+                type: "area",
+                area: "fullAspectArea",
+                index: 60,
+            }
+        }
+    },
 ]
 
 export function loadResources(){

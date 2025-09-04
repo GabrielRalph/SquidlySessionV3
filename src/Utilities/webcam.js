@@ -73,7 +73,7 @@ Video.onunmute = () => {
   
   async function nextFrame(){
     return new Promise((resolve, reject) => {
-      setTimeout(resolve, 30);
+      // setTimeout(resolve, 30);
       window.requestAnimationFrame(resolve);
     })
   }
@@ -138,7 +138,7 @@ Video.onunmute = () => {
     for (let key in ProcessRunning) {
       if (processListeners[key]) return true;
     }
-    return falsek
+    return false
   }
   
   async function runProcessingLoop(){

@@ -93,8 +93,8 @@ const ICONS_SMALL = [
                 name: "file"
             },
             {
-                name: "trash", 
-                hidden: true,
+                name: "apps", 
+                hidden: true
             },
             {
                 name: "quiz"
@@ -834,7 +834,7 @@ export class ToolBarFeature extends Features {
             this.session.toolBar.setIcon("control/lock-tools/name", locked ? "tools-locked" : "tools-unlocked");
             this.session.toolBar.setIcon("control/lock-tools/text", locked ? "unlock tools" : "lock tools");
         });
-        this.session.toolBar.addSelectionListener("lock-tools", (e) => {
+        this.addSelectionListener("lock-tools", (e) => {
             this._locked = !this._locked;
             this.session.toolBar.setIcon("control/lock-tools/name", this._locked ? "tools-locked" : "tools-unlocked");
             this.session.toolBar.setIcon("control/lock-tools/text", this._locked ? "unlock tools" : "lock tools");
@@ -843,7 +843,6 @@ export class ToolBarFeature extends Features {
         });
 
         this._start();
-
     }
 
     async _start(){
