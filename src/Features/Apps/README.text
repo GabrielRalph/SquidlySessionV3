@@ -1,0 +1,10 @@
+Add info.json file to app server with 
+{
+    "name": "App Name",
+    "title": "App Title",
+    "subtitle": "App Subtitle",
+    "version": "1.0.0",
+    "description": "A test app for SquidlyV3",
+    "author": "Gabriel Ralph",
+    "icon": "calibrate"
+}
