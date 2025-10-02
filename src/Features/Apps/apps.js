@@ -1,7 +1,10 @@
 import { HideShow } from "../../Utilities/hide-show.js";
 import { filterAndSort, SearchWindow } from "../../Utilities/search.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
-import { Features, OccupiableWindow } from "../features-interface.js"
+import { Features, OccupiableWindow } from "../features-interface.js";
+import { Vector } from "../../SvgPlus/4.js";
+import { GridIcon, GridLayout } from "../../Utilities/grid-icon.js";
+
 const AppsList = [
     "http://127.0.0.1:5500",
     "http://127.0.0.1:5501"
@@ -71,6 +74,10 @@ class AppsFrame extends OccupiableWindow {
                 "pointer-events": "all",
             }
         });
+
+        this.grid = this.createChild(GridLayout, {
+            style: {position: "absolute", top: "var(--gap)", left: "var(--gap)", right: "var(--gap)", bottom: "var(--gap)"}
+        }, 4, 4);
         this.search = this.createChild(QuizSearch, {
             style: {position: "absolute", top: 0, left: 0, right: 0, bottom: 0}
         });
@@ -82,6 +89,16 @@ class AppsFrame extends OccupiableWindow {
             this.offsetY = y;
         });
         this.observer.observe(this.iframe);
+        let closeIcon = new GridIcon({
+            symbol: "close",
+            displayValue: "Exit",
+            type: "action",
+        }, "apps");
+        closeIcon.styles = {
+            "pointer-events": "all",
+        }
+
+        this.grid.add(closeIcon, 0, 0);
     }
 
     // Set iframe src or srcdoc
@@ -107,8 +124,10 @@ class AppsFrame extends OccupiableWindow {
     static get usedStyleSheets(){
         return [
              ...SearchWindow.usedStyleSheets,
+             GridIcon.styleSheet,
             ]
     }
+    static get fixToolBarWhenOpen() {return true}
 }
 
 export class Apps extends Features {
@@ -121,6 +140,10 @@ export class Apps extends Features {
 
     async open() {
         await this.appFrame.setSrc("about:blank");
+        // Ensure apps are loaded before showing search
+        if (!this.appDescriptors || this.appDescriptors.length === 0) {
+            await this.loadAppDescriptors();
+        }
         await Promise.all([
             this.appFrame.root.show(),
             this.appFrame.search.reset(true),
@@ -180,6 +203,13 @@ export class Apps extends Features {
 
     _message_log(e) {
         console.log(...e.data.params);
+    }
+
+    _message_app_type(e) {
+        // Store current cursor type
+        this.currentAppType = e.data.type;
+        this.sdata.set("app_type", e.data.type);
+        console.log("App type received:", e.data.type);
     }
 
     async loadAppDescriptors() {
@@ -243,6 +273,41 @@ export class Apps extends Features {
            if (modeFunc in this && this[modeFunc] instanceof Function) {
                 this[modeFunc](e);
            }
+        });
+
+        // Listen to app_type changes from Firebase and send to cursor app
+        this.sdata.onValue("app_type", (appType) => {
+            if (appType !== null) {
+                console.log("🔄 App type changed in Firebase:", appType);
+                // Send message to cursor app to sync state
+                this.appFrame.sendMessage({
+                    mode: "sync_app_type",
+                    type: appType
+                });
+            }
+        });
+
+        // 1. Listen to LOCAL eye gaze data (current user's own eye gaze)
+        this.session.eyeGaze.addEyeDataListener((eyeP, bbox, hidden) => {
+            if (eyeP instanceof Vector && !hidden && this.appFrame && this.appFrame.iframe) {
+                this.appFrame.sendMessage({
+                    user: this.sdata.me + "-eyes",  // "host" or "participant"
+                    x: eyeP.x * bbox[1]._x,
+                    y: eyeP.y * bbox[1]._y,
+                });
+            }
+        });
+
+        // Listen to all remote cursor events (mouse and eye gaze)
+        ["mouse", "eyes"].forEach(cursorType => {
+            this.session.cursors.addEventListener(this.sdata.them + "-" + cursorType, (e) => {
+                this.appFrame.sendMessage({
+                    user: this.sdata.them + "-" + cursorType,
+                    x: e.screenPos._x * window.innerWidth,
+                    y: e.screenPos._y * window.innerHeight,
+                    source: "remote"
+                });
+            });
         });
     }
 
