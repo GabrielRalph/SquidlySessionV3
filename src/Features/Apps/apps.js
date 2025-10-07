@@ -105,7 +105,30 @@ class AppsFrame extends OccupiableWindow {
             "pointer-events": "all",
         }
 
+        // Add switch app icon
+        let switchAppIcon = new GridIcon({
+            symbol: "switch",
+            displayValue: "Switch App",
+            type: "action",
+            // TODO: add switch app logic
+            // Send message to iframe to switch app
+            events: {
+                "access-click": (e) => {
+                    // this.feature.switchApp();
+                    // only send "switch_app" command
+                    this.sendMessage({
+                        command: "switch_app",
+                        // app: this.feature.appDescriptors[0]
+                    });
+                }
+            }
+        }, "apps");
+        switchAppIcon.styles = {
+            "pointer-events": "all",
+        }
+
         this.grid.add(closeIcon, 0, 0);
+        this.grid.add(switchAppIcon, 1, 0);
     }
 
     // Set iframe src or srcdoc
