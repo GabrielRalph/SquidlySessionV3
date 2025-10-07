@@ -93,6 +93,13 @@ class AppsFrame extends OccupiableWindow {
             symbol: "close",
             displayValue: "Exit",
             type: "action",
+            events: {
+                "access-click": async (e) => {
+                    await this.feature.close();
+                    // Release toolbar after closing
+                    this.feature.session.openWindow("default");
+                }
+            }
         }, "apps");
         closeIcon.styles = {
             "pointer-events": "all",
@@ -136,6 +143,8 @@ export class Apps extends Features {
         this.appFrame = new AppsFrame(this, sdata);
         this.appFrame.open = this.open.bind(this);
         this.appFrame.close = this.close.bind(this);
+        this.sdata.set("app_type", null);
+        this.currentAppIndex = null;
     }
 
     async open() {
@@ -152,6 +161,9 @@ export class Apps extends Features {
     }
 
     async close() {
+        // Clear the selected app from Firebase when closing
+        this.sdata.set("selected_app", null);
+        this.currentAppIndex = null;
         await Promise.all([
             this.appFrame.setSrc("about:blank"),
             this.appFrame.root.hide()
@@ -251,8 +263,15 @@ export class Apps extends Features {
                 if (e.value == null) {
                     e.waitFor(this.session.openWindow("default"));
                 } else {
+                    // this._setApp(e.value.app.index);
+                    // this.appFrame.search.hide();
+                    this.sdata.set("selected_app", {
+                        index: e.value.app.index,
+                        app: e.value.app,
+                        timestamp: Date.now()
+                    });
                     this._setApp(e.value.app.index);
-                    this.appFrame.search.hide();            
+                    this.appFrame.search.hide();
                 }
             })
             this.appFrame.search.apps = this.appDescriptors;
@@ -266,6 +285,21 @@ export class Apps extends Features {
         this.session.toolBar.addSelectionListener("apps", () => {
             this.session.openWindow("apps");
         })
+
+        this.sdata.onValue("selected_app", (selectedApp) => {
+            if (selectedApp) {
+                console.log("🔄 Selected app changed in Firebase:", selectedApp);
+                this._setApp(selectedApp.index);
+                this.currentAppIndex = selectedApp.index;
+                this.appFrame.search.hide();
+            } else {
+                // App was closed by other party
+                console.log("🔄 App closed by other party");
+                this.currentAppIndex = null;
+                this.appFrame.setSrc("about:blank");
+                this.appFrame.root.hide();
+            }
+        });
 
         // Iframe API Message Listener
         window.addEventListener("message", e => {
