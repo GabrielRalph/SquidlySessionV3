@@ -186,6 +186,7 @@ export class Apps extends Features {
     async close() {
         // Clear the selected app from Firebase when closing
         this.sdata.set("selected_app", null);
+        this.sdata.set("app_type", null);   // clear stale cursor type
         this.currentAppIndex = null;
         await Promise.all([
             this.appFrame.setSrc("about:blank"),
