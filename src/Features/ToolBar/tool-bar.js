@@ -106,7 +106,6 @@ const ICONS_SMALL = [
         name: "end",
         color: "red"
     },
-    {name: "apps"},
 ]
 
 
