@@ -116,6 +116,23 @@
     justify-content: center;
 }
 
+.grid-icon.image .content .symbol{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-icon.image .content .symbol img{
+    max-width: 100%;
+    border-radius: 1.5vmin;
+}
+
+.grid-icon.image .content .display-value{
+    display: none;
+}
+
 .symbol .text {
     font-size: 2em;
 }

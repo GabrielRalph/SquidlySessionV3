@@ -6,6 +6,7 @@ import { Vector } from "../../SvgPlus/4.js";
 import { GridIcon, GridLayout } from "../../Utilities/grid-icon.js";
 
 const AppsList = [
+    "https://cursor-splash.squidly.com.au",
     "http://127.0.0.1:5500",
     "http://127.0.0.1:5501"
 ]
@@ -15,6 +16,9 @@ class QuizSearch extends SearchWindow {
     constructor(apps){
         super();
         this.apps = apps;
+        this.styles = {
+            background: "white",
+        }
     }
 
     reset(imm){
@@ -29,10 +33,9 @@ class QuizSearch extends SearchWindow {
             return {
                 app: q,
                 icon: {
-                    displayValue: q.title,
-                    subtitle: q.subtitle,
+                    
                     symbol: q.icon,
-                    type: "topic",
+                    type: "image",
                 },
             }
         })
@@ -77,7 +80,7 @@ class AppsFrame extends OccupiableWindow {
 
         this.grid = this.createChild(GridLayout, {
             style: {position: "absolute", top: "var(--gap)", left: "var(--gap)", right: "var(--gap)", bottom: "var(--gap)"}
-        }, 4, 4);
+        }, 4, 5);
         this.search = this.createChild(QuizSearch, {
             style: {position: "absolute", top: 0, left: 0, right: 0, bottom: 0}
         });
@@ -102,33 +105,34 @@ class AppsFrame extends OccupiableWindow {
             }
         }, "apps");
         closeIcon.styles = {
+            "--shadow-color": "transparent",
             "pointer-events": "all",
         }
 
         // Add switch app icon
-        let switchAppIcon = new GridIcon({
-            symbol: "switch",
-            displayValue: "Switch App",
-            type: "action",
-            // TODO: add switch app logic
-            // Send message to iframe to switch app
-            events: {
-                "access-click": (e) => {
-                    // this.feature.switchApp();
-                    // only send "switch_app" command
-                    this.sendMessage({
-                        command: "switch_app",
-                        // app: this.feature.appDescriptors[0]
-                    });
-                }
-            }
-        }, "apps");
-        switchAppIcon.styles = {
-            "pointer-events": "all",
-        }
+        // let switchAppIcon = new GridIcon({
+        //     symbol: "switch",
+        //     displayValue: "Switch Mode",
+        //     type: "action",
+        //     // TODO: add switch app logic
+        //     // Send message to iframe to switch app
+        //     events: {
+        //         "access-click": (e) => {
+        //             // this.feature.switchApp();
+        //             // only send "switch_app" command
+        //             this.sendMessage({
+        //                 command: "switch_app",
+        //                 // app: this.feature.appDescriptors[0]
+        //             });
+        //         }
+        //     }
+        // }, "apps");
+        // switchAppIcon.styles = {
+        //     "pointer-events": "all",
+        // }
 
         this.grid.add(closeIcon, 0, 0);
-        this.grid.add(switchAppIcon, 1, 0);
+        // this.grid.add(switchAppIcon, 1, 0);
     }
 
     // Set iframe src or srcdoc
@@ -246,6 +250,41 @@ export class Apps extends Features {
         this.currentAppType = e.data.type;
         this.sdata.set("app_type", e.data.type);
         console.log("App type received:", e.data.type);
+    }
+
+    _message_firebaseSet(e) {
+        console.log("Firebase set received:", e.data.path, e.data.value);
+        let path = "appdata/" + e.data.path;
+        this.sdata.set(path, e.data.value);
+    }
+
+    _message_firebaseOnValue(e) {
+        let path = "appdata/" + e.data.path;
+        this.sdata.onValue(path, (value) => {
+            this.appFrame.sendMessage({
+                mode: "firebaseOnValueCallback",
+                path: e.data.path,
+                value: value
+            });
+        });
+    }
+
+    _message_setIcon(e) {
+        let icon = new GridIcon(e.data.options);
+        icon.styles = {
+            "--shadow-color": "transparent",
+            "pointer-events": "all",
+        }
+        this.appFrame.grid.add(icon, e.data.x, e.data.y);
+        icon.events = {
+            "access-click": (event) => {
+                this.appFrame.sendMessage({
+                    mode: "onIconClickCallback",
+                    key: e.data.key,
+                    value: {clickMode: event.clickMode}
+                });
+            }
+        }
     }
 
     async loadAppDescriptors() {
