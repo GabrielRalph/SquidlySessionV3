@@ -21,12 +21,24 @@ const col2num = {
     "colour-5": 4,
 }
 
+/**
+ * @typedef {Object} CursorProperties
+ * @property {string} class - the class of the cursor (i.e. simple, cursor)
+ * @property {number} size - the size of the cursor
+ * @property {string} text - the fill colour of the cursor
+ * @property {string} type - the type of the cursor (i.e. [size = 0-3][color = 0-4])
+ * @property {string} guide - the svg path data for the guide
+ */
+
 class Cursor extends HideShow {
     cursorIcon = null;
     constructor(){
         super("g")
     }
 
+    /**
+     * @param {CursorProperties} properties
+     */
     set properties(properties) {
         let position = this.position;
         this.innerHTML = "";
@@ -67,6 +79,7 @@ export class Cursors extends Features {
     cursorLibrary = {};
     referenceArea = "entireScreen";
     cursorTimeouts = {};
+
     constructor(session, sDataFrame){
         super(session, sDataFrame);
         this.cursorsPanel = new ShadowElement("cursors-panel");
@@ -166,6 +179,8 @@ export class Cursors extends Features {
             size = size2num[size];
             colour = col2num[colour];
             type = `${size}${colour}`;
+        } else {
+            type = "-";
         }
         return {type, class: "cursor"}
     }

@@ -163,6 +163,9 @@ export const POINTERS = {
       // this.textel.props = { "font-size": size * 1.2, y: size * 0.4 };
     }
 
+    /**
+     * @param {string} value - svg path data for guide
+     */
     set guide(value) {
       this.subG.innerHTML = value;
     }
@@ -178,6 +181,9 @@ export const POINTERS = {
       this.translate(v);
     }
 
+    /**
+     * @param {number} size
+     */
     set size(size) {
       this.circle.props = { r: size };
     }
@@ -191,6 +197,10 @@ export const POINTERS = {
       this.type = '00';
     }
 
+    /**
+     * @param {string} type cursor color type
+     *                      [size = 0-3][color = 0-4]
+     */
     set type(type) {
       if (typeof type === "string" && type.length > 1) {
         let b = this.icon.children[0];
@@ -220,6 +230,8 @@ export const POINTERS = {
             b.style.setProperty("fill", "#0606f7");
             break
         }
+      } else {
+        this.styles = { display: "none" };
       }
     }
 
@@ -252,6 +264,9 @@ export const POINTERS = {
 
     }
 
+    /**
+     * @param {string} text
+     */
     set text(text) {
 
       this.g3.innerHTML = "";
@@ -289,6 +304,9 @@ export const POINTERS = {
       return this._text;
     }
 
+    /**
+     * @param {number} size
+     */
     set size(size) {
       this.text = this.text;
       this._size = size;
