@@ -38,6 +38,7 @@ console.log = (...params) => {
 
 FIREBASE_ON_VALUE_CALLBACKS = {};
 SET_ICON_CALLBACKS = {};
+CURSOR_UPDATE_CALLBACK = null;
 
 function firebaseSet(path, value){
     window.parent.postMessage({
@@ -67,8 +68,11 @@ function setIcon(x, y, options, callback){
     }, "*");
 }
 
-function addEyeGazeListener(user, callback){
-    // implement
+function addCursorListener(callback){
+    CURSOR_UPDATE_CALLBACK = callback;
+    window.parent.postMessage({
+        mode: "addCursorListener"
+    }, "*");
 }
 
 RESPONSE_FUNCTIONS = {
@@ -80,6 +84,16 @@ RESPONSE_FUNCTIONS = {
     onIconClickCallback(data){
         if (data.key in SET_ICON_CALLBACKS){
             SET_ICON_CALLBACKS[data.key](data.value);
+        }
+    },
+    cursorUpdate(data){
+        if (CURSOR_UPDATE_CALLBACK){
+            CURSOR_UPDATE_CALLBACK({
+                user: data.user,
+                x: data.x,
+                y: data.y,
+                source: data.source
+            });
         }
     }
 
