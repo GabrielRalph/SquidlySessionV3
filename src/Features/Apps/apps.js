@@ -169,7 +169,7 @@ export class Apps extends Features {
         this.appFrame.open = this.open.bind(this);
         this.appFrame.close = this.close.bind(this);
         this.currentAppIndex = null;
-        this.cursorUpdatesEnabled = false;
+        this._cursorListenersInitialized = false;
     }
 
     async open() {
@@ -189,7 +189,6 @@ export class Apps extends Features {
         // Clear the selected app from Firebase when closing
         this.sdata.set("selected_app", null);
         this.currentAppIndex = null;
-        this.cursorUpdatesEnabled = false;
         await Promise.all([
             this.appFrame.setSrc("about:blank"),
             this.appFrame.root.hide()
@@ -278,7 +277,37 @@ export class Apps extends Features {
     }
 
     _message_addCursorListener(e) {
-        this.cursorUpdatesEnabled = true;
+        // Prevent duplicate listener setup
+        if (this._cursorListenersInitialized) return;
+        this._cursorListenersInitialized = true;
+
+        // Listen to LOCAL eye gaze data (current user's own eye gaze)
+        this.session.eyeGaze.addEyeDataListener((eyeP, bbox, hidden) => {
+            if (eyeP instanceof Vector && !hidden && this.appFrame?.iframe) {
+                this.appFrame.sendMessage({
+                    mode: "cursorUpdate",
+                    user: this.sdata.me + "-eyes",
+                    x: eyeP.x * bbox[1]._x,
+                    y: eyeP.y * bbox[1]._y,
+                    source: "local"
+                });
+            }
+        });
+
+        // Listen to all remote cursor events (mouse and eye gaze)
+        ["mouse", "eyes"].forEach(cursorType => {
+            this.session.cursors.addEventListener(this.sdata.them + "-" + cursorType, (e) => {
+                if (this.appFrame?.iframe) {
+                    this.appFrame.sendMessage({
+                        mode: "cursorUpdate",
+                        user: this.sdata.them + "-" + cursorType,
+                        x: e.screenPos._x * window.innerWidth,
+                        y: e.screenPos._y * window.innerHeight,
+                        source: "remote"
+                    });
+                }
+            });
+        });
     }
 
     async loadAppDescriptors() {
@@ -362,34 +391,6 @@ export class Apps extends Features {
            if (modeFunc in this && this[modeFunc] instanceof Function) {
                 this[modeFunc](e);
            }
-        });
-
-        // Listen to LOCAL eye gaze data (current user's own eye gaze)
-        this.session.eyeGaze.addEyeDataListener((eyeP, bbox, hidden) => {
-            if (eyeP instanceof Vector && !hidden && this.appFrame && this.appFrame.iframe && this.cursorUpdatesEnabled) {
-                this.appFrame.sendMessage({
-                    mode: "cursorUpdate",
-                    user: this.sdata.me + "-eyes",
-                    x: eyeP.x * bbox[1]._x,
-                    y: eyeP.y * bbox[1]._y,
-                    source: "local"
-                });
-            }
-        });
-
-        // Listen to all remote cursor events (mouse and eye gaze)
-        ["mouse", "eyes"].forEach(cursorType => {
-            this.session.cursors.addEventListener(this.sdata.them + "-" + cursorType, (e) => {
-                if (this.cursorUpdatesEnabled) {
-                    this.appFrame.sendMessage({
-                        mode: "cursorUpdate",
-                        user: this.sdata.them + "-" + cursorType,
-                        x: e.screenPos._x * window.innerWidth,
-                        y: e.screenPos._y * window.innerHeight,
-                        source: "remote"
-                    });
-                }
-            });
         });
     }
 
