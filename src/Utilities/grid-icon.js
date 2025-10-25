@@ -101,8 +101,12 @@ export class GridIconSymbol extends SvgPlus{
             this.createChild(Icon, {}, symbol)
         } else {
             let url = symbol;
+            let maxWidth = 100;
             if (typeof symbol == "object" && symbol !== null && "url" in symbol) {
                 url = symbol.url;
+                if ("width" in symbol && typeof symbol.width === "number") {
+                    maxWidth = symbol.width;
+                }
             }
 
             if (typeof url === "string") {
@@ -110,11 +114,15 @@ export class GridIconSymbol extends SvgPlus{
                     this.createChild("div", {
                         class: "bg-img",
                         style: {
-                            "background-image": `url(${symbol.url})`
+                            "background-image": `url(${symbol.url})`,
+                            "max-width": `${90 * (maxWidth / 100)}%`
                         }
                     });
                 } else {
                     this.createChild("img", {
+                        styles: {
+                            "max-width": `${90 * (maxWidth / 100)}%`
+                        },
                         events: {
                             load: () => this.dispatchEvent(new Event("load")),
                             error: () => this.dispatchEvent(new Event("load")),
@@ -125,7 +133,10 @@ export class GridIconSymbol extends SvgPlus{
             } else if ("text" in symbol) {
                 this.createChild("div", {
                     class: "text",
-                    content: symbol.text
+                    content: symbol.text,
+                    style: {
+                        "font-size": symbol.size || "1em"
+                    }
                 });
             }
         }

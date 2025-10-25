@@ -283,6 +283,15 @@ export class SessionView extends ShadowElement {
         super("session-view");
         
         // Create all the panels
+        let link = this.root.createChild("link", {
+            rel: "stylesheet",
+            href: relURL("../../Fonts/OpenDyslexic/od3.css", import.meta)
+        })
+        document.head.appendChild(link);
+        document.head.innerHTML += `<link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Inclusive+Sans:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet"></link>`
+
         let sideScreen = this.root.createChild(SideScreen, {}, this);
         let topPanel = this.root.createChild(SlidePanel, {}, "top", this);
         let sidePanel = this.root.createChild(SlidePanel, {}, "side", this);

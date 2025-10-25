@@ -490,9 +490,22 @@ export class SquidlySessionElement extends ShadowElement {
             if (user == this.sdata.me && group == "display" && setting == "layout") {
                 updateSidePanel(value);
             }
-        })
 
+            if (user == this.sdata.me && group == "display" && setting == "font") {
+                this.sessionView.root.setAttribute("font", value);
+            }
+            if (user == this.sdata.me && group == "display" && setting == "effect") {
+                if (value == "none") {
+                    this.sessionView.root.removeAttribute("effect");
+                } else {
+                    this.sessionView.root.setAttribute("effect", value);
+                }
+            }
+        })
+        this.sessionView.root.setAttribute("font", this.settings.get(`${this.sdata.me}/display/font`));
+        this.sessionView.root.setAttribute("effect", this.settings.get(`${this.sdata.me}/display/effect`));
         updateSidePanel(this.settings.get(`${this.sdata.me}/display/layout`));
+
 
         return new Promise((r) => {
             this.sdata.onValue("occupier", async (name) => {

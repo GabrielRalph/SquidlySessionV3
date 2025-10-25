@@ -1,4 +1,7 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inclusive+Sans:ital,wght@0,300..700;1,300..700&display=swap');
+
 session-view {
     --s-unit: hypot(1vh, 1vw);
     font-size: calc(1.5 * var(--s-unit));
@@ -105,6 +108,64 @@ session-view {
     height: 100%;
     display: block;
     overflow: hidden;
+
+    font-family: "Inclusive Sans", sans-serif;
+}
+
+/* 1) High Contrast (Light) – boosts contrast & clarity */
+session-view[effect="high-contrast-light"] * {
+  filter: contrast(1.5) brightness(1.05) saturate(1.05);
+}
+
+/* 1b) High Contrast (Dark) – optional dark variant via inversion trick */
+session-view[effect="high-contrast-dark"] * {
+  /* Invert, then rotate hue to keep colors naturalish, tighten contrast */
+  filter: invert(1) hue-rotate(180deg) contrast(1.2) brightness(0.95) saturate(1.05);
+}
+
+/* 2) Low Sensory – soften contrast & saturation for comfort */
+session-view[effect="low-sensory"] * {
+  filter: contrast(0.9) brightness(0.98) saturate(0.75);
+}
+
+/* 3) Color Blind–Assist – slight hue shift to ease red/green collisions + clarity */
+session-view[effect="colorblind-assist"] * {
+  /* NOTE: This is a gentle heuristic, not a true fix. Prefer safe palettes in CSS tokens. */
+  filter: hue-rotate(20deg) contrast(1.05) saturate(0.95);
+}
+/* 4) Greyscale / Monochrome – reduce color load, keep readability */
+session-view[effect="greyscale"] * {
+  filter: grayscale(1) contrast(1.05) brightness(1.0);
+}
+
+/* 5) Sepia Calm – warm, low-stimulus reading palette */
+session-view[effect="sepia-calm"] * {
+  filter: sepia(0.25) contrast(0.95) brightness(1.02) saturate(0.9);
+}
+
+/* 6) Enhanced Saturation – mild boost for aging/low-quality displays */
+session-view[effect="enhanced-saturation"] * {
+  filter: saturate(1.15);
+}
+
+/* Optional: don’t filter media/content imagery */
+session-view[effect] img,
+session-view[effect] video,
+session-view[effect] canvas {
+  filter: none !important; /* keep photos/videos true-to-life */
+}
+
+session-view[font="opendyslexic"] {
+    font-family: 'od3', sans-serif;
+    font-size: calc(1.2 * var(--s-unit));
+    line-height: 1.2
+}
+session-view[font="atkinson"] {
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+}
+
+session-view[font="inclusive"] {
+    font-family: 'Inclusive Sans', sans-serif;
 }
 
 session-view > * {

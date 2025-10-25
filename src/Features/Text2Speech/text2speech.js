@@ -19,6 +19,7 @@ function log(main, list, mode = "normal") {
 }
 let UTTERANCES = {};
 let VOICE_NAME = "charles";
+let SPEED = 1;
 let VOLUME = 1;
 const MY_VOICES = {
     margaret: true,
@@ -31,8 +32,29 @@ const MY_VOICES = {
     theo: true,
     lucy: true,
     holly: true,
-    default: true
+    default: true,
+
+    ফাতেমা: true,
+    ফুয়াদ: true,
+    রানী: true,
+    প্রদীপ: true,
+
+    다빈: true,
+    소영: true,
+    민재: true,
+    병준: true,
+
+    louis: true,
+    amélie: true,
+    etienne: true,
+    julia: true
 }
+const SPEEDS = {
+    slow: 0.8,
+    medium: 1,
+    fast: 1.25
+}
+
 
 
 const synth = window.speechSynthesis;
@@ -72,6 +94,9 @@ async function playAudioURL(url) {
     log(`Playing audio from URL: ${url}`, [], "load");
     
     const audio = new Audio(url);
+
+    audio.playbackRate = SPEED
+
     audio.volume = VOLUME;
     let sinkID = await getSelectedDevice("audiooutput");
     audio.setSinkId(sinkID);
@@ -281,20 +306,29 @@ export class Text2Speech extends Features {
         let tempVoice = null;
 
         VOLUME = this.session.settings.get(`${this.sdata.me}/volume/level`) / 100;
-        let voice = this.session.settings.get(`${this.sdata.me}/access/voice`);
+        let voice = this.session.settings.get(`${this.sdata.me}/languages/voice`);
         log("Initial voice = '" + voice + "' volume = " + VOLUME);
 
         this.session.settings.addEventListener("change", (e) => {
             let {user, group, setting, value} = e;
             if (user == this.sdata.me){
-                if (group == "access" && setting == "voice") {
-                    if (value in MY_VOICES && tempVoice !== value) {
-                        tempVoice = value;
-                        this.speakName(value, true);
+                if (group == "languages") {
+                    if (setting == "voice" ) {
+                        if (value in MY_VOICES && tempVoice !== value) {
+                            tempVoice = value;
+                            this.speakName(value, true);
+                        }
+                    } else if (setting == "speed") {
+                        
+                        let newSpeed = SPEEDS[value] || 1;
+                        if (newSpeed !== SPEED) {
+                            this.speakName(tempVoice || VOICE_NAME, true);
+                            SPEED = newSpeed;
+                        }
                     }
                 } else if (group == "volume" && setting == "level") {
                     VOLUME = value/100;
-                }
+                } 
             }
         })
 

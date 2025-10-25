@@ -73,6 +73,14 @@ export class SvgResize extends HideShow {
   stop() { }
 }
 
+const CURSOR_PATHS = {
+  a: `<path d="M11,32l3.8-2,3.2-1.6-5.2-9.6h8.6L-1.4-4v32l6.6-6.4,5.8,10.4Z"/>
+  <path d="M11.4,29.2l3.6-2-5.6-10.4h7.2L.6.8v22.4l5-4.8,5.8,10.8Z"/>`,
+  r: `<path d="M120.93,12.31l-241.85-.17c-2.25,0-4.07-1.83-4.07-4.07s1.83-4.07,4.07-4.07l115.57.17L0-2.69l5.36,6.85h115.57c2.25,0,4.07,1.83,4.07,4.07s-1.83,4.07-4.07,4.07ZM-120.93,5.87c-1.21,0-2.19.98-2.19,2.19s.98,2.19,2.19,2.19l241.85.17c1.21,0,2.19-.98,2.19-2.19s-.98-2.19-2.19-2.19H4.44L0,.36l-4.44,5.68-116.49-.17Z"/>
+  <path d="M4.44,6.04L0,.36l-4.44,5.68-116.49-.17c-1.21,0-2.19.98-2.19,2.19s.98,2.19,2.19,2.19l241.85.17c1.21,0,2.19-.98,2.19-2.19s-.98-2.19-2.19-2.19H4.44Z"/>`,
+  c: `<path d="M0,21.71c-22.06,0-40-17.94-40-40S-22.06-58.29,0-58.29s40,17.94,40,40S22.06,21.71,0,21.71ZM0-55.2c-20.36,0-36.91,16.56-36.91,36.91S-20.36,18.62,0,18.62,36.91,2.06,36.91-18.3,20.36-55.2,0-55.2Z"/>
+  <path d="M0-55.2c-20.36,0-36.91,16.56-36.91,36.91S-20.36,18.62,0,18.62,36.91,2.06,36.91-18.3,20.36-55.2,0-55.2ZM1.4,15.47C1.16,12.87,0,0,0,0l-1.4,15.47c-17.53-.72-31.64-14.82-32.36-32.36l15.47-1.4s-12.87-1.16-15.47-1.4c.72-17.53,14.82-31.64,32.36-32.36l1.4,15.47s1.16-12.87,1.4-15.47c17.53.72,31.64,14.82,32.36,32.36-2.6.24-15.47,1.4-15.47,1.4l15.47,1.4C33.04.64,18.93,14.75,1.4,15.47Z"/>`
+}
 export class BasePointer extends HideShow {
   constructor() {
     super("g")
@@ -136,31 +144,14 @@ export const POINTERS = {
 
       this.sizeG = sizeG;
       this.subG = subG;
-      // this.tg = new HideShow("g");
-      // this.circle3 = this.tg.createChild("circle", { fill: cOuter })
-      // this.textel = this.tg.createChild("text", { "text-anchor": "middle", fill: cText });
-      // this.appendChild(this.tg);
       this.size = size;
     }
-
-    // set color(c) {
-    //   // let p = { fill: c };
-    //   // this.circle.props = p;
-    //   // this.circle3.props = p;
-    // }
 
     async showText(duration = 400) { await this.tg.show(duration) }
     async hideText(duration = 400) { await this.tg.hide(duration) }
 
-    // set text(value) {
-    //   this.textel.innerHTML = value;
-    // }
     set size(size) {
       this.sizeG.props = { transform: `scale(${size / 50})` }
-      // this.circle.props = { r: size };
-      // this.circle2.props = { r: size / 5 };
-      // this.circle3.props = { r: size / 1.5 };
-      // this.textel.props = { "font-size": size * 1.2, y: size * 0.4 };
     }
 
     /**
@@ -193,8 +184,9 @@ export const POINTERS = {
       super();
       this.icon = this.createChild("g");
       // this.createChild("circle", {fill: "red", r: 2});
-      this.icon.innerHTML = `<path d="M5.8,16.4l1.9-1l1.6-0.8L6.7,9.8H11L-0.4-1.6v16l3.3-3.2L5.8,16.4z"/><path d="M6,15L7.8,14L5,8.8h3.6l-8-8V12l2.5-2.4L6,15z"/>`;
-      this.type = '00';
+      this.icon.innerHTML = CURSOR_PATHS.a;
+      this.cpathName = 'a';
+      this.type = '00a';
     }
 
     /**
@@ -203,6 +195,14 @@ export const POINTERS = {
      */
     set type(type) {
       if (typeof type === "string" && type.length > 1) {
+        if (type.length >= 3) {
+          let pathType = type[2];
+          if (pathType != this.cpathName && pathType in CURSOR_PATHS) {
+            this.cpathName = pathType;
+            this.icon.innerHTML = CURSOR_PATHS[this.cpathName];
+          }
+        }
+
         let b = this.icon.children[0];
         let t = this.icon.children[1];
 
@@ -230,6 +230,8 @@ export const POINTERS = {
             b.style.setProperty("fill", "#0606f7");
             break
         }
+
+        
       } else {
         this.styles = { display: "none" };
       }

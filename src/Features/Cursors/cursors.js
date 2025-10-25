@@ -21,6 +21,12 @@ const col2num = {
     "colour-5": 4,
 }
 
+const style2Key = {
+    "arrow": "a",
+    "guide": "r",
+    "circle": "c",
+}
+
 /**
  * @typedef {Object} CursorProperties
  * @property {string} class - the class of the cursor (i.e. simple, cursor)
@@ -172,13 +178,15 @@ export class Cursors extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVAE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     _getMouseCursorProperties(user) {
-        let size = this.session.settings.get(`${user}/display/cursorSize`);
-        let colour = this.session.settings.get(`${user}/display/cursorColour`);
+        let size = this.session.settings.get(`${user}/cursors/cursorSize`);
+        let colour = this.session.settings.get(`${user}/cursors/cursorColour`);
+        let style = this.session.settings.get(`${user}/cursors/cursorStyle`);
         let type = null;
         if (size != "none") {
             size = size2num[size];
             colour = col2num[colour];
-            type = `${size}${colour}`;
+            style = style2Key[style] || "a";
+            type = `${size}${colour}${style}`;
         } else {
             type = "-";
         }
@@ -198,8 +206,8 @@ export class Cursors extends Features {
         }
         updatef();
         this.session.settings.addEventListener("change", (e) => {
-            let {user, group, setting} = e;
-            if (user == this.me && group == "display" && (setting == "cursorSize" || setting == "cursorColour")) {
+            let {user, group} = e;
+            if (user == this.me && group == "cursors") {
                 updatef();
             }
         });

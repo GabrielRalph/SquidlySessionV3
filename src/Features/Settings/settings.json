@@ -29,15 +29,13 @@
     "host": [
         [
             {
-                "displayValue": "Speaker",
+                "displayValue": "Devices",
                 "hidden": false,
+                "link": "devices",
+                "type": "topic-normal",
                 "symbol": {
-                    "id": "S6n76FD9JZZ6LRiHEHCG",
-                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FS6n76FD9JZZ6LRiHEHCG?alt=media&token=7262d8e8-4ca0-46cf-87ea-e207a95640bb"
-                },
-                "link": "speaker",
-                "type": "topic-verb",
-                "utterance": ""
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/images%2Fi_devices.svg?alt=media&token=1698ef06-ed70-4e2e-baaf-4a09a02323ff"
+                }
             },
             {
                 "displayValue": "Display",
@@ -64,15 +62,12 @@
         ],
         [
             {
-                "displayValue": "Microphone",
-                "hidden": false,
+                "displayValue": "Languages",
                 "symbol": {
-                    "id": "vmc1NZQT1vRNEFHSKCb7",
-                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2Fvmc1NZQT1vRNEFHSKCb7?alt=media&token=8827dbad-f13d-4107-9e2a-60b240e4bd62"
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FI8AMnIHJMaT636j2B9bJ?alt=media&token=842d1f0c-1ba8-4d65-94a0-290f6245e1ea"
                 },
-                "link": "microphone",
-                "type": "topic-verb",
-                "utterance": ""
+                "type": "topic-normal",
+                "link": "languages"
             },
             {
                 "displayValue": "Access",
@@ -99,14 +94,13 @@
         ],
         [
             {
-                "displayValue": "Video",
+                "displayValue": "Cursors",
                 "hidden": false,
                 "symbol": {
-                    "id": "ZmIjtFzfer6renT0IP64",
-                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FZmIjtFzfer6renT0IP64?alt=media&token=18a4f60f-1908-4b4f-8855-7732b612bb39"
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FpK03mKKHUOI7AV8O9igJ?alt=media&token=14ffe0d4-d02f-4caf-a7b7-c9c35b20618a"
                 },
-                "link": "video",
-                "type": "topic-verb",
+                "type": "topic-normal",
+                "link": "cursors",
                 "utterance": ""
             },
             {
@@ -133,6 +127,123 @@
             }
         ]
     ],
+    "languages": [
+        [
+            {
+                "displayValue": "Next Language",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "language",
+                "direction": 1
+            },
+            {
+                "displayValue": "Next Voice",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "voice",
+                "direction": 1
+            },
+            {
+                "displayValue": "Next speed",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "speed",
+                "direction": 1
+            }
+        ],
+        [
+            {
+                "setting": "language",
+                "hidden": false,
+                "type": "normal"
+            },
+            {
+                "setting": "voice",
+                "hidden": false,
+                "type": "normal"
+            },
+            {
+                "setting": "speed",
+                "hidden": false,
+                "type": "normal"
+            }
+        ],
+        [
+            {
+                "displayValue": "Previous Language",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "language",
+                "direction": -1
+            },
+            {
+                "displayValue": "Previous Voice",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "voice",
+                "direction": -1
+            },
+            {
+                "displayValue": "Previous speed",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "speed",
+                "direction": -1
+            }
+        ]
+    ],
+    "devices": [
+        [
+            {
+                "displayValue": "Speaker",
+                "hidden": false,
+                "symbol": {
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/images%2Fi_speaker.svg?alt=media&token=cd0f5421-8e60-4c8a-9bbe-0239c399bd68"
+                },
+                "link": "speaker",
+                "type": "topic-verb",
+                "utterance": ""
+            },
+            {
+                "displayValue": "Microphone",
+                "hidden": false,
+                "symbol": {
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/images%2Fi_microphone.svg?alt=media&token=d1488a4f-e4d7-4b1d-933a-2726ee3846f0"
+                },
+                "link": "microphone",
+                "type": "topic-verb",
+                "utterance": ""
+            },
+            {
+                "displayValue": "Video",
+                "hidden": false,
+                "symbol": {
+                    "url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/images%2Fi_camera.svg?alt=media&token=56efea45-8f3a-4352-9482-3fa59293c05e"
+                },
+                "link": "video",
+                "type": "topic-verb",
+                "utterance": ""
+            }
+        ]
+    ],
     "access": [
         [
             {
@@ -155,16 +266,7 @@
                 "settingKey": "dwellTime",
                 "direction": 1
             },
-            {
-                "displayValue": "Next Voice",
-                "hidden": false,
-                "symbol": "upArrow",
-                "type": "adjective",
-                "utterance": "",
-                "action": "increment-setting",
-                "settingKey": "voice",
-                "direction": 1
-            }
+            {"hidden": true}
         ],
         [
             {
@@ -177,11 +279,7 @@
                 "hidden": false,
                 "type": "normal"
             },
-            {
-                "setting": "voice",
-                "hidden": false,
-                "type": "normal"
-            }
+            {"hidden": true}
         ],
         [
             {
@@ -204,16 +302,7 @@
                 "settingKey": "dwellTime",
                 "direction": -1
             },
-            {
-                "displayValue": "Previous Voice",
-                "hidden": false,
-                "symbol": "downArrow",
-                "type": "adjective",
-                "utterance": "",
-                "action": "increment-setting",
-                "settingKey": "voice",
-                "direction": -1
-            }
+            {"hidden": true}
         ]
     ],
     "calibration": [
@@ -386,82 +475,172 @@
             }
         ]
     ],
+    "cursors": [
+        [
+            {
+                "displayValue": "Next cursor style",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "cursorStyle",
+                "direction": 1
+            },
+            {
+                "displayValue": "Larger cursor",
+                "hidden": false,
+                "symbol": "add",
+                "type": "verb",
+                "utterance": "",
+                "action": "increment-setting",  
+                "settingKey": "cursorSize",
+                "direction": 1
+            },
+            {
+                "displayValue": "Next cursor colour",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "cursorColour",
+                "direction": 1
+            }
+        ],
+        [
+            {
+                "hidden": false,
+                "setting": "cursorStyle",
+                "type": "normal"
+            },
+            {
+                "hidden": false,
+                "setting": "cursorSize",
+                "type": "normal"
+            },
+            {
+                "hidden": false,
+                "setting": "cursorColour",
+                "type": "normal"
+            }
+        ],
+        [
+            {
+                "displayValue": "Previous cursor style",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "cursorStyle",
+                "direction": -1
+            },
+            {
+                "displayValue": "Smaller cursor",
+                "hidden": false,
+                "symbol": "minus",
+                "type": "starter",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "cursorSize",
+                "direction": -1
+            },
+            {
+                "displayValue": "Previous cursor colour",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "cursorColour",
+                "direction": -1
+            }
+        ]
+
+    ],
     "display": [
-        [{
-          "displayValue": "Next layout",
-          "hidden": false,
-          "symbol": "upArrow",
-          "type": "adjective",
-          "utterance": "",
-          "action": "increment-setting",
-          "settingKey": "layout",
-          "direction": 1
-        },
-        {
-            "displayValue": "Larger cursor",
-            "hidden": false,
-            "symbol": "add",
-            "type": "verb",
-            "utterance": "",
-            "action": "increment-setting",  
-            "settingKey": "cursorSize",
-            "direction": 1
-        },
-        {
-          "displayValue": "Next cursor colour",
-          "hidden": false,
-          "symbol": "upArrow",
-          "type": "adjective",
-          "utterance": "",
-          "action": "increment-setting",
-          "settingKey": "cursorColour",
-          "direction": 1
-        }],
-       [ {
-            "hidden": false,
-            "setting": "layout",
-            "type": "normal"
-        },
-        {
-            "hidden": false,
-            "setting": "cursorSize",
-            "type": "normal"
-        },
-        {
-          "hidden": false,
-          "setting": "cursorColour",
-          "type": "normal"
-        }],
-       [ {
-          "displayValue": "Previous layout",
-          "hidden": false,
-          "symbol": "downArrow",
-          "type": "adjective",
-          "utterance": "",
-          "action": "increment-setting",
-          "settingKey": "layout",
-          "direction": -1
-        },
-        {
-          "displayValue": "Smaller cursor",
-          "hidden": false,
-          "symbol": "minus",
-          "type": "starter",
-          "utterance": "",
-            "action": "increment-setting",
-            "settingKey": "cursorSize",
-            "direction": -1
-        },
-        {
-          "displayValue": "Previous cursor colour",
-          "hidden": false,
-          "symbol": "downArrow",
-          "type": "adjective",
-          "utterance": "",
-            "action": "increment-setting",
-            "settingKey": "cursorColour",
-            "direction": -1
-        }]
+        [
+            {
+                "displayValue": "Next layout",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "layout",
+                "direction": 1
+            },
+            {
+                "displayValue": "Next Font",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "font",
+                "direction": 1
+            },
+            {
+                "displayValue": "Next effect",
+                "hidden": false,
+                "symbol": "upArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "effect",
+                "direction": 1
+            }
+        ],
+        [ 
+            {
+                "hidden": false,
+                "setting": "layout",
+                "type": "normal"
+            },
+            {
+                "hidden": false,
+                "setting": "font",
+                "type": "normal"
+            },
+            {
+                "hidden": false,
+                "setting": "effect",
+                "type": "normal"
+            }
+       ],
+       [ 
+            {
+                "displayValue": "Previous layout",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "layout",
+                "direction": -1
+            },
+            {
+                "displayValue": "Previous font",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "font",
+                "direction": -1
+            },
+            {
+                "displayValue": "Previous effect",
+                "hidden": false,
+                "symbol": "downArrow",
+                "type": "adjective",
+                "utterance": "",
+                "action": "increment-setting",
+                "settingKey": "effect",
+                "direction": -1
+            }
+        ]
     ],
     "keyboardShortcuts": [
         [{
