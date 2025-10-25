@@ -135,7 +135,7 @@ export class GridIconSymbol extends SvgPlus{
                     class: "text",
                     content: symbol.text,
                     style: {
-                        "font-size": symbol.size || "1em"
+                        "font-size": symbol.size || null
                     }
                 });
             }
