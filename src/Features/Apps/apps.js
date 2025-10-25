@@ -144,8 +144,6 @@ class AppsFrame extends OccupiableWindow {
             this.iframe.srcdoc = srcdoc ? src : null;
             if (!srcdoc)
                 this.iframe.props = {src};
-            else 
-                console.log(src)
         })
     }
 
@@ -170,8 +168,8 @@ export class Apps extends Features {
         this.appFrame = new AppsFrame(this, sdata);
         this.appFrame.open = this.open.bind(this);
         this.appFrame.close = this.close.bind(this);
-        this.sdata.set("app_type", null);
         this.currentAppIndex = null;
+        this._cursorListenersInitialized = false;
     }
 
     async open() {
@@ -190,7 +188,6 @@ export class Apps extends Features {
     async close() {
         // Clear the selected app from Firebase when closing
         this.sdata.set("selected_app", null);
-        this.sdata.set("app_type", null);   // clear stale cursor type
         this.currentAppIndex = null;
         await Promise.all([
             this.appFrame.setSrc("about:blank"),
@@ -245,15 +242,7 @@ export class Apps extends Features {
         console.log(...e.data.params);
     }
 
-    _message_app_type(e) {
-        // Store current cursor type
-        this.currentAppType = e.data.type;
-        this.sdata.set("app_type", e.data.type);
-        console.log("App type received:", e.data.type);
-    }
-
     _message_firebaseSet(e) {
-        console.log("Firebase set received:", e.data.path, e.data.value);
         let path = "appdata/" + e.data.path;
         this.sdata.set(path, e.data.value);
     }
@@ -285,6 +274,40 @@ export class Apps extends Features {
                 });
             }
         }
+    }
+
+    _message_addCursorListener(e) {
+        // Prevent duplicate listener setup
+        if (this._cursorListenersInitialized) return;
+        this._cursorListenersInitialized = true;
+
+        // Listen to LOCAL eye gaze data (current user's own eye gaze)
+        this.session.eyeGaze.addEyeDataListener((eyeP, bbox, hidden) => {
+            if (eyeP instanceof Vector && !hidden && this.appFrame?.iframe) {
+                this.appFrame.sendMessage({
+                    mode: "cursorUpdate",
+                    user: this.sdata.me + "-eyes",
+                    x: eyeP.x * bbox[1]._x,
+                    y: eyeP.y * bbox[1]._y,
+                    source: "local"
+                });
+            }
+        });
+
+        // Listen to all remote cursor events (mouse and eye gaze)
+        ["mouse", "eyes"].forEach(cursorType => {
+            this.session.cursors.addEventListener(this.sdata.them + "-" + cursorType, (e) => {
+                if (this.appFrame?.iframe) {
+                    this.appFrame.sendMessage({
+                        mode: "cursorUpdate",
+                        user: this.sdata.them + "-" + cursorType,
+                        x: e.screenPos._x * window.innerWidth,
+                        y: e.screenPos._y * window.innerHeight,
+                        source: "remote"
+                    });
+                }
+            });
+        });
     }
 
     async loadAppDescriptors() {
@@ -351,13 +374,11 @@ export class Apps extends Features {
 
         this.sdata.onValue("selected_app", (selectedApp) => {
             if (selectedApp) {
-                console.log("🔄 Selected app changed in Firebase:", selectedApp);
                 this._setApp(selectedApp.index);
                 this.currentAppIndex = selectedApp.index;
                 this.appFrame.search.hide();
             } else {
                 // App was closed by other party
-                console.log("🔄 App closed by other party");
                 this.currentAppIndex = null;
                 this.appFrame.setSrc("about:blank");
                 this.appFrame.root.hide();
@@ -370,41 +391,6 @@ export class Apps extends Features {
            if (modeFunc in this && this[modeFunc] instanceof Function) {
                 this[modeFunc](e);
            }
-        });
-
-        // Listen to app_type changes from Firebase and send to cursor app
-        this.sdata.onValue("app_type", (appType) => {
-            if (appType !== null) {
-                console.log("🔄 App type changed in Firebase:", appType);
-                // Send message to cursor app to sync state
-                this.appFrame.sendMessage({
-                    mode: "sync_app_type",
-                    type: appType
-                });
-            }
-        });
-
-        // 1. Listen to LOCAL eye gaze data (current user's own eye gaze)
-        this.session.eyeGaze.addEyeDataListener((eyeP, bbox, hidden) => {
-            if (eyeP instanceof Vector && !hidden && this.appFrame && this.appFrame.iframe) {
-                this.appFrame.sendMessage({
-                    user: this.sdata.me + "-eyes",  // "host" or "participant"
-                    x: eyeP.x * bbox[1]._x,
-                    y: eyeP.y * bbox[1]._y,
-                });
-            }
-        });
-
-        // Listen to all remote cursor events (mouse and eye gaze)
-        ["mouse", "eyes"].forEach(cursorType => {
-            this.session.cursors.addEventListener(this.sdata.them + "-" + cursorType, (e) => {
-                this.appFrame.sendMessage({
-                    user: this.sdata.them + "-" + cursorType,
-                    x: e.screenPos._x * window.innerWidth,
-                    y: e.screenPos._y * window.innerHeight,
-                    source: "remote"
-                });
-            });
         });
     }
 

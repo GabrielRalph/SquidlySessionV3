@@ -38,8 +38,9 @@ console.log = (...params) => {
 
 FIREBASE_ON_VALUE_CALLBACKS = {};
 SET_ICON_CALLBACKS = {};
+CURSOR_UPDATE_CALLBACK = null;
 
-function firebaseSet(path, value){
+window.firebaseSet = function(path, value){
     window.parent.postMessage({
         mode: "firebaseSet",
         path: path,
@@ -47,7 +48,7 @@ function firebaseSet(path, value){
     }, "*");
 }
 
-function firebaseOnValue(path, callback){
+window.firebaseOnValue = function(path, callback){
     FIREBASE_ON_VALUE_CALLBACKS[path] = callback;
     window.parent.postMessage({
         mode: "firebaseOnValue",
@@ -55,7 +56,7 @@ function firebaseOnValue(path, callback){
     }, "*");
 }
 
-function setIcon(x, y, options, callback){
+window.setIcon = function(x, y, options, callback){
     let key = "setIcon_" + Math.random().toString(36).substring(2, 15);
     SET_ICON_CALLBACKS[key] = callback;
     window.parent.postMessage({
@@ -67,8 +68,11 @@ function setIcon(x, y, options, callback){
     }, "*");
 }
 
-function addEyeGazeListener(user, callback){
-    // implement
+window.addCursorListener = function(callback){
+    CURSOR_UPDATE_CALLBACK = callback;
+    window.parent.postMessage({
+        mode: "addCursorListener"
+    }, "*");
 }
 
 RESPONSE_FUNCTIONS = {
@@ -80,6 +84,16 @@ RESPONSE_FUNCTIONS = {
     onIconClickCallback(data){
         if (data.key in SET_ICON_CALLBACKS){
             SET_ICON_CALLBACKS[data.key](data.value);
+        }
+    },
+    cursorUpdate(data){
+        if (CURSOR_UPDATE_CALLBACK){
+            CURSOR_UPDATE_CALLBACK({
+                user: data.user,
+                x: data.x,
+                y: data.y,
+                source: data.source
+            });
         }
     }
 
