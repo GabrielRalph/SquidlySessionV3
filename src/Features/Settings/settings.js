@@ -415,6 +415,10 @@ export class SettingsFeature extends Features {
         return Settings.getValue(name);
     }
 
+    setValue(name, value) {
+        return Settings.setValue(name, value);
+    }
+
 
     changeDevice(user, kind, deviceId) {
         if (user === this.sdata.me) {

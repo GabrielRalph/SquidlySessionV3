@@ -309,6 +309,39 @@ export class Apps extends Features {
             });
         });
     }
+    _message_setSettings(e) {
+        this.session.settings.setValue(e.data.path, e.data.value);
+    }
+
+    _message_debugLog(e) {
+        // Forward debug logs to console
+        if (e.data.level === 'error') {
+            console.error("[Backend->Iframe]", e.data.message, ...(e.data.args || []));
+        } else if (e.data.level === 'warn') {
+            console.warn("[Backend->Iframe]", e.data.message, ...(e.data.args || []));
+        } else {
+            console.log("[Backend->Iframe]", e.data.message, ...(e.data.args || []));
+        }
+    }
+
+
+    _message_getSettings(e) {
+        this._sendDebugLog("Received getSettings request for path: " + e.data.path + ", key: " + e.data.key);
+        const value = this.session.settings.get(e.data.path);
+        this._sendDebugLog("Retrieved value: " + JSON.stringify(value) + " for path: " + e.data.path);
+        // Send the value back to the iframe
+        e.source.postMessage({
+            mode: "getSettingsResponse",
+            key: e.data.key,
+            path: e.data.path,
+            value: value
+        }, "*");
+        this._sendDebugLog("Sent response back to iframe with key: " + e.data.key);
+    }
+
+    _message_addSettingsListener(e) {
+        // to be implemented
+    }
 
     async loadAppDescriptors() {
         let apiURL = relURL("./app-base-api.js", import.meta)
@@ -324,9 +357,12 @@ export class Apps extends Features {
                 const [info, html] = await Promise.all([resInfo.json(), resIndex.text()]);
 
                 info.url = url;
-
+                // TODO: to be implemented
+                let session_info = {
+                    user: this.sdata.me,
+                }
                 // Inject API into HTML
-                info.html = html.replace(/<head\b[^>]*>/, `<head>\n\t<script src = "${apiURL}"></script>\n\t<base href="${url}/">`);
+                info.html = html.replace(/<head\b[^>]*>/, `<head>\n\t<script src = "${apiURL}"></script>\n\t<base href="${url}/">\n\t<script>const session_info = ${JSON.stringify(session_info)}</script>`);
                 
                 return info;
             } catch (e) {

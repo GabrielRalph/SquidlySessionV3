@@ -75,6 +75,30 @@ window.addCursorListener = function(callback){
     }, "*");
 }
 
+window.setSettings = function(path, value){
+    window.parent.postMessage({
+        mode: "setSettings",
+        path: path,
+        value: value
+    }, "*");
+}
+
+window.getSettings = function(path){
+    // To be implemented
+    // window.parent.postMessage({
+    //     mode: "getSettings",
+    //     path: path
+    // }, "*");
+}
+
+window.addSettingsListener = function(path, callback){
+    // to be implemented
+    // window.parent.postMessage({
+    //     mode: "addSettingsListener",
+    //     path: path,
+    // }, "*");
+}
+
 RESPONSE_FUNCTIONS = {
     firebaseOnValueCallback(data){
         if (data.path in FIREBASE_ON_VALUE_CALLBACKS){
