@@ -6,7 +6,7 @@ import { SvgPlus, Vector } from "./SvgPlus/4.js";
 import { FrameRateMonitor } from "./Utilities/frame-rate-monitor.js";
 import { ShadowElement } from "./Utilities/shadow-element.js";
 import { delay, getQueryKey, PublicProxy, WaveStateVariable } from "./Utilities/usefull-funcs.js";
-
+import { get, ref } from "./Firebase/firebase.js";
 /** @param {() => Promise[]} */
 async function series(arr) {
 
@@ -578,8 +578,14 @@ export class SquidlySessionElement extends ShadowElement {
         console.log("host link - ", link);
         
         if (sessionConnection !== null && sessionConnection.isHost) {
-            sessionConnection.onleave = () => {
-                window.location.href = link;
+            sessionConnection.onleave = async () => {
+                let hostUID = sessionConnection.hostUID;
+                let params = new URLSearchParams({
+                    sid: sessionConnection.sid,
+                    host: hostUID,
+                    hostName: (await get(ref(`users/${hostUID}/info/displayName`))).val()
+                });
+                window.location.href = link +"?"+ params.toString();
             }
         }
     }
@@ -595,8 +601,14 @@ export class SquidlySessionElement extends ShadowElement {
         console.log("participant link - ", link);
         
         if (sessionConnection !== null && !sessionConnection.isHost) {
-            sessionConnection.onleave = () => {
-                window.location.href = link;
+            sessionConnection.onleave = async () => {
+                let hostUID = sessionConnection.hostUID;
+                let params = new URLSearchParams({
+                    sid: sessionConnection.sid,
+                    host: hostUID,
+                    hostName: (await get(ref(`users/${hostUID}/info/displayName`))).val()
+                });
+                window.location.href = link +"?"+ params.toString();
             }
         }
     }
