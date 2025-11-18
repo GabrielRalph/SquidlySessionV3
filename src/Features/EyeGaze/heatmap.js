@@ -1,4 +1,3 @@
-import html2canvas from 'https://esm.sh/html2canvas';
 let Heatmaps = new Set();
 
 // console.log(html2canvas);
