@@ -446,7 +446,7 @@ export class SettingsFeature extends Features {
     async initialise() {
         let hostUID = this.sdata.hostUID;
         let settingFrame = new FirebaseFrame(`users/${hostUID}/settings`);
-        Settings.initialise(this.sdata, settingFrame);
+        Settings.initialise(settingFrame);
         await SettingsWindow.loadStyleSheets();
         let settings = await (await fetch(relURL("./settings-layout.json", import.meta))).json();
         this.settingsWindow.settings = settings;
