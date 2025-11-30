@@ -1,5 +1,6 @@
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
 import { AccessButton, AccessEvent } from "../../Utilities/access-buttons.js";
+import { GridCard, GridIcon } from "../../Utilities/grid-icon.js";
 import { HideShow } from "../../Utilities/hide-show.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
@@ -47,14 +48,22 @@ class TestScreen extends ShadowElement {
         this.svg = svg;
         svg.addDrawable(this)
 
-        let b = this.createChild(AccessButton, {
+        // let b = this.createChild(AccessButton, {
+        //     events: {
+        //         "access-click": (e) => this.dispatchEvent(new AccessEvent("close", e))
+        //     },
+        //     class: "close",
+        // }, "test-close");
+        // b.createChild(Icon, {}, "close");
+        // b.createChild("div", {content: "Close"});
+        this.createChild(GridIcon, {}, {
+            type: "action",
+            displayValue: "Close",
+            symbol: "close",
             events: {
                 "access-click": (e) => this.dispatchEvent(new AccessEvent("close", e))
-            },
-            class: "close",
-        }, "test-close");
-        b.createChild(Icon, {}, "close");
-        b.createChild("div", {content: "Close"});
+            }
+        })
    }
 
 
@@ -134,7 +143,7 @@ class TestScreen extends ShadowElement {
     }
 
     static get usedStyleSheets() {
-        return [relURL("./styles.css", import.meta)]
+        return [relURL("./styles.css", import.meta), GridIcon.styleSheet]
     }
 }
 
