@@ -1,4 +1,4 @@
-import { get, set } from "../../Firebase/firebase.js";
+import { FirebaseFrame } from "../../Firebase/firebase-frame.js";
 import { SvgPlus } from "../../SvgPlus/4.js";
 import { AccessEvent } from "../../Utilities/access-buttons.js";
 import { addDeviceChangeCallback, getDevices } from "../../Utilities/device-manager.js";
@@ -444,7 +444,9 @@ export class SettingsFeature extends Features {
 
 
     async initialise() {
-        Settings.initialise(this.sdata);
+        let hostUID = this.sdata.hostUID;
+        let settingFrame = new FirebaseFrame(`users/${hostUID}/settings`);
+        Settings.initialise(this.sdata, settingFrame);
         await SettingsWindow.loadStyleSheets();
         let settings = await (await fetch(relURL("./settings-layout.json", import.meta))).json();
         this.settingsWindow.settings = settings;
