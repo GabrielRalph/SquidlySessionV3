@@ -133,8 +133,7 @@ export class FeedbackFrame extends SvgPlus {
         return html;
     }
 
-    renderThermometer(xPos, startY, endY, error) {
-        const tw = 20;
+    renderThermometer(xPos, startY, endY, error, tw) {
         let fill = `"hsl(${96*error}deg 90% 56% / 50%)"`;
         let stroke = `"hsl(${96*error}deg 90% 56%)"`;
         let height = endY - startY;
@@ -181,7 +180,7 @@ export class FeedbackFrame extends SvgPlus {
                     html += this.renderFace(width, height, 1, this.avg);
                 }
 
-                html += this.renderThermometer(width - (bh+mx)/2, (bh), height - (bh+mx), op);
+                html += this.renderThermometer(width - (bh-mx)/2, (bh), height - (bh), op, bh/3);
 
                 html += this.renderFace(width, height, op, points)
                 

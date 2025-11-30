@@ -99,7 +99,6 @@ const LANGUAGES = {
 }
 
 
-
 const SettingOptions = [
     {
         key: [["host", "participant"], "access", ["dwellTime", "switchTime"]],
@@ -515,8 +514,8 @@ function getSetting(name) {
 /** Initialises the settings for the session
  * @param {SessionDataFrame} sdata
  */
-export function initialise(settingFrame) {
-    for (let options of SettingOptions) {
+export function initialise(settingFrame, settingsOptions = SettingOptions) {
+    for (let options of settingsOptions) {
         let keys = getAllKeys(options.key);
         for (let key of keys) {
             Settings[key] = new Setting(options, key, settingFrame);
@@ -550,6 +549,15 @@ export function getStringValue(name) {
         }
     }
    return value;
+}
+
+export function getSelection(name) {
+    let setting = getSetting(name);
+    let options = null;
+    if (setting) {
+        options = setting.selection;
+    }
+    return options;
 }
 
 /** Add a change listener
@@ -606,3 +614,5 @@ export function getIcon(name) {
     }
     return icon;
 }
+
+export {SettingOptions, getAllKeys}
