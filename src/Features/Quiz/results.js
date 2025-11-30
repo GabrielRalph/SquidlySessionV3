@@ -74,7 +74,7 @@ const TEMPLATE = `
 `
 function markup2latex(text) {
     // replace single dollar signs with literal dollar signs
-    text = text.replace(/(?<!\$)\$(?!\$)/g, "\\$");
+    text = text.replace(/(?:[^\$])\$(?:[^\$])/g, "\\$");
 
     // replace double dollar signs with single dollar signs
     text = text.replace(/\$\$/g, "$");

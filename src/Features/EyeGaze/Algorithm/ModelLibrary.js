@@ -2,12 +2,14 @@
 const MODEL_SRCS = [
     "./Models/RRVectorsRed.js",
 ]
-
 let Models = {};
-for (let url of MODEL_SRCS) {
+
+async function load() {
+  for (let url of MODEL_SRCS) {
     try {
-        let model = (await import(url)).default
-        console.log(model.name);
+        let module = await import(url);
+        let model = module.default
+        console.log("LOADING MODEL", model.name);
         if (model.name) {
           Models[model.name] = model;
         } else {
@@ -16,7 +18,9 @@ for (let url of MODEL_SRCS) {
     } catch (e) {
         console.log(`The model at ${url} was unable to load.`, e)
     }
+  }
 }
+
 
 function getModels(){
     let mods = {};
@@ -43,4 +47,4 @@ function getModel(key){
 }
 
 
-export {getModels, getModel, getModelColors}
+export {getModels, getModel, getModelColors, load}

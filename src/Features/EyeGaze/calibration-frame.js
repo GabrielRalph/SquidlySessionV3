@@ -107,7 +107,9 @@ const CSeqs = {
 	list: CSList,
 	wait: class CSWait extends CSeq {
 		getPointAtTime(t) {
-			return new Vector();
+			let p = new Vector();
+			if (typeof this.opacity === "number") p.opacity = this.opacity;
+			return p;
 		}
 	},
 	pulse: class CSPulse extends CSeq {
@@ -354,7 +356,8 @@ function makeCSeq(cs) {
 }
 
 function makeDefaultCSeqs(speed, size) {
-	return makeCSeq({
+
+	let message = makeCSeq({
 		type: "list",
 		sequences: [
 			{
@@ -365,9 +368,53 @@ function makeDefaultCSeqs(speed, size) {
 			},
 			{
 				type: "message",
-				time: 6,
+				time: 5,
 				isCount: false,
-				message: "<span style = 'white-space:pre'>Follow the targets.\n\nRelax, it's okay to blink and\nmove your head freely.\n\nPress Esc to cancel at any time.</span>"
+				message: "<span style = 'white-space:pre'>Track the target with your eyes as\nit moves across screen like this. </span>"
+			},
+			{
+				type: "message",
+				time: 5,
+				isCount: false,
+				message: "<span style = 'white-space:pre'>Relax, it's okay to blink and\nmove your head freely.\n\nPress Esc to cancel at any time.</span>"
+			}
+		]
+	});
+
+	let scan = makeCSeq({
+		type: "list",
+		sequences: [
+			{
+				type: "wait",
+				opacity: 0,
+				time: 4,
+			},
+			{
+				type: "fade",
+				direction: "in",
+				x: 0.3,
+				y: 0.8,
+				time: 0.5,
+			},
+			{
+				type: "move",
+				startX: 0.3,
+				startY: 0.8,
+				endX: 0.7,
+				endY: 0.8,
+				time: 2,
+			},
+			{
+				type: "fade",
+				direction: "out",
+				x: 0.7,
+				y: 0.8,
+				time: 0.5,
+			},
+			{
+				type: "wait",
+				time: 7.5,
+				opacity: 0,
 			},
 			{
 				type: "scanX",
@@ -381,8 +428,11 @@ function makeDefaultCSeqs(speed, size) {
 				pulseTime: 0.75,
 				size: size,
 			},
+
 		]
 	});
+
+	return [message, scan];
 }
 
 const speedName2value = {
@@ -534,33 +584,42 @@ export class CalibrationFrame extends HideShow {
 		this.pointer.position = pos;
 	}
 
+
 	async calibrate(css = this.calibrationSequence) {
 		let t = 0;
-		let duration = css.duration;
 		let t0 = performance.now();
 		this.stop = false;
 		this.pointer.shown = false;
 		this.pointer.opacity = 0;
 		this.message.opacity = 0; 
+
+		if (!(css instanceof Array)) {
+			css = [css];
+		}
+		let duration =  Math.max(...css.map(c => c.duration));
+
 		while (t < duration && !this.stop) {
-			let point = css.getPointAtTime(t);
+			let points = css.map(c => c.getPointAtTime(t)).filter(p => p !== null);
 
-			if (typeof point.message === "string") {
-				this.message.innerHTML = point.message;
-				this.message.opacity = (typeof point.opacity === "number" ? point.opacity : 1);
-				this.recording = false;
+			let recording = false;
+			for (let point of points) {
+				if (typeof point.message === "string") {
+					this.message.innerHTML = point.message;
+					this.message.opacity = (typeof point.opacity === "number" ? point.opacity : 1);
+					this.recording = false;
 
-			} else {
+				} else {
 
-				this.pointer.size = (point.size ? point.size : 1) * this.pointerSize;
-				this.pointer.opacity = (typeof point.opacity === "number" ? point.opacity : 1);
-				this.recording = !!point.recording;
-	
-				let br = new Vector(this.pointerSize).div(this.clientWidth, this.clientHeight);
-				let fs = new Vector(1).sub(br.mul(2))
-				this.position = point.mul(fs).add(br);
+					this.pointer.size = (point.size ? point.size : 1) * this.pointerSize;
+					this.pointer.opacity = (typeof point.opacity === "number" ? point.opacity : 1);
+					recording |= !!point.recording;
+		
+					let br = new Vector(this.pointerSize).div(this.clientWidth, this.clientHeight);
+					let fs = new Vector(1).sub(br.mul(2))
+					this.position = point.mul(fs).add(br);
+				}
 			}
-
+			this.recording = recording;
 
 			await delay();
 			t = (performance.now() - t0) / 1000;

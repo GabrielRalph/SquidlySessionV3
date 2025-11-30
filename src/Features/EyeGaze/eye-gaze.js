@@ -7,7 +7,7 @@ import { SvgResize } from "../../Utilities/svg-resize.js";
 import { relURL, isExactSame, dotGrid, argmin, TransitionVariable } from "../../Utilities/usefull-funcs.js";
 import { addProcessListener, getStream, isOn, isProcessing, startProcessing, startWebcam, stopProcessing } from "../../Utilities/webcam.js";
 import { Features } from "../features-interface.js";
-import { FaceLandmarks, load } from "./Algorithm/Utils/face-mesh.js";
+import { load } from "./Algorithm/index.js";
 import { CalibrationFrame } from "./calibration-frame.js";
 import { FeedbackWindow } from "./feedback-frame.js";
 import { addPointToHeatmaps, Heatmap } from "./heatmap.js";

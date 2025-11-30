@@ -3,7 +3,7 @@ import * as Webcam from "../../../Utilities/webcam.js";
 import * as ModelLibrary from "./ModelLibrary.js"
 
 let SelectedModel = "RRVectorsReduced";
-let Model = ModelLibrary.getModel(SelectedModel).loadFromStorage();
+let Model = null;
 
 
 let SampleData = [];
@@ -121,5 +121,13 @@ export function setCalibrationPositionGetter(posGetter) {
 
 Webcam.setProcess((input) => processFrame(input));
 
-let load = FaceMesh.load;
+async function load() {
+  console.log("Loading Eye Gaze");
+  
+  await Promise.all([
+    FaceMesh.load(),
+    ModelLibrary.load(),
+  ]);
+  Model = ModelLibrary.getModel(SelectedModel).loadFromStorage();
+}
 export {Webcam, load}

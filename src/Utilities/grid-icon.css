@@ -12,6 +12,9 @@
     --word-adjective: #ffe792;
     --word-verb-dark: #e36c7a;
     --word-verb: #ff9ca7;
+    --emphasis-color: #fb9753;
+    --emphasis-color-dark: #e2581f;
+    --emphasis-tab-color: #c1440e;
     --border: 4px;
     --gap: 0.5em;
     --shadow-color: #bfbfbfc5;
@@ -39,6 +42,13 @@
     --card-color: var(--action-color);
     --tab-color: var(--action-red-dark);
     color: white;
+}
+
+.grid-icon.emphasis, .grid-icon.topic-emphasis {
+    --icon-color: #551f08;
+    --icon-color-hover: #311103;
+    --card-color: var(--emphasis-color);
+    --tab-color: var(--emphasis-tab-color);
 }
 
 .grid-icon.starter, .grid-icon.topic-starter {

@@ -176,10 +176,10 @@ export const FEATURES = [
                 index: 215,
                 mode: "overlay",
             },
-            restButton: { // Rest Button
-                type: "panel",
-                area: "bottom",
-            }
+            // restButton: { // Rest Button
+            //     type: "panel",
+            //     area: "bottom",
+            // }
         }
     },
     {

@@ -83,12 +83,14 @@ const MAKE_CARD_ICON = {
     "topic-verb": folderCard,
     "topic-adjective": folderCard,
     "topic-action": folderCard,
+    "topic-emphasis": folderCard,
     normal: plainCard,
     starter: plainCard,
     noun: plainCard,
     verb: plainCard,
     adjective: plainCard,
     action: plainCard,
+    emphasis: plainCard,
 }
 
 /** A GridIconSymbol represents the image from a grid icon. */

@@ -211,30 +211,36 @@ export class SquidlySessionElement extends ShadowElement {
                 await this.initialiseWindowManager();
                 await this.initialiseKeyboardShortcuts();
                 this.squidlyLoader.hide(0.5);
+
+                this.toolBar.addSelectionListener("end", (e) => {
+                    sessionConnection.leave();
+                })
+
+                this.toolBar.addSelectionListener("key", async (e) => {
+                    // Copy the key to clipboard
+                    try {
+                        let link = "https://squidly.com.au/V3/?" + sessionConnection.sid;
+                        await navigator.clipboard.writeText(link)
+                        this.notifications.notify("Session key copied to clipboard", "success");
+                    } catch (e) {
+                        this.notifications.notify("Failed to copy session key to clipboard", "error");
+                    }
+                })
+            
             } catch (e) {
-                console.warn(e);
+                
+                
                 if (e instanceof FeatureInitialiserError) {
                     this.loaderText = e.displayMessage;
                     this.loaderVideo = e.video;
                 } else {
                     this.loaderText = "An unexpected error occurred while initialising the session. Please refresh and try again.";
                 }
+                console.log(e);
             }
 
-            this.toolBar.addSelectionListener("end", (e) => {
-                sessionConnection.leave();
-            })
-
-            this.toolBar.addSelectionListener("key", async (e) => {
-                // Copy the key to clipboard
-                try {
-                    let link = "https://squidly.com.au/V3/?" + sessionConnection.sid;
-                    await navigator.clipboard.writeText(link)
-                    this.notifications.notify("Session key copied to clipboard", "success");
-                } catch (e) {
-                    this.notifications.notify("Failed to copy session key to clipboard", "error");
-                }
-            })
+            console.log(this.toolBar)
+            
         } else {
 
         }

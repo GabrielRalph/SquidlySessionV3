@@ -214,7 +214,8 @@ class SettingsWindow extends OccupiableWindow {
         this.root.events = {
             "settings-click": (e) => e.waitFor(this.onSettingsClick(e)),
         };
-
+        
+        this.settingsPath = this.createChild("div", {class: "settings-path", content: "Settings"});
         this.rotater = this.createChild(Rotater);
     }
 
@@ -283,6 +284,7 @@ class SettingsWindow extends OccupiableWindow {
     async setPath(path) {
         let pathStr = path.join("/");
         let historyStr = this.history.join("/");
+        this.settingsPath.textContent = path.join(" > ");
         
         if (historyStr !== pathStr) {
             this.history = [...path];
@@ -444,7 +446,7 @@ export class SettingsFeature extends Features {
     async initialise() {
         Settings.initialise(this.sdata);
         await SettingsWindow.loadStyleSheets();
-        let settings = await (await fetch(relURL("./settings.json", import.meta))).json();
+        let settings = await (await fetch(relURL("./settings-layout.json", import.meta))).json();
         this.settingsWindow.settings = settings;
 
         addDeviceChangeCallback((devices) => {

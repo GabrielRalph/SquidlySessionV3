@@ -1,10 +1,12 @@
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
 import { AccessButton, AccessEvent } from "../../Utilities/access-buttons.js";
+import { GridIcon } from "../../Utilities/grid-icon.js";
 import { HideShow } from "../../Utilities/hide-show.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
 import { delay, relURL } from "../../Utilities/usefull-funcs.js";
 import { addProcessListener } from "../../Utilities/webcam.js";
 import { OccupiableWindow } from "../features-interface.js";
+import { getHostPresets } from "../VideoCall/presets.js";
 import { FaceLandmarks } from "./Algorithm/Utils/face-mesh.js";
 
 const used_points = [...new Set([152,10,389,162,473,468,33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154,153,145,144,163,7,362, 398, 384, 385, 386, 387, 388, 263, 249, 390,373, 374, 380, 381, 382,61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146,10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109])]
@@ -99,6 +101,14 @@ export class FeedbackFrame extends SvgPlus {
                 width: "100%"
             }
         });
+        this.header = this.createChild("div", {
+            class: "f-header",
+            styles: {
+                position: "absolute",
+                top: 0,
+                left: 0,
+            }
+        })
         this.svg = this.createChild("svg");
         this.aspect = 1;
     }
@@ -123,6 +133,18 @@ export class FeedbackFrame extends SvgPlus {
         return html;
     }
 
+    renderThermometer(xPos, startY, endY, error) {
+        const tw = 20;
+        let fill = `"hsl(${96*error}deg 90% 56% / 50%)"`;
+        let stroke = `"hsl(${96*error}deg 90% 56%)"`;
+        let height = endY - startY;
+        let filledHeight = height * error;
+        return `
+        <rect class="thermometer-bg" x="${xPos - tw/2}" y="${startY}" width="${tw}" height="${height}" rx="${tw/2}" ry="${tw/2}" stroke=${stroke} stroke-width="1"></rect>
+        <rect class="thermometer-fill" x="${xPos - tw/2}" y="${startY + (height - filledHeight)}" width="${tw}" height="${filledHeight}" rx="${tw/2}" ry="${tw/2}" fill=${fill} ></rect>
+        `;
+    }
+
     render(){
         let {points, svg, width, height, aspect, clientWidth, clientHeight} = this;
         if (clientWidth > 1 && clientHeight > 1)  {
@@ -140,7 +162,6 @@ export class FeedbackFrame extends SvgPlus {
                 mx = (pW - width) / 2;
             } else {
                 my = (pH - height) / 2;
-    
             }
     
             svg.props = {
@@ -159,6 +180,9 @@ export class FeedbackFrame extends SvgPlus {
                     op =(1 - (op > 1 ? 1 : op)) ** 0.5;
                     html += this.renderFace(width, height, 1, this.avg);
                 }
+
+                html += this.renderThermometer(width - (bh+mx)/2, (bh), height - (bh+mx), op);
+
                 html += this.renderFace(width, height, op, points)
                 
                 svg.innerHTML = html;
@@ -170,6 +194,7 @@ export class FeedbackFrame extends SvgPlus {
     }
 
     stop(){}
+
     async start() {
         if (this._started) return;
         this._started = true;
@@ -180,6 +205,11 @@ export class FeedbackFrame extends SvgPlus {
             await delay()
         }
         this._started = false;
+    }
+
+
+    set headerText(text) {
+        this.header.textContent = text;
     }
 
 
@@ -228,31 +258,34 @@ export class FeedbackFrame extends SvgPlus {
     }
 }
 
-
 class FeedbackWidget extends SvgPlus {
     constructor(){
         super("feedback-widget");
 
         this.fb = this.createChild(FeedbackFrame);
         let row = this.createChild("div");
-        let b1 = row.createChild(AccessButton, {events: {
-            "access-click": (e) => {
-               this.dispatchEvent(new AccessEvent("calibrate", e))
-            }   
-        }}, "calibrate");
-        b1.createChild(Icon, {}, "calibrate")
-        b1.createChild("div", {content: "Calibrate"})
+        row.createChild(GridIcon, {}, {
+            type: "starter",
+            symbol: "calibrate",
+            displayValue: "Calibrate",
+            events: {
+                "access-click": (e) => {
+                   this.dispatchEvent(new AccessEvent("calibrate", e))
+                }   
+           }
+        })
 
-        let b2 = row.createChild(AccessButton, {
-            class: "test",
+        row.createChild(GridIcon, {}, {
+            type: "emphasis",
+            symbol: "test",
+            displayValue: "Test",
             events: {
                 "access-click": (e) => {
                    this.dispatchEvent(new AccessEvent("test", e))
                 }   
            }
-        }, "calibrate");
-        b2.createChild(Icon, {}, "test")
-        b2.createChild("div", {content: "Test"})
+        })
+  
     }
 
     start(){this.fb.start()}
@@ -263,6 +296,10 @@ class FeedbackWidget extends SvgPlus {
 
     /** @param {FaceLandmarks} d */
     set onion(d) {this.fb.onion = d}
+
+    set headerText(text) {
+        this.fb.headerText = text;
+    }
 }
 
 export class FeedbackWindow extends OccupiableWindow {
@@ -299,13 +336,21 @@ export class FeedbackWindow extends OccupiableWindow {
         // Create header and close icon
         let head = this.createChild("div", {class: "header"});
         head.createChild("h1", {content: "Get into view to </br> start the calibration"});
-        let b = head.createChild(AccessButton, {
+        head.createChild(GridIcon, {}, {
+            type: "action",
+            symbol: "close",
+            displayValue: "Exit",
             events: {
                 "access-click": (e) => this.dispatchEvent(new AccessEvent("exit", e))
             }
-        }, "calibrate")
-        b.createChild(Icon, {}, "close");
-        b.createChild("div", {content: "Exit"})
+        })
+        // let b = head.createChild(AccessButton, {
+        //     events: {
+        //         "access-click": (e) => this.dispatchEvent(new AccessEvent("exit", e))
+        //     }
+        // }, "calibrate")
+        // b.createChild(Icon, {}, "close");
+        // b.createChild("div", {content: "Exit"})
 
         // Create host and participant widgets
         let main = this.createChild("div", {class: "main"});
@@ -313,10 +358,18 @@ export class FeedbackWindow extends OccupiableWindow {
             "calibrate": (e) => this.dispatchEvent(new AccessEvent("calibrate-participant", e)),
             "test": (e) => this.dispatchEvent(new AccessEvent("test-participant", e))
         }});
+        this.participant.headerText = "Participant";
         this.host = main.createChild(FeedbackWidget, { hide: true, events: {
             "calibrate": (e) => this.dispatchEvent(new AccessEvent("calibrate-host", e)),
             "test": (e) => this.dispatchEvent(new AccessEvent("test-host", e))
         }});
+        this.host.headerText = "Host"
+        this.updateHostName();
+    }
+
+    async updateHostName() {
+        let presets = await getHostPresets(this.sdata.hostUID);
+        this.host.headerText = presets.name || "Host";
     }
 
 
@@ -406,7 +459,7 @@ export class FeedbackWindow extends OccupiableWindow {
 
     static get fixToolBarWhenOpen() {return true}
     static get usedStyleSheets() {
-        return [relURL("./styles.css", import.meta)]
+        return [relURL("./styles.css", import.meta), GridIcon.styleSheet]
     }
 }
 

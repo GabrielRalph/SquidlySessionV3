@@ -434,6 +434,7 @@ export class AccessControl extends Features {
             v = v.mul(overlay.clientWidth, overlay.clientHeight);
             
             let selected = buttons.filter(b => b.isPointInElement(v));
+            console.log("DWELL BUTTONS", selected);
             overlay.updateDwellButtons(selected, this);
         } else {
             this.overlay.updateDwellButtons([], this);
