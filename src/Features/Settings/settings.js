@@ -34,6 +34,14 @@ class ProfileSearchWindow extends SearchWindow {
                 },
             }
         })
+        items.push({
+            id: null,
+            icon: {
+                displayValue: "Default Profile",
+                type: "noun",
+                symbol: "user"
+            },
+        })
         items = filterAndSort(items, searchPhrase, ({icon: {displayValue}}) => [displayValue]);
         return items;
     }
