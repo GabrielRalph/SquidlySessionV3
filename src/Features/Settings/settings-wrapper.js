@@ -72,7 +72,7 @@ export function getProfiles() {
 /** Initialises the settings for the session
  * @param {SessionDataFrame} sdata
  */
-export function initialise(hostUID, profileID = "-OfXcjuq0hbmxBliV6yM") {
+export function initialise(hostUID, profileID = null) {
     let hostSettingsPath = `users/${hostUID}/settings/host`
     HostUID = hostUID;
     HostSettings = new SettingsFrame(new FirebaseFrame(hostSettingsPath), SettingOptions);

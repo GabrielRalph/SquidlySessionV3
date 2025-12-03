@@ -467,7 +467,7 @@ class Setting {
             
             if (value === null) {
                 value = options.default;
-                this.sdata.set(name, value);
+                // this.sdata.set(name, value);
             }
 
             if (value !== this.value) {
@@ -714,9 +714,7 @@ export class SettingsFrame {
 
 
     resetAllToDefault() {
-        for (let key in this.__Settings) {
-            this.__Settings[key].value = this.__Settings[key].options.default;
-        }
+        this.dataFrame.set(null, true)
     }
 
     dispose() {
