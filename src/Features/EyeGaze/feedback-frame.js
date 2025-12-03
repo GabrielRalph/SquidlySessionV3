@@ -357,13 +357,19 @@ export class FeedbackWindow extends OccupiableWindow {
             "calibrate": (e) => this.dispatchEvent(new AccessEvent("calibrate-participant", e)),
             "test": (e) => this.dispatchEvent(new AccessEvent("test-participant", e))
         }});
-        this.participant.headerText = "Participant";
+        this.participant.headerText = session.settings.get("participant/profileSettings/name") || "Participant";
         this.host = main.createChild(FeedbackWidget, { hide: true, events: {
             "calibrate": (e) => this.dispatchEvent(new AccessEvent("calibrate-host", e)),
             "test": (e) => this.dispatchEvent(new AccessEvent("test-host", e))
         }});
         this.host.headerText = "Host"
         this.updateHostName();
+
+        session.settings.addEventListener("change", async (e) => {
+            if (e.path === "participant/profileSettings/name") {
+                this.participant.headerText = e.value || "Participant";
+            }
+        })
     }
 
     async updateHostName() {

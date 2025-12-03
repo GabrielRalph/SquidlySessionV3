@@ -8,8 +8,37 @@ import { Icon } from "../../Utilities/Icons/icons.js";
 import { Rotater } from "../../Utilities/rotater.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
 import { changeDevice } from "../../Utilities/webcam.js";
+
 import { Features, OccupiableWindow } from "../features-interface.js";
-import * as Settings from "./settings-base.js";
+import * as Settings from "./settings-wrapper.js";
+
+import { filterAndSort, SearchWindow } from "../../Utilities/search.js";
+class ProfileSearchWindow extends SearchWindow {
+    constructor(){
+        super();
+    }
+
+    async getSearchResults(searchPhrase){
+        let profiles = Settings.getProfiles();
+
+        console.log("SEARCHING PROFILES", profiles);
+
+        /** @type {Answer[]} */
+        let items = profiles.map(({name, image, profileID}) => {
+            return {
+                id: profileID,
+                icon: {
+                    displayValue: name,
+                    symbol: image,
+                    type: "normal"
+                },
+            }
+        })
+        items = filterAndSort(items, searchPhrase, ({icon: {displayValue}}) => [displayValue]);
+        return items;
+    }
+}
+
 
 class SettingsIcon extends GridIcon {
     constructor(icon, type) {
@@ -99,8 +128,9 @@ class IconGrid extends SvgPlus{
 }
 
 class SettingsPanel extends SvgPlus {
-    constructor(grid, path) {
+    constructor(grid, path, settingsFeature = null) {
         super("settings-panel");
+        let isHost = settingsFeature ? settingsFeature.sdata.me === "host" : false;
         let isHome = path.length === 1;
         this.createChild(IconGrid, {}, [
             [{
@@ -117,7 +147,12 @@ class SettingsPanel extends SvgPlus {
                 hidden: isHome,
                 action: "home",
             }],
-            [{
+            isHome && isHost ? [{
+                type: "action",
+                displayValue: "Profiles",
+                symbol: "search",
+                action: "search",  
+            }] : [{
                 type: "action",
                 displayValue: "Back",
                 symbol: "back",
@@ -217,11 +252,23 @@ class SettingsWindow extends OccupiableWindow {
         
         this.settingsPath = this.createChild("div", {class: "settings-path", content: "Settings"});
         this.rotater = this.createChild(Rotater);
+
+        if (this.settingsFeature.sdata.me === "host") {
+            this.searchWindow = this.createChild(ProfileSearchWindow, {events: {
+                "value": (e) => {
+                    if (e.value) {
+                        settings.selectProfile(e.value.id);
+                    }
+                    e.waitFor(this.searchWindow.hide());
+                }
+            }});
+        }
     }
 
     actions = {
         home: this.gotoHome.bind(this),
         back: this.gotoBack.bind(this),
+        search: this.openProfileSearch.bind(this),
         "increment-setting": (e) => {
             let {icon} = e;
             let path = icon.path.join("/") + "/" + (icon.settingKey || icon.setting);
@@ -277,7 +324,7 @@ class SettingsWindow extends OccupiableWindow {
 
     async gotoHome(e) {
         this.history = ["home"];
-        await this.rotater.setContent(new SettingsPanel(this.settings.home, this.history), false);
+        await this.rotater.setContent(new SettingsPanel(this.settings.home, this.history, this.settingsFeature), false);
         this.dispatchEvent(new AccessEvent("navigation", e));
     }
 
@@ -307,7 +354,7 @@ class SettingsWindow extends OccupiableWindow {
         
         if (grid !== null) {
             this.history.push(link);
-            this.currentPage = new SettingsPanel(grid, this.history)
+            this.currentPage = new SettingsPanel(grid, this.history, this.settingsFeature);
             await this.rotater.setContent(this.currentPage, false);
             this.dispatchEvent(new AccessEvent("navigation", e));
         }
@@ -347,6 +394,11 @@ class SettingsWindow extends OccupiableWindow {
         }
     }
 
+    async openProfileSearch() {
+        await this.searchWindow.resetSearchItems(true);
+        await this.searchWindow.show();
+    }
+
     set settings(settings) {
         this._settings = settings;
         this.gotoHome();
@@ -366,7 +418,7 @@ class SettingsWindow extends OccupiableWindow {
     }
 
     static get usedStyleSheets() {
-        return [relURL("./settings.css", import.meta), GridIcon.styleSheet, Rotater.styleSheet];
+        return [relURL("./settings.css", import.meta), GridIcon.styleSheet, Rotater.styleSheet, SearchWindow.styleSheet];
     }
 
     static get fixToolBarWhenOpen(){return true; }
@@ -443,20 +495,23 @@ export class SettingsFeature extends Features {
     }
 
 
+    selectProfile(profileID) {
+        this.sdata.set("profileID", profileID);
+    }
+
+
     async initialise() {
         let hostUID = this.sdata.hostUID;
-        let settingFrame = new FirebaseFrame(`users/${hostUID}/settings`);
-        Settings.initialise(settingFrame);
+        Settings.initialise(hostUID);
         await SettingsWindow.loadStyleSheets();
-        let settings = await (await fetch(relURL("./settings-layout.json", import.meta))).json();
-        this.settingsWindow.settings = settings;
+        let settingsLayout = await (await fetch(relURL("./settings-layout.json", import.meta))).json();
+        this.settingsWindow.settings = settingsLayout;
 
-        addDeviceChangeCallback((devices) => {
-            this.sdata.set("devices/"+this.sdata.me, devices);
-            this.settingsWindow.updateDevices(this.sdata.me, devices);
-        });
-        this.sdata.set("devices/"+this.sdata.me, await getDevices(true));
+        if (this.sdata.me === "host") {
+            Settings.watchProfiles(hostUID, ()=>{});
+        }
 
+        // Listen to path changes
         this.sdata.onValue("path", (path) => {
             if (path === null) {
                 path = ["home"];
@@ -465,6 +520,17 @@ export class SettingsFeature extends Features {
         });
 
 
+        this.sdata.onValue("profileID", (profileID) => {
+            Settings.chooseProfile(profileID);
+        });
+
+
+        // Listen to device changes
+        addDeviceChangeCallback((devices) => {
+            this.sdata.set("devices/"+this.sdata.me, devices);
+            this.settingsWindow.updateDevices(this.sdata.me, devices);
+        });
+        this.sdata.set("devices/"+this.sdata.me, await getDevices(true));
         this.lastTheirDevices = {
             audioinput: {},
             audiooutput: {},

@@ -661,6 +661,10 @@ export class SearchWindow extends HideShowSlide {
         return this._sgrid.searchValue;
     }
 
+    static get styleSheet() {
+        return relURL("search-styles.css", import.meta);
+    }
+
     static get usedStyleSheets() {
         return [relURL("search-styles.css", import.meta), GridIcon.styleSheet, Rotater.styleSheet];
     }

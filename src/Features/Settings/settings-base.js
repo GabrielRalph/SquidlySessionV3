@@ -1,3 +1,4 @@
+import { get } from "../../Firebase/firebase.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
 
 /** @typedef {import("../squidly-session.js").SessionDataFrame} SessionDataFrame */
@@ -98,7 +99,6 @@ const LANGUAGES = {
     }
 }
 
-
 const SettingOptions = [
     {
         key: [["host", "participant"], "access", ["dwellTime", "switchTime"]],
@@ -110,22 +110,40 @@ const SettingOptions = [
         toString(value){
             return Math.round(value * 10) / 10 + "";
         },
-        toIcon({value, name}) {
+        toIcon({value, path}) {
             return {
                 symbol: {text: this.toString(value) + "s"},
-                displayValue: name.endsWith("dwellTime") ? "Eye Gaze" : "Switch",
+                displayValue: path.endsWith("dwellTime") ? "Eye Gaze" : "Switch",
             }
+        },
+        getName({path}) {
+            return path.endsWith("dwellTime") ? "Eye Gaze Dwell Time" : "Switch Time";
         }
     },
     {
         key: [["host", "participant"], "keyboardShortcuts", ["v", "a", "f", "c", "g", "x", "q", "s", "e"]],
         type: "boolean",
         default: false,
-        toIcon({value, name}) {
+        keyNames: {
+            v: "Start/Stop Video",
+            a: "Mute/Unmute Audio",
+            f: "Start/Stop Screen Share",
+            e: "Start/Stop Eye Gaze",
+            x: "Start/Stop Switch Access",
+            c: "Open/Close Calibration",
+            g: "Open/Close AAC Grid",
+            q: "Open/Close Quiz",
+            s: "Open/Close Settings",
+        },
+        toIcon({value, path}) {
             return {
-                symbol: {url: relURL("../../Utilities/KeyboardIcons/" + name[name.length-1] + ".svg", import.meta)},
+                symbol: {url: relURL("../../Utilities/KeyboardIcons/" + path[path.length-1] + ".svg", import.meta)},
                 active: value,
+                displayValue: this.getName({path}),
             }
+        },
+        getName({path}) {
+            return this.keyNames[path[path.length-1]];
         }
     },
     {
@@ -137,6 +155,9 @@ const SettingOptions = [
                 symbol: value ? "eye" : "noeye",
                 displayValue: value ? "Eye-gaze Enabled" : "Eye-gaze Disabled",
             }
+        },
+        getName() {
+            return "Eye-gaze Enabled";
         }
     },
     {
@@ -154,21 +175,25 @@ const SettingOptions = [
                 symbol: {text: this.toString(value) + "%"},
                 displayValue: "Volume",
             }
+        },
+        getName() {
+            return "Volume";
         }
     },
     {
         key: [["host", "participant"], "languages", "voice"], 
         type: "option",
         default: "default",
-        options: ({name}) => {
-            let languageKey = name.replace("/voice", "/language");
-            let language = getValue(languageKey) || "english";
+        options: ({path}, settings) => {
+            let languageKey = path.replace("/voice", "/language");
+            let language = settings.getValue(languageKey) || "english";
             return Object.keys(LANGUAGES[language].voices);
         },
         
         toString(value){
             return value[0].toUpperCase() + value.slice(1);
         },
+
         toIcon(s) {
             const {value, selection} = s;
             if (!selection.includes(value)) {
@@ -180,6 +205,9 @@ const SettingOptions = [
                 displayValue: "Voice",
                 sideDots: s.sideDots,
             }
+        },
+        getName() {
+            return "Voice";
         }
     },
     {
@@ -199,6 +227,9 @@ const SettingOptions = [
                 displayValue: this.toString(value),
                 sideDots: sideDots,
             }
+        },
+        getName() {
+            return "Language";
         }
     },
     {
@@ -212,6 +243,9 @@ const SettingOptions = [
                 displayValue: "Size",
                 sideDots: sideDots,
             }
+        },
+        getName() {
+            return "Stimulous Size";
         }
     },
     {
@@ -226,6 +260,9 @@ const SettingOptions = [
                 displayValue: upperCase,
                 sideDots: sideDots,
             }
+        },
+        getName() {
+            return "Speed"
         }
     },
     {
@@ -242,6 +279,9 @@ const SettingOptions = [
                 displayValue: upperCase,
                 sideDots: sideDots,
             }
+        },
+        getName() {
+            return "Guide";
         }
     },
     {
@@ -249,8 +289,12 @@ const SettingOptions = [
         type: "option",
         default: "v-side",
         options: ["v-side", "v-top"],
+        optionToText: {
+            "v-side": "Side",
+            "v-top": "Top",
+        },
         toIcon({value, sideDots}) {
-            let upperCase = value == "v-side" ? "Side" : "Top";
+            let upperCase = this.optionToText[value];
             return {
                 symbol: value,
                 displayValue: upperCase,
@@ -263,7 +307,7 @@ const SettingOptions = [
         type: "option",
         default: "default",
         options: ["inclusive", "atkinson", "opendyslexic", "default"],
-        label2name: {
+        optionToText: {
             "default": "Default",
             "inclusive": "Inclusive Sans",
             "atkinson": "Atkinson Hyperlegible",
@@ -273,8 +317,11 @@ const SettingOptions = [
             return {
                 symbol: {text: "Aa", size: "3em"},
                 sideDots: sideDots,
-                displayValue: this.label2name[value],
+                displayValue: this.optionToText[value],
             }
+        },
+        getName() {
+            return "Font";
         }
     },
     {
@@ -282,7 +329,7 @@ const SettingOptions = [
         type: "option",
         default: "none",
         options: ["high-contrast-light", "high-contrast-dark", "low-sensory", "colorblind-assist", "greyscale", "sepia-calm", "enhanced-saturation", "none"],
-        effect2name: {
+        optionToText: {
             "none": "None",
             "enhanced-saturation": "Enhanced Saturation",
             "high-contrast-light": "High Contrast Light",
@@ -294,9 +341,12 @@ const SettingOptions = [
         },
         toIcon({value, sideDots}) {
             return {
-                displayValue: this.effect2name[value],
+                displayValue: this.optionToText[value],
                 sideDots: sideDots,
             }
+        },
+        getName() {
+            return "Effect";
         }
     },
     {
@@ -313,6 +363,9 @@ const SettingOptions = [
                 displayValue: upperCase,
                 sideDots: sideDots,
             }
+        },
+        getName() {
+            return "Cursor Size";
         }
     },
     {
@@ -320,7 +373,7 @@ const SettingOptions = [
         type: "option",
         default: "colour-1",
         options: ["colour-1", "colour-2", "colour-3", "colour-4", "colour-5"],
-        color2name: {
+        optionToText: {
             "colour-1": "Black/White",
             "colour-2": "White/Black",
             "colour-3": "Black/Yellow",
@@ -332,9 +385,12 @@ const SettingOptions = [
                 symbol: {
                     url: relURL("../../Utilities/Cursors/" + value + ".svg", import.meta),
                 },
-                displayValue: this.color2name[value],
+                displayValue: this.optionToText[value],
                 sideDots: sideDots,
             }
+        },
+        getName() {
+            return "Cursor Colour";
         }
     },
     {
@@ -355,8 +411,11 @@ const SettingOptions = [
                 displayValue: this.style2name[value][0],
                 sideDots: sideDots,
             }
+        },
+        getName() {
+            return "Cursor Style";
         }
-    }
+    },
 ]
 
 function getAllKeys(arr) {
@@ -380,6 +439,7 @@ function getAllKeys(arr) {
 }
 
 
+
 /** @type {Function[]} */
 const settingChangeListeners = [
 ]
@@ -396,13 +456,14 @@ class Setting {
      * @param {string} name - The name of the setting
      * @param {FirebaseFrame} sdata - The session data frame
      */
-    constructor(options, name, sdata) {
+    constructor(options, name, sdata, settings) {
         this.options = options;
         this._value = options.default;
         this.sdata = sdata;
         this.path = name;
+        this._settings = settings;
 
-        sdata.onValue(name, (value) => {
+        this._listener = sdata.onValue(name, (value) => {
             
             if (value === null) {
                 value = options.default;
@@ -411,7 +472,7 @@ class Setting {
 
             if (value !== this.value) {
                 this._value = value;
-                onChange(name, value);
+                settings._onChange(name, value);
             }
         });
     }
@@ -452,16 +513,35 @@ class Setting {
             selection = this.options.options;
 
             if (selection instanceof Function) {
-                selection = selection(this);
+                selection = selection(this, this._settings);
             }
         }
 
         return selection;
     }
 
-    get name() {
-        return this.path;
+    get selectionValues() {
+        let selection = [];
+        for (let option of this.selection) {
+            let value = option;
+            if (this.options.optionToText) {
+                value = this.options.optionToText[option];
+            } else {
+                value = option[0].toUpperCase() + option.slice(1);
+            }
+            selection.push({value: option, displayValue: value});
+        }
+        return selection;
     }
+
+    get name() {
+        if (this.options.getName) {
+            return this.options.getName(this, this._settings);
+        } else {
+            return this.path.split("/").pop();
+        }
+    }
+
 
     get icon(){
         let icon = {};
@@ -490,7 +570,164 @@ class Setting {
         if (this.value !== value) {
             this._value = value;
             this.sdata.set(this.path, value);
-            onChange(this.path, value);
+            this._settings._onChange(this.path, value);
+        }
+    }
+
+    dispose() {
+        this._listener();
+    }
+}
+
+export class SettingsDescriptor {
+    constructor(setting, path) {
+        this.path = path;
+        for (let key in setting.options) {
+            this[key] = setting.options[key];
+        }
+    }
+}
+
+export class SettingsFrame {
+    constructor(dataFrame, settingsOptions = SettingOptions) {
+        this.__Settings = {};
+        this.__SettingsChangeListeners = new Set();
+        for (let options of settingsOptions) {
+            let keys = getAllKeys(options.key);
+            for (let key of keys) {
+                this.__Settings[key] = new Setting(options, key, dataFrame, this);
+            }
+        }
+        this.dataFrame = dataFrame;
+    }
+
+    get settingsAsObject() {
+        let obj = {};
+        for (let path in this.__Settings) {
+            let keys = path.split("/");
+            let ref = obj;
+            for (let i = 0; i < keys.length - 1; i++) {
+                let key = keys[i];
+                if (!(key in ref)) {
+                    ref[key] = {};
+                }
+                ref = ref[key];
+            }
+            let value = this.__Settings[path]
+            ref[keys[keys.length - 1]] = new SettingsDescriptor(value, path);
+        }
+        return obj;
+    }
+
+    _onChange(...args) {
+        for (let listener of this.__SettingsChangeListeners) {  
+            listener(...args);
+        }
+    }
+
+    _getSetting(name) {
+        let setting = null;
+        if (name in this.__Settings) {
+            setting = this.__Settings[name];
+        }
+        return setting;
+    }
+
+    getValue(name) {
+        let setting = this._getSetting(name);
+        let value = null;
+        if (setting) {
+            value = setting.value;
+        }
+        return value;
+    }
+
+    setValue(name, value) {
+        let setting = this._getSetting(name);
+        if (setting) {
+            setting.value = value;
+        }
+    }
+
+    addChangeListener(listener) {
+        if (listener instanceof Function) {
+            this.__SettingsChangeListeners.add(listener);
+            return () => {
+                this.__SettingsChangeListeners.delete(listener);
+            }
+        }
+    }   
+
+    getStringValue(name) {
+        let setting = this._getSetting(name);
+        let value = null;
+        if (setting) {
+            if (setting.options.toString) {
+                value = setting.options.toString(setting.value);
+            } else {
+                value = setting.value;
+            }
+        }
+       return value;
+    }
+
+    getSelection(name) {
+        let setting = this._getSetting(name);
+        let options = null;
+        if (setting) {
+            options = setting.selectionValues;
+        }
+        return options;
+    }
+
+    getName(name) {
+        let setting = this._getSetting(name);
+        let sname = null;
+        if (setting) {
+            sname = setting.name;
+        }
+        return sname;
+    }
+
+    incrementValue(name, direction) {
+        let setting = this._getSetting(name);
+        if (setting) {
+            setting.incrementValue(direction);
+        }
+    }
+
+    toggleValue(name) {
+        let setting = this._getSetting(name);
+        if (setting) {
+            setting.toggleValue();
+        }
+    }
+
+    getIcon(name) {
+        let setting = this._getSetting(name);
+        let icon = {};
+        if (setting) {
+            icon = setting.icon;
+        }
+        return icon;
+    }
+
+
+    resetAllToDefault() {
+        for (let key in this.__Settings) {
+            this.__Settings[key].value = this.__Settings[key].options.default;
+        }
+    }
+
+    dispose() {
+        for (let key in this.__Settings) {
+            this.__Settings[key].dispose();
+        }
+    }
+
+    _callUpdateForAllSettings() {
+        for (let key in this.__Settings) {
+            this._onChange(key, this.__Settings[key].value);
         }
     }
 }
@@ -518,7 +755,7 @@ export function initialise(settingFrame, settingsOptions = SettingOptions) {
     for (let options of settingsOptions) {
         let keys = getAllKeys(options.key);
         for (let key of keys) {
-            Settings[key] = new Setting(options, key, settingFrame);
+            Settings[key] = new Setting(options, key, settingFrame, {_onChange: onChange, getValue, getStringValue, getSelection, getName});
         }
     }
 }
@@ -555,9 +792,19 @@ export function getSelection(name) {
     let setting = getSetting(name);
     let options = null;
     if (setting) {
-        options = setting.selection;
+        options = setting.selectionValues;
     }
     return options;
+}
+
+
+export function getName(name) {
+    let setting = getSetting(name);
+    let sname = null;
+    if (setting) {
+        sname = setting.name;
+    }
+    return sname;
 }
 
 /** Add a change listener

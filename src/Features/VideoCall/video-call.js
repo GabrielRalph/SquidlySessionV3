@@ -259,6 +259,9 @@ export class VideoCall extends Features {
             if (presets.image) {
                 this._setWidgetUserImage(presets.image, "host");
             }
+            this._setWidgetUserName(this.session.settings.get("participant/profileSettings/name"), "participant");
+            this._setWidgetUserImage(this.session.settings.get("participant/profileSettings/image"), "participant");
+
             
             // get new stream from webcam
             let stream = getStream(2);
@@ -287,11 +290,19 @@ export class VideoCall extends Features {
             })
 
             this.session.settings.addEventListener("change", (e) => {
-                let {user, group, setting, value} = e;
+                let {user, group, setting, value, path} = e;
                 if (user == this.sdata.me) {
                     if (group == "volume" && setting == "level") {
                         this.volume = value;
                     }
+                } 
+                
+                if (path == "participant/profileSettings/name") {
+                        this._setWidgetUserName(value, "participant");
+                }
+
+                if (path == "participant/profileSettings/image") {
+                        this._setWidgetUserImage(value, "participant");
                 }
             });
 
