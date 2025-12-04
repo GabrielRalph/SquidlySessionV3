@@ -296,7 +296,8 @@ class SettingsWindow extends OccupiableWindow {
         },
         "change-device": (e) => {
             let {icon} = e;
-            this.settingsFeature.changeDevice(icon.path[0], name2kind[icon.path[1]], icon.device);
+            let kind = name2kind[icon.path[icon.path.length - 1]];
+            this.settingsFeature.changeDevice(icon.path[0], kind, icon.device);
         }
     }
 
@@ -393,8 +394,8 @@ class SettingsWindow extends OccupiableWindow {
     }
 
     updateDevices(user, devices) { 
-        let [_, pathUser, settingType] = this.history
-
+        let pathUser = this.history[1];
+        let settingType = this.history[this.history.length - 1];
         if (pathUser === user && settingType in this.dynamicPages) {
             const kind = name2kind[settingType];
             devices = Object.values(devices[kind] || {});
@@ -483,6 +484,7 @@ export class SettingsFeature extends Features {
 
 
     changeDevice(user, kind, deviceId) {
+        console.log("CHANGE DEVICE", user, kind, deviceId);
         if (user === this.sdata.me) {
             changeDevice(kind, deviceId);
         }  else {
@@ -527,23 +529,29 @@ export class SettingsFeature extends Features {
             this.settingsWindow.setPath(path);
         });
 
-
+        // Listen to profile changes
         this.sdata.onValue("profileID", (profileID) => {
             Settings.chooseProfile(profileID);
         });
 
 
-        // Listen to device changes
+        // When devices change locally, update them in firebase
+        // and in the settings window
         addDeviceChangeCallback((devices) => {
             this.sdata.set("devices/"+this.sdata.me, devices);
             this.settingsWindow.updateDevices(this.sdata.me, devices);
         });
+
+
+        // Set the current devices initially in firebase
         this.sdata.set("devices/"+this.sdata.me, await getDevices(true));
+
         this.lastTheirDevices = {
             audioinput: {},
             audiooutput: {},
             videoinput: {},
         }
+        // Listen to the other users device changes in the firebase
         this.sdata.onValue("devices/"+this.sdata.them, (devices) => {
             if (devices === null) {
                 devices = {
@@ -556,6 +564,7 @@ export class SettingsFeature extends Features {
             this.settingsWindow.updateDevices(this.sdata.them, devices);
         });
 
+        // Listen to device change requests from the video call
         this.session.videoCall.addEventListener("change-device", (e) => {
             let [kind, deviceId] = e.data;
             this.changeDevice(this.sdata.me, kind, deviceId);
