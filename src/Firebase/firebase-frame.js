@@ -122,6 +122,7 @@ export class FirebaseFrame {
      * @param {String} path same as with get.
      * @param {(value: DataValue) => void} callback a function that will be called at the start 
      *                                                        and for every change made.
+     * @return {() => void} returns a function that when called will remove the listener.
      */
     onValue(path, cb) {
       if (hasJoined) {
@@ -149,6 +150,7 @@ export class FirebaseFrame {
      * 
      * @param {String} path same as with get.
      * @param {(value: DataValue, key: String, previousKey: String) => void} callback 
+     * @return {() => void} returns a function that when called will remove the listener.
      */
     onChildAdded(path, cb) {
         if (hasJoined) {
@@ -175,6 +177,7 @@ export class FirebaseFrame {
      * 
      * @param {String} path same as with get.
      * @param {(value: DataValue, key: String) => void} callback
+     * @return {() => void} returns a function that when called will remove the listener.
      */
     onChildRemoved(path, cb) {
       if (hasJoined) {

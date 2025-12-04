@@ -34,7 +34,7 @@ export function watchProfiles(hostUID, callback) {
     let profilesFrame = new FirebaseFrame(profilesPath);
     
     let added = profilesFrame.onChildAdded(null, (profile, profileID) => {
-        profiles[profileID] = profile;
+        profiles[profileID] = typeof profile === "object" ? profile : {};
         profileListeners[profileID] = profilesFrame.onValue(profileID+"/profileSettings", (setting) => {
             if (profiles[profileID]) {
                 profiles[profileID].profileSettings = setting;
@@ -45,10 +45,15 @@ export function watchProfiles(hostUID, callback) {
     });
 
    
-    let removed = profilesFrame.onChildRemoved(null, (profileID) => {
-        profileListeners[profileID]();
-        delete profiles[profileID];
-        delete profileListeners[profileID];
+    let removed = profilesFrame.onChildRemoved(null, (oldData, profileID) => {
+        console.log("Profile removed", profileID);
+        if (profileID in profileListeners) {
+            profileListeners[profileID]();
+            delete profileListeners[profileID];
+        }
+        if (profileID in profiles) {
+            delete profiles[profileID];
+        }
         callback();
     });
 
@@ -63,7 +68,9 @@ export function watchProfiles(hostUID, callback) {
 
 export function getProfiles() {
     return Object.keys(profiles).map(key => {
-        return {profileID: key, ...profiles[key].profileSettings};
+        let name = profiles[key]?.profileSettings?.name || "Unititled Profile";
+        let image = profiles[key]?.profileSettings?.image || null;
+        return {profileID: key, image, name};
     });
 }
 
