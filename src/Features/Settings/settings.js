@@ -265,7 +265,7 @@ class SettingsWindow extends OccupiableWindow {
             this.searchWindow = this.createChild(ProfileSearchWindow, {events: {
                 "value": (e) => {
                     if (e.value) {
-                        settings.selectProfile(e.value.id);
+                        settings._selectProfile(e.value.id);
                     }
                     e.waitFor(this.searchWindow.hide());
                 }
@@ -505,8 +505,12 @@ export class SettingsFeature extends Features {
     }
 
 
-    selectProfile(profileID) {
+    _selectProfile(profileID) {
         this.sdata.set("profileID", profileID);
+    }
+
+    get openPath() {
+        return this._openPath.join("/");
     }
 
 
@@ -527,6 +531,7 @@ export class SettingsFeature extends Features {
                 path = ["home"];
             }
             this.settingsWindow.setPath(path);
+            this._openPath = path;
         });
 
         // Listen to profile changes

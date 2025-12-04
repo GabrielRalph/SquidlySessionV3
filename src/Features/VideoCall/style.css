@@ -1,54 +1,66 @@
 video-panel-widget {
-    display: flex;
+    --border: 2px;
     --bg-color: rgb(34 33 33);
     background: var(--bg-color);
     width: 100%;
     height: 100%;
+    display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .stack {
     display: flex;
+    gap: 2px;
+    margin: 2px;
+    width: var(--s-width);
+    height: var(--s-height);
+    position: absolute;
+
+
 }
-.stack[stack-mode="vertical"] {
+.stack[stack-mode="vertical-height"],
+.stack[stack-mode="vertical-width"] {
     flex-direction: column;
 }
 
+
+
 /* Video Display */
 video-display {
-    --border: 0px;
     display: flex;
-    --aspect: 1.33333;
     position: relative;
-    width: var(--width);
-    height: var(--height);
     pointer-events: all;
-    border: 0px solid transparent;
+    width: 100%;
+    height: 100%;
+    --t-width:var(--s-width);
+    --t-height: var(--s-height);
+}
+
+.stack[stack-mode="vertical-width"] video-display,
+.stack[stack-mode="vertical-height"] video-display{
+    --v-width: calc(var(--t-width));
+    --v-height: calc(var(--t-width) / var(--aspect, 1));
+}
+.stack[stack-mode="horizontal-width"] video-display,
+.stack[stack-mode="horizontal-height"] video-display{
+    --v-height: calc(var(--t-height));
+    --v-width: calc(var(--t-height) * var(--aspect, 1));
 }
 
 video-display video {
-    border-radius: var(--br);
+    border-radius: var(--br, 0px);
     width: 100%;
     height: 100%;
+    pointer-events: none;;
 }
 
 video-display:not(:hover) .top-left {
     opacity: 0;
     pointer-events: none;
 }
-.border-overlay {
-    --br: 2px;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: calc(100% - 2 * var(--br));
-    height: calc(100% - 2 * var(--br));
-    border: var(--br) solid var(--bg-color);
-    pointer-events: none;
-}
+
+
 .video-overlay {
     position: absolute;
     top: 0;
@@ -60,15 +72,17 @@ video-display:not(:hover) .top-left {
     width: 100%;
     height: 100%;
 }
+
 video-display[talking] {
     border-color: red;
 }
+
 .overlay-image {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    --min-dim: min(var(--width), var(--height));
+    --min-dim: min(var(--v-width), var(--v-height));
     --size: calc(var(--min-dim) * 0.7);
     width: var(--size);
     height: var(--size);

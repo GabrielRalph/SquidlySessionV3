@@ -290,12 +290,15 @@ export class Text2Speech extends Features {
         let names = Object.keys(MY_VOICES);
         await Promise.all(names.map(v => loadUtterances([v], v)));
 
+        // Listen for speaking requests through webrtc
         this.session.videoCall.addEventListener("t2s", (e) => {
             const {data} = e;
             if (typeof data === "string") {
                 this.speak(data, false);
             } 
         })
+
+        // Listen for name speaking requests through webrtc
         this.session.videoCall.addEventListener("t2s-name", (e) => {
             const {data} = e;
             if (typeof data === "string") {
@@ -303,35 +306,67 @@ export class Text2Speech extends Features {
             } 
         })
 
-        let tempVoice = null;
 
+        // Initial settings
         VOLUME = this.session.settings.get(`${this.sdata.me}/volume/level`) / 100;
         let voice = this.session.settings.get(`${this.sdata.me}/languages/voice`);
         log("Initial voice = '" + voice + "' volume = " + VOLUME);
 
+
+        // Listen to settings changes 
+        let tempVoice = null;
         this.session.settings.addEventListener("change", (e) => {
-            let {user, group, setting, value} = e;
+            const {user, group, setting, value} = e;
+
+            // If the setting change petains to this user
             if (user == this.sdata.me){
+                let isSettingsInLanguage = this.session.currentOpenFeature === "settings" && this.session.settings.openPath.endsWith("languages");
+                console.log("isSettingsInLanguage", isSettingsInLanguage);
+                // If the setting is in languages group
                 if (group == "languages") {
-                    if (setting == "voice" ) {
-                        if (value in MY_VOICES && tempVoice !== value) {
+
+                    // If the setting is voice
+                    if (setting == "voice" && value in MY_VOICES && tempVoice !== value) {
+
+                        // If the user is currently in the languages settings page
+                        // then temporarily change the voice to the new one and speak
+                        // the name of the voice.
+                        if (isSettingsInLanguage) {
                             tempVoice = value;
                             this.speakName(value, true);
+
+                        // Otherwise change the voice immediately
+                        } else {
+                            changeVoice(value)
+                            tempVoice = null;
                         }
+
+                    // If the setting is speed
                     } else if (setting == "speed") {
-                        
                         let newSpeed = SPEEDS[value] || 1;
+
+                        // If speed has changed
                         if (newSpeed !== SPEED) {
-                            this.speakName(tempVoice || VOICE_NAME, true);
+
+                            // If the user is currently in the languages settings page
+                            // speak the current voice name at the new speed
+                            if (isSettingsInLanguage) {
+                                this.speakName(tempVoice || VOICE_NAME, true);
+                            }
+
+                            // Change speed
                             SPEED = newSpeed;
                         }
                     }
+
+                // If the setting is in volume group change the volume
                 } else if (group == "volume" && setting == "level") {
                     VOLUME = value/100;
                 } 
             }
         })
 
+        // On exit of settings, if there is a temp voice, change to it
         this.session.settings.addEventListener("exit", (e) => {
             if (tempVoice !== null) {
                 changeVoice(tempVoice);
@@ -340,7 +375,5 @@ export class Text2Speech extends Features {
         });
 
         await changeVoice(voice);
-
-        
     }
 }

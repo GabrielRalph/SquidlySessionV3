@@ -252,7 +252,6 @@ export class SquidlySessionElement extends ShadowElement {
         if (name != this.occupier) {
             let nextOccupier = name in this.occupiables ? this.occupiables[name] : null;
             name = name in this.occupiables ? name : null;
-            
 
             let proms = [
                 this.currentOccupier instanceof Element ? this.currentOccupier.close() : null,
@@ -272,7 +271,6 @@ export class SquidlySessionElement extends ShadowElement {
             
         }
     }
-
 
     async initialiseSessionView(){
         setLoadState("sessionView", 0);
@@ -758,6 +756,10 @@ export class SquidlySession {
 
     get isOccupied() {
         return $$.get(this).occupier !== null;
+    }
+
+    get currentOpenFeature(){
+        return $$.get(this).occupier;
     }
 
     async openWindow(name) {

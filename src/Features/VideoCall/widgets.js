@@ -14,19 +14,29 @@ class MuteEvent extends Event {
 }
 
 class VideoDisplay extends HideShow {
-    _aspect = null;
-    border = 0;
+    
     constructor(el = "video-display") {
         super(el);
+
+        // this._aspect = 1;
+
         this.class = "video-display"
         this.styles = {
             position: "relative",
         }
-        this.video = this.createChild("video", {autoplay: true, playsinline: true});
+      
+        this.video = this.createChild("video", {
+            autoplay: true, 
+            playsinline: true,
+            events: {
+                loadedmetadata: () => this._computeAspect(),
+                emptied:  () => this._computeAspect(),
+            }
+        });
 
         this.videoOverlay = this.createChild("div", {class: "video-overlay"})
         this.overlayImage = this.videoOverlay.createChild("div", {class: "overlay-image"});
-        this.createChild("div", {class: "border-overlay"});
+        // this.createChild("div", {class: "border-overlay"});
 
         this.topLeft = this.createChild("div", {
             class: "icon-slot top-left",
@@ -74,7 +84,7 @@ class VideoDisplay extends HideShow {
                 this.video.setSinkId(lastSinkId)
             }
         })
-        this._watchVideoSize();
+        // this._watchVideoSize();
     }
 
     applyHiddenState() {
@@ -136,34 +146,34 @@ class VideoDisplay extends HideShow {
         }
     }
 
-    async _watchVideoSize() {
-        let lastSize = null;
-        while (true) {
-            let size = null;
-            let src = this.srcObject;
-            if (src != null) {
-                try {
-                    let settings = src.getVideoTracks()[0].getSettings();
-                    let ratio = (this.border + settings.width) / (this.border + settings.height);
-                    if (!Number.isNaN(ratio)) {
-                        size = ratio;
-                    } else {
-                        size = null;
-                    }
-                } catch (e) {
-                    size = null
-                }
-            };
 
-            if (size !== lastSize) {
-                this._aspect = size;
-                this.dispatchEvent(new Event("aspect"));
-                lastSize = size;
+    _computeAspect() {
+        let aspectRatio = null;
+        let src = this.srcObject;
+        if (src != null) {
+            try {
+                let {width, height} = src.getVideoTracks()[0].getSettings();
+                let ratio = width / height;
+                if (!Number.isNaN(ratio)) {
+                    aspectRatio = ratio;
+                } else {
+                    aspectRatio = null;
+                }
+            } catch (e) {
+                aspectRatio = null
             }
-            await delay(100);
+        };
+
+        if (aspectRatio !== this._aspect) {
+            this._aspect = aspectRatio;
+            this.styles = {
+                "--aspect": this.aspect
+            }
+            this.dispatchEvent(new Event("aspect"));
         }
-       
     }
+
+   
 
     set userName(name) {
         this.bottomLeft.innerHTML = "";
@@ -174,8 +184,14 @@ class VideoDisplay extends HideShow {
     }
 
     set userImage(url) {
-        this.overlayImage.styles = {
-            "background-image": `url("${url}")`
+        if (typeof url === "string" && url !== "") {
+            this.overlayImage.styles = {
+                "background-image": `url("${url}")`
+            }
+        } else {
+            this.overlayImage.styles = {
+                "background-image": null
+            }
         }
     }
 
@@ -195,7 +211,9 @@ class VideoDisplay extends HideShow {
   
     get aspect(){
         let aspect = this._aspect;
-        if (aspect === null || Number.isNaN(aspect)) aspect = 0;
+        if (typeof aspect !== "number" || Number.isNaN(aspect)) {
+            aspect = 0;
+        }
         return aspect;
     }
 
@@ -216,32 +234,44 @@ class VideoDisplay extends HideShow {
 }
 
 
+const stackModes = {
+    "vertical-height": (a1, a2, w, h, space) => [ (h - space) / (1/a1 + 1/a2), h ],
+    "vertical-width": (a1, a2, w, h, space) => [ w, (w / a1) + (w / a2) + space ],
+    "horizontal-width": (a1, a2, w, h, space) => [ w, (w - space) / (a1 + a2) ],
+    "horizontal-height": (a1, a2, w, h, space) => [ h * a1 + h * a2 + space, h ],
+}
+    
+
 export class VideoPanelWidget extends ShadowElement {
     /** @type {VideoDisplay} */
     host = null;
 
-     /** @type {VideoDisplay} */
-     participant = null;
+    /** @type {VideoDisplay} */
+    participant = null;
+
+    border = 2;
 
     constructor() {
         super("video-panel-widget");
+
+
         this.stack = this.createChild("div", {class: "stack"})
 
         this.participant = this.stack.createChild(VideoDisplay, {events: {
-            aspect: this.updateLayout.bind(this),
+            aspect: this._update2.bind(this),
             mute: (e) => this.dispatchEvent(new MuteEvent(e.track, "participant")),
         }});
         this.participant.userName = "participant";
 
         this.host = this.stack.createChild(VideoDisplay, {events: {
-            aspect: this.updateLayout.bind(this),
+            aspect: this._update2.bind(this),
             mute: (e) => this.dispatchEvent(new MuteEvent(e.track, "host")),
         }});
         this.host.userName = "host";
 
 
         let robs = new ResizeObserver(() => {
-            this.updateLayout()
+            this._update2()
         })
         robs.observe(this.root);
     }
@@ -254,57 +284,88 @@ export class VideoPanelWidget extends ShadowElement {
         this.participant.video.volume = value;
     }
 
-    async updateLayout(){
+    _update2() {
+        this.host._computeAspect();
+        this.participant._computeAspect();
+
+        let aspectA = this.host.aspect;
+        let aspectB = this.participant.aspect;
+
+        let fullHeight = this.clientHeight - 2 * this.border;
+        let fullWidth = this.clientWidth - 2 * this.border;
+
+        this.host.shown = aspectA > 0;
+        this.participant.shown = aspectB > 0;
+        
+        let layouts = Object.keys(stackModes).map(mode => {
+            let [w, h] = stackModes[mode](aspectA, aspectB, fullWidth, fullHeight, this.border);
+            let area = w * h;
+            let valid = (w <= fullWidth) && (h <= fullHeight);
+            return {mode, w, h, area, valid};
+        });
+
+        layouts.sort((a, b) => b.area - a.area);
+        layouts = layouts.filter(l => l.valid);
+        
+        let choice = layouts[0];
+        this.stack.styles = {
+            "--s-width": choice.w + "px",
+            "--s-height": choice.h + "px",
+        }
+        this.stack.setAttribute("stack-mode", choice.mode);
+    }
+
+    // async updateLayout(){
       
-        let size = this.bbox[1];
-        if (!size.isZero) {
-            let taspect = size.x / size.y;
-            let paspect = this.participant.aspect;
-            let haspect = this.host.aspect;
+    //     let size = this.bbox[1];
+    //     if (!size.isZero) {
+    //         let taspect = size.x / size.y;
+    //         let paspect = this.participant.aspect;
+    //         let haspect = this.host.aspect;
 
-            this.host.shown = haspect !== 0;
-            this.participant.shown = paspect !== 0;
+    //         this.host.shown = haspect !== 0;
+    //         this.participant.shown = paspect !== 0;
             
-            if (haspect + paspect > 0) {
+    //         if (haspect + paspect > 0) {
                 
-                let stackaspects = [
-                    (paspect + haspect),        // stacking horizontally
-                    1/((paspect==0 ? 0 : 1/paspect) + (haspect==0 ? 0 : 1/haspect)),  // stacking vertically
-                ]
-                let stackareas = stackaspects.map(a => {
-                    // wider than total aspect
-                    if (a > taspect) {
-                        return [a * size.y ** 2, true];
+    //             let stackaspects = [
+    //                 (paspect + haspect),        // stacking horizontally
+    //                 1/((paspect==0 ? 0 : 1/paspect) + (haspect==0 ? 0 : 1/haspect)),  // stacking vertically
+    //             ]
+    //             let stackareas = stackaspects.map(a => {
+    //                 // wider than total aspect
+    //                 if (a > taspect) {
+    //                     return [a * size.y ** 2, true];
 
-                    // higher than total aspect
-                    } else {
-                        return [(size.x ** 2) / a, false];
-                    }
-                });
+    //                 // higher than total aspect
+    //                 } else {
+    //                     return [(size.x ** 2) / a, false];
+    //                 }
+    //             });
 
-                let isHorizontal = stackareas[0][0] < stackareas[1][0];
-                let isFillToWidth = isHorizontal ? stackareas[0][1] : stackareas[1][1];
-                let stackaspect = stackaspects[isHorizontal ? 0 : 1];
+    //             let isHorizontal = stackareas[0][0] < stackareas[1][0];
+    //             let isFillToWidth = isHorizontal ? stackareas[0][1] : stackareas[1][1];
+    //             let stackaspect = stackaspects[isHorizontal ? 0 : 1];
 
-                let stackSize = new Vector(
-                    (isFillToWidth ? size.x : size.y * stackaspect),
-                    (isFillToWidth ? size.x / stackaspect : size.y)
-                )
+    //             let stackSize = new Vector(
+    //                 (isFillToWidth ? size.x : size.y * stackaspect),
+    //                 (isFillToWidth ? size.x / stackaspect : size.y)
+    //             )
                
 
-                this.stack.setAttribute("stack-mode", isHorizontal ? "horizontal" : "vertical");
-                [this.host, this.participant].forEach(el => {
-                    let aspect = el.aspect;
-                    if (aspect > 0) {
-                        el.size = new Vector(
-                            !isHorizontal ? stackSize.x : stackSize.y * aspect,
-                            !isHorizontal ? stackSize.x / aspect : stackSize.y
-                        )
-                    }
-                })
-            }
-        }
-    }
+    //             this.stack.setAttribute("stack-mode", isHorizontal ? "horizontal" : "vertical");
+    //             [this.host, this.participant].forEach(el => {
+    //                 let aspect = el.aspect;
+    //                 if (aspect > 0) {
+    //                     el.size = new Vector(
+    //                         !isHorizontal ? stackSize.x : stackSize.y * aspect,
+    //                         !isHorizontal ? stackSize.x / aspect : stackSize.y
+    //                     )
+    //                 }
+    //             })
+    //         }
+    //     }
+    // }
 
     static get usedStyleSheets(){
         return [relURL("./style.css", import.meta)]
