@@ -127,5 +127,5 @@ video-display[disabled] .video-overlay {
     flex-direction: column;
     margin: 0.3em;
     gap: 0.3em;
-    font-size: min(1.5em, calc(var(--height) / 6.5));
+    font-size: min(1.5em, calc(var(--v-height) / 6.5));
 }
