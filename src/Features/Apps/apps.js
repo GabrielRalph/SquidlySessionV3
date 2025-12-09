@@ -326,9 +326,9 @@ export class Apps extends Features {
 
 
     _message_getSettings(e) {
-        this._sendDebugLog("Received getSettings request for path: " + e.data.path + ", key: " + e.data.key);
+        console.log("Received getSettings request for path: " + e.data.path + ", key: " + e.data.key);
         const value = this.session.settings.get(e.data.path);
-        this._sendDebugLog("Retrieved value: " + JSON.stringify(value) + " for path: " + e.data.path);
+        console.log("Retrieved value: " + JSON.stringify(value) + " for path: " + e.data.path);
         // Send the value back to the iframe
         e.source.postMessage({
             mode: "getSettingsResponse",
@@ -336,11 +336,20 @@ export class Apps extends Features {
             path: e.data.path,
             value: value
         }, "*");
-        this._sendDebugLog("Sent response back to iframe with key: " + e.data.key);
+        console.log("Sent response back to iframe with key: " + e.data.key);
     }
 
     _message_addSettingsListener(e) {
-        // to be implemented
+        const path = e.data.path;
+        this.session.settings.addEventListener("change", (event) => {
+            if (event.path === path) {
+                 e.source.postMessage({
+                    mode: "settingsUpdate",
+                    path: path,
+                    value: event.value
+                }, "*");
+            }
+        });
     }
 
     async loadAppDescriptors() {
