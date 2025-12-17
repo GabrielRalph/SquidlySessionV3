@@ -39,6 +39,8 @@ console.log = (...params) => {
 FIREBASE_ON_VALUE_CALLBACKS = {};
 SET_ICON_CALLBACKS = {};
 CURSOR_UPDATE_CALLBACK = null;
+GET_SETTINGS_CALLBACKS = {};
+SETTINGS_LISTENERS = {};
 
 window.firebaseSet = function(path, value){
     window.parent.postMessage({
@@ -83,20 +85,24 @@ window.setSettings = function(path, value){
     }, "*");
 }
 
-window.getSettings = function(path){
-    // To be implemented
-    // window.parent.postMessage({
-    //     mode: "getSettings",
-    //     path: path
-    // }, "*");
+window.getSettings = function(path, callback){
+    if (!callback) return;
+    let key = "getSettings_" + Math.random().toString(36).substring(2, 15);
+    GET_SETTINGS_CALLBACKS[key] = callback;
+    window.parent.postMessage({
+        mode: "getSettings",
+        path: path,
+        key: key
+    }, "*");
 }
 
 window.addSettingsListener = function(path, callback){
-    // to be implemented
-    // window.parent.postMessage({
-    //     mode: "addSettingsListener",
-    //     path: path,
-    // }, "*");
+    if (!callback) return;
+    SETTINGS_LISTENERS[path] = callback;
+    window.parent.postMessage({
+        mode: "addSettingsListener",
+        path: path,
+    }, "*");
 }
 
 RESPONSE_FUNCTIONS = {
@@ -119,8 +125,18 @@ RESPONSE_FUNCTIONS = {
                 source: data.source
             });
         }
+    },
+    getSettingsResponse(data){
+        if (data.key in GET_SETTINGS_CALLBACKS){
+            GET_SETTINGS_CALLBACKS[data.key](data.value);
+            delete GET_SETTINGS_CALLBACKS[data.key];
+        }
+    },
+    settingsUpdate(data){
+        if (data.path in SETTINGS_LISTENERS){
+            SETTINGS_LISTENERS[data.path](data.value);
+        }
     }
-
 }
 
 window.addEventListener("message", (event) => {
