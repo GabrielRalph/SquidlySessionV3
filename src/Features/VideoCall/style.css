@@ -54,6 +54,12 @@ video-display video {
     height: 100%;
     pointer-events: none;;
 }
+video-display canvas {
+    border-radius: var(--br, 0px);
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
 
 video-display:not(:hover) .top-left {
     opacity: 0;
@@ -71,6 +77,9 @@ video-display:not(:hover) .top-left {
     opacity: 0;
     width: 100%;
     height: 100%;
+    transition: 0.3s ease-in opacity;
+    background-color: #ffffff38;
+
 }
 
 video-display[talking] {
@@ -93,9 +102,11 @@ video-display[talking] {
     background-image: url('data:image/svg+xml,<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 256 256"><!-- Generator: Adobe Illustrator 29.4.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 152) --><path d="M24.77,256c0-69.4,46.22-125.66,103.23-125.66s103.23,56.26,103.23,125.66"/><ellipse cx="128" cy="62.64" rx="46.42" ry="45.2"/></svg>');
 }
 video-display[disabled] .video-overlay {
-    background-color: #ffffff38;
     opacity: 1;
 }
+/* video-display[disabled] .overlay-image {
+    opacity: 1;
+} */
 
 .top-left {
     opacity: 1;
@@ -121,6 +132,7 @@ video-display[disabled] .video-overlay {
     border-radius: 0.5em;
     box-shadow: 0px 0px 5px #2725258c;
 }
+
 
 .icon-slot:not(:empty) {
     display: flex;

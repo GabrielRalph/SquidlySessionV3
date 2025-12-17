@@ -197,6 +197,25 @@ export class ShareContent extends Features {
         })
     }
 
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    
+    static get layers() {
+        return {
+            contentView: {
+                type: "area",
+                area: "fullAspectArea",
+                index: 60,
+            }
+        }
+    }
+
+
+    static get name(){
+        return "shareContent"
+    }
+
     static get firebaseName(){
         return "share-content"
     }

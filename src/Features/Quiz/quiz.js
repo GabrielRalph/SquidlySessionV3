@@ -607,6 +607,26 @@ export class QuizFeature  extends Features {
         });
     }
 
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    static get layers() {
+        return {
+            board: {
+                type: "area",
+                area: "fullAspectArea",
+                index: 80,
+                mode: "occupy",
+                name: "main",
+            }
+        }
+    }
+    
+    static get name() {
+        return "quiz";
+    }
+
     static get firebaseName(){
         return "quiz";
     }

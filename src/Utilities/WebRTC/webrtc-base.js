@@ -21,26 +21,6 @@ function rtc_l1_log(str) {
 }
 
 function preferOpus(description) {
-    // const sdp = description.sdp;
-    // const sdpLines = sdp.split('\r\n');
-    // const mLineIndex = sdpLines.findIndex(line => line.startsWith('m=audio'));
-
-    // if (mLineIndex === -1) return sdp;
-
-    // const opusPayload = sdpLines.find(line => line.includes('opus/48000'))?.match(/:(\d+) opus\/48000/);
-    // if (!opusPayload) return sdp;
-
-    // const payload = opusPayload[1];
-    // const mLine = sdpLines[mLineIndex].split(' ');
-    // const newMLine = [mLine[0], mLine[1], mLine[2], payload, ...mLine.slice(3).filter(p => p !== payload)];
-    // sdpLines[mLineIndex] = newMLine.join(' ');
-
-    // const sdpMod = sdpLines.join('\r\n');
-
-    // return new RTCSessionDescription({
-    //     type: description.type,
-    //     sdp: sdpMod
-    // })
     return description;
 }
 
@@ -444,6 +424,13 @@ export class ConnectionManager {
         }
     }
 
+    async getStats() {
+        if (this.connection && this.connection.PC instanceof RTCPeerConnection) {
+            return await this.connection.PC.getStats();
+        }
+        return null;
+    }
+
     closeConnection(){
         if (this.connection) {
             this.connection.close();
@@ -569,71 +556,3 @@ export class ConnectionManager {
     }
     
 }
-    
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ INITIALISE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-// /** @type {WebRTCConnection} */
-// let CurrentConnection = null;
-// let LastConfig = null;
-// let LastStream = null;
-// let LastSignaler = null;
-// let RestartTimeout = null;
-// let GlobalEventListeners = {}
-
-// export async function initialise(config = LastConfig, stream = LastStream, signaler = LastSignaler) {
-//     LastConfig = config;
-//     LastStream = stream;
-//     LastSignaler = signaler;
-
-//     CurrentConnection = new WebRTCConnection(config, stream, signaler);
-//     CurrentConnection.EventListeners = GlobalEventListeners;
-//     await CurrentConnection.start();
-//     signaler.on("restart", () => {
-//         clearTimeout(RestartTimeout);
-//         let dtime = new Date().getTime() - CurrentConnection.timeOfStart;
-//         let restart = () => {
-//             rtc_l1_log("restarting")
-//             CurrentConnection.close();
-//             initialise();
-//         }
-//         if (dtime < MinTimeTillRestart) {
-//             setTimeout(() => {
-//                 if (CurrentConnection.sessionState !== "open") {
-//                     restart();
-//                 }
-//             }, dtime);
-//         } else {
-//             restart();
-//         }
-//     });
-// }
-
-// export function on(key, cb) {
-//     if (CurrentConnection) {
-//         CurrentConnection.on(key, cb);
-//         GlobalEventListeners = CurrentConnection.EventListeners;
-//     } else {
-//         if (cb instanceof Function) {
-//             if (!(key in GlobalEventListeners)) {
-//                 GlobalEventListeners[key] = [];
-//             }
-//             GlobalEventListeners[key].push(cb);
-//         }
-//     }
-// }
-
-// export function send(data) {
-
-//     if (CurrentConnection !== null && CurrentConnection.isDataChannelReady) {
-//         if (typeof data === "object" && data !== null) {
-//             data = JSON.stringify(data);
-//             CurrentConnection.sendMessage("J"+data);
-//         } else {
-//             CurrentConnection.sendMessage("N"+data);
-//         }
-//     }
-// }
-
-
-

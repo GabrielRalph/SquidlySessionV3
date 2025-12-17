@@ -376,4 +376,9 @@ export class Text2Speech extends Features {
 
         await changeVoice(voice);
     }
+
+
+    static get name(){
+        return "text2speech";
+    }
 }

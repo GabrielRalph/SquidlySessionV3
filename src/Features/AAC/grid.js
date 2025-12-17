@@ -528,7 +528,6 @@ class AACGridBoard extends OccupiableWindow {
         }
     }
 
-
     async setTopicPath(path, immediate) {
         this.topicPath = path;
         this.updateBack();
@@ -635,6 +634,7 @@ export class AACGrid extends Features {
         this.board.quickTalk = id
     }
 
+
     async initialise(){
         let {sdata} = this;
         Topics.setText2SpeechModule(this.session.text2speech);
@@ -668,31 +668,24 @@ export class AACGrid extends Features {
         ]);
     }
 
-    // async searchTopics(){
-    //     let topics = await Topics.getAllTopics(this.sdata.hostUID);
-    //     let searchList = Object.keys(topics).map(id => {
-    //         let topic = topics[id];
-    //         return {
-    //             id,
-    //             matches: topic.name,
-    //             icon: {
-    //                 displayValue: topic.name,
-    //                 type: "topic",
-    //                 subtitle: topic.ownerName,
-    //             }
-    //         }
-    //     })
-    //     await this.session.search.startSearch(searchList, async (result) => {
-    //         if (result) {
-    //             let topicID = result.id;
-    //             if (topicID && topicID !== this.board.currentTopic) {
-    //                 this.board.topicPath = [];
-    //                 await this.board.setTopic(topicID);
-    //                 this._updateTopics(this.board.topicPath);
-    //             }
-    //         }
-    //     });
-    // }
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    static get layers() {
+        return {
+            board: {
+                type: "area",
+                area: "fullAspectArea",
+                index: 80,
+                mode: "occupy",
+            }
+        }
+    }
+
+    static get name() {
+        return "aacGrid";
+    }
 
     static get firebaseName(){
         return "aac";

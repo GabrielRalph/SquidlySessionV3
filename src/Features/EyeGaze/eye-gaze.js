@@ -509,6 +509,41 @@ export class EyeGazeFeature extends Features {
     get me() { return this.sdata.me } 
     get them() { return this.sdata.them }
 
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    static get layers() {
+        return {
+            feedbackWindow: {   // EyeGaze feedback window
+                type: "area",
+                area: "fullAspectArea",
+                index: 85,
+                mode: "occupy",
+                name: "main",
+                fix: {
+                    toolbar: true
+                }
+            },
+            calibrationWindow: { // Calibration window
+                type: "area",
+                area: "entireScreen",
+                index: 500,
+                mode: "overlay",
+            },
+            testScreen: { // Test window
+                type: "area",
+                area: "entireScreen",
+                index: 215,
+                mode: "overlay",
+            }
+        };
+    }
+
+    static get name() {
+        return "eyeGaze";
+    }
+
     static get firebaseName(){
         return "eye-gaze";
     }

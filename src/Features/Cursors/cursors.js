@@ -177,6 +177,7 @@ export class Cursors extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVAE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    
     _getMouseCursorProperties(user) {
         let size = this.session.settings.get(`${user}/cursors/cursorSize`);
         let colour = this.session.settings.get(`${user}/cursors/cursorColour`);
@@ -307,7 +308,34 @@ export class Cursors extends Features {
         this._watchMouseCursorPosition();
     }
 
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
     static get privatePropertyNames(){return ["svg", "cursorLibrary", "entireScreen"]}
+
+    static get layers() {
+        return {
+            cursorsPanel: {
+                type: "area",
+                area: "entireScreen",
+                index: 320,
+                mode: "overlay"
+            },
+            fullAspectArea: {
+                type: "area",
+                area: "fullAspectArea",
+                mode: "overlay",
+                index: -1,
+            },
+            fixedAspectArea: {
+                type: "area",
+                area: "fixedAspectArea",
+                mode: "overlay",
+                index: -1,
+            }
+        }
+    }
 
     static get name(){
         return "cursors";

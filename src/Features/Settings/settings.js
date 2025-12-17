@@ -576,6 +576,25 @@ export class SettingsFeature extends Features {
         });
     }
 
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    static get layers() {
+        return {
+            settingsWindow: {
+                type: "area",
+                area: "fullAspectArea",
+                index: 81,
+                mode: "occupy",
+            }
+        }
+    }
+
+    static get name() {
+        return "settings";
+    }
+
     static get firebaseName() {
         return "settings";
     }

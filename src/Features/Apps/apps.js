@@ -430,6 +430,20 @@ export class Apps extends Features {
         });
     }
 
+    static get name() {
+        return "apps"
+    }
+
+    static get layers() {
+        return {
+            appFrame: {
+                type: "area",
+                area: "fullAspectArea",
+                index: 60,
+            }
+        }
+    }
+
     static get firebaseName(){
         return "apps"
     }

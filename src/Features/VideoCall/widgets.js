@@ -1,3 +1,4 @@
+import { set } from "../../Firebase/firebase.js";
 import { Vector } from "../../SvgPlus/vector.js";
 import { addDeviceChangeCallback } from "../../Utilities/device-manager.js";
 import { HideShow } from "../../Utilities/hide-show.js";
@@ -18,25 +19,17 @@ class VideoDisplay extends HideShow {
     constructor(el = "video-display") {
         super(el);
 
-        // this._aspect = 1;
-
+        this._aspect = 0;
         this.class = "video-display"
         this.styles = {
             position: "relative",
         }
-      
-        this.video = this.createChild("video", {
-            autoplay: true, 
-            playsinline: true,
-            events: {
-                loadedmetadata: () => this._computeAspect(),
-                emptied:  () => this._computeAspect(),
-            }
-        });
+
+        this.canvas = this.createChild("canvas");
+        this.ctx = this.canvas.getContext("2d", {willReadFrequently: true});
 
         this.videoOverlay = this.createChild("div", {class: "video-overlay"})
         this.overlayImage = this.videoOverlay.createChild("div", {class: "overlay-image"});
-        // this.createChild("div", {class: "border-overlay"});
 
         this.topLeft = this.createChild("div", {
             class: "icon-slot top-left",
@@ -75,16 +68,6 @@ class VideoDisplay extends HideShow {
                 left: 0
             }
         });
-
-        let lastSinkId = null;
-        addDeviceChangeCallback((devices) => {
-            let activeOutput = Object.values(devices.audiooutput || {}).find(d => d.active);
-            if (activeOutput && activeOutput.deviceId !== lastSinkId) {
-                lastSinkId = activeOutput.deviceId;
-                this.video.setSinkId(lastSinkId)
-            }
-        })
-        // this._watchVideoSize();
     }
 
     applyHiddenState() {
@@ -99,8 +82,13 @@ class VideoDisplay extends HideShow {
         }
     }
 
-    update(mode){
+    _update(mode){
         this.dispatchEvent(new MuteEvent(mode, null))
+    }
+
+
+    set waiting(bool) {
+        this.toggleAttribute("disabled", bool || this.video_muted === true);
     }
 
     /**
@@ -109,13 +97,14 @@ class VideoDisplay extends HideShow {
     set video_muted(value) {
         this.toggleAttribute("disabled", false);
         if (value === false) {
-            this.setIcon("videoMute", "video", () => this.update("video"));
+            this.setIcon("videoMute", "video", () => this._update("video"));
         } else if (value === true) {
             this.toggleAttribute("disabled", true);
-            this.setIcon("videoMute", "novideo", () => this.update("video"));
+            this.setIcon("videoMute", "novideo", () => this._update("video"));
         } else {
             this.setIcon("videoMute", null);
         }
+        this._video_muted = value;
     }
 
     /**
@@ -123,9 +112,9 @@ class VideoDisplay extends HideShow {
      */
     set audio_muted(value) {
         if (value === false) {
-            this.setIcon("audioMute", "unmute", () => this.update("audio"));
+            this.setIcon("audioMute", "unmute", () => this._update("audio"));
         } else if (value === true) {
-            this.setIcon("audioMute", "mute", () => this.update("audio"));
+            this.setIcon("audioMute", "mute", () => this._update("audio"));
         } else {
             this.setIcon("audioMute", null);
         }
@@ -147,33 +136,33 @@ class VideoDisplay extends HideShow {
     }
 
 
-    _computeAspect() {
-        let aspectRatio = null;
-        let src = this.srcObject;
-        if (src != null) {
-            try {
-                let {width, height} = src.getVideoTracks()[0].getSettings();
-                let ratio = width / height;
-                if (!Number.isNaN(ratio)) {
-                    aspectRatio = ratio;
-                } else {
-                    aspectRatio = null;
-                }
-            } catch (e) {
-                aspectRatio = null
-            }
-        };
-
-        if (aspectRatio !== this._aspect) {
-            this._aspect = aspectRatio;
+    captureFrame(video) {
+        const { videoWidth, videoHeight } = video;
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+            this._aspect = videoWidth / videoHeight;
             this.styles = {
                 "--aspect": this.aspect
             }
-            this.dispatchEvent(new Event("aspect"));
+            if (this.canvas.width !== videoWidth || this.canvas.height !== videoHeight) {
+                this.dispatchEvent(new Event("aspect"));
+            }
+            this.canvas.width = videoWidth;
+            this.canvas.height = videoHeight;
+            this.ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
         }
     }
 
-   
+    emptyFrame() {
+        this._aspect = 0;
+        this.styles = {
+            "--aspect": this.aspect
+        }
+        this.canvas.width = 1;
+        this.canvas.height = 1;
+        this.ctx.clearRect(0, 0, 1, 1);
+        this.dispatchEvent(new Event("aspect"));
+    }
+
 
     set userName(name) {
         this.bottomLeft.innerHTML = "";
@@ -203,32 +192,13 @@ class VideoDisplay extends HideShow {
     set hide(bool){
         this.toggleAttribute("hide", bool);
     }
-
-    /** @param {boolean} val*/
-    set muted(val) {
-        this.video.muted = val;
-    }
-  
+ 
     get aspect(){
         let aspect = this._aspect;
         if (typeof aspect !== "number" || Number.isNaN(aspect)) {
             aspect = 0;
         }
         return aspect;
-    }
-
-    set srcObject(src) {
-        this.video.srcObject = src;
-    }
-
-    get srcObject() { return this.video.srcObject; }
-
-
-    set size(v) {
-        this.styles = {
-            "--width": v.x + "px",
-            "--height": v.y + "px",
-        }
     }
 
 }
@@ -258,36 +228,25 @@ export class VideoPanelWidget extends ShadowElement {
         this.stack = this.createChild("div", {class: "stack"})
 
         this.participant = this.stack.createChild(VideoDisplay, {events: {
-            aspect: this._update2.bind(this),
+            aspect: this._update_layout.bind(this),
             mute: (e) => this.dispatchEvent(new MuteEvent(e.track, "participant")),
         }});
         this.participant.userName = "participant";
 
         this.host = this.stack.createChild(VideoDisplay, {events: {
-            aspect: this._update2.bind(this),
+            aspect: this._update_layout.bind(this),
             mute: (e) => this.dispatchEvent(new MuteEvent(e.track, "host")),
         }});
         this.host.userName = "host";
 
 
         let robs = new ResizeObserver(() => {
-            this._update2()
+            this._update_layout()
         })
         robs.observe(this.root);
     }
 
-    /** 
-     * @param {number} value
-     */
-    set volume(value) {
-        this.host.video.volume = value;
-        this.participant.video.volume = value;
-    }
-
-    _update2() {
-        this.host._computeAspect();
-        this.participant._computeAspect();
-
+    _update_layout() {
         let aspectA = this.host.aspect;
         let aspectB = this.participant.aspect;
 
@@ -315,57 +274,6 @@ export class VideoPanelWidget extends ShadowElement {
         this.stack.setAttribute("stack-mode", choice.mode);
     }
 
-    // async updateLayout(){
-      
-    //     let size = this.bbox[1];
-    //     if (!size.isZero) {
-    //         let taspect = size.x / size.y;
-    //         let paspect = this.participant.aspect;
-    //         let haspect = this.host.aspect;
-
-    //         this.host.shown = haspect !== 0;
-    //         this.participant.shown = paspect !== 0;
-            
-    //         if (haspect + paspect > 0) {
-                
-    //             let stackaspects = [
-    //                 (paspect + haspect),        // stacking horizontally
-    //                 1/((paspect==0 ? 0 : 1/paspect) + (haspect==0 ? 0 : 1/haspect)),  // stacking vertically
-    //             ]
-    //             let stackareas = stackaspects.map(a => {
-    //                 // wider than total aspect
-    //                 if (a > taspect) {
-    //                     return [a * size.y ** 2, true];
-
-    //                 // higher than total aspect
-    //                 } else {
-    //                     return [(size.x ** 2) / a, false];
-    //                 }
-    //             });
-
-    //             let isHorizontal = stackareas[0][0] < stackareas[1][0];
-    //             let isFillToWidth = isHorizontal ? stackareas[0][1] : stackareas[1][1];
-    //             let stackaspect = stackaspects[isHorizontal ? 0 : 1];
-
-    //             let stackSize = new Vector(
-    //                 (isFillToWidth ? size.x : size.y * stackaspect),
-    //                 (isFillToWidth ? size.x / stackaspect : size.y)
-    //             )
-               
-
-    //             this.stack.setAttribute("stack-mode", isHorizontal ? "horizontal" : "vertical");
-    //             [this.host, this.participant].forEach(el => {
-    //                 let aspect = el.aspect;
-    //                 if (aspect > 0) {
-    //                     el.size = new Vector(
-    //                         !isHorizontal ? stackSize.x : stackSize.y * aspect,
-    //                         !isHorizontal ? stackSize.x / aspect : stackSize.y
-    //                     )
-    //                 }
-    //             })
-    //         }
-    //     }
-    // }
 
     static get usedStyleSheets(){
         return [relURL("./style.css", import.meta)]

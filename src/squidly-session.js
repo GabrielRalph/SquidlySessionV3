@@ -74,7 +74,6 @@ async function initialiseFirebaseUser(){
 }
 
 
-
 export class SessionDataFrame extends FirebaseFrame {
     constructor(firebaseName) {
         if (sessionConnection == null || !sessionConnection.hasJoined) {
@@ -228,8 +227,6 @@ export class SquidlySessionElement extends ShadowElement {
                 })
             
             } catch (e) {
-                
-                
                 if (e instanceof FeatureInitialiserError) {
                     this.loaderText = e.displayMessage;
                     this.loaderVideo = e.video;
@@ -290,14 +287,7 @@ export class SquidlySessionElement extends ShadowElement {
             "z-index": 1,
             overflow: "hidden"
         }});
-        // this.createChild(FrameRateMonitor, {styles: {
-        //     position: "absolute",
-        //     top: "1em",
-        //     right: "1em",
-        //     "z-index": 3,
-        // }});
         
-        window.sv = this.sessionView
         setLoadState("sessionView", 2);
     }
 
@@ -372,6 +362,7 @@ export class SquidlySessionElement extends ShadowElement {
         setLoadState("connection", 0)
         if (sessionConnection === null) {
             let key = getQueryKey();
+         
             if (key == null) {
                 error = [ERROR_CODES.NO_SESSION, "no key provided"];
             } else {
@@ -765,7 +756,6 @@ export class SquidlySession {
     async openWindow(name) {
         await $$.get(this).openWindow(name)
     }
-
 
     /**
      * @param {boolean} bool

@@ -2,7 +2,6 @@ import { SvgPlus, Vector } from "../../SvgPlus/4.js";
 import { AccessButton, getButtonGroups } from "../../Utilities/access-buttons.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { delay, relURL, WaveStateVariable } from "../../Utilities/usefull-funcs.js";
-import { addProcessListener } from "../../Utilities/webcam.js";
 import { Features } from "../features-interface.js";
 
 let SwitchTime = 1; // ms
@@ -453,6 +452,25 @@ export class AccessControl extends Features {
                 }
             }
         })
+    }
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    static get name() {
+        return "accessControl";
+    }
+
+    static get layers() {
+        return {
+            overlay: {
+                type: "area",
+                area: "entireScreen",
+                index: 310,
+                mode: "overlay"
+            }
+        }
     }
 
     static async loadResources(){

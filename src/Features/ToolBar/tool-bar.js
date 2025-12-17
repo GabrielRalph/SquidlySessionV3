@@ -38,7 +38,6 @@ import { AccessButton, AccessClickEvent } from "../../Utilities/access-buttons.j
  * @type {[IconsDescription]}
  */
 const ICONS_SMALL = [
-    
     {
         name: "control",
         icons: [
@@ -876,6 +875,22 @@ export class ToolBarFeature extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    static get layers() {
+        return {
+            toolBarArea: {
+                zIndex: 2,
+                position: "top-left",
+                size: "auto-x auto-y",
+                margin: "0px 0px 0px 0px",
+                content: "toolBar toolBarRing",
+            }
+        }
+    }
+
+    static get name(){
+        return "toolBar";
+    }
 
     static get firebaseName(){ 
         return "tool-bar";
