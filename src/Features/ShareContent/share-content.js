@@ -5,37 +5,6 @@ import { RTCSignaler } from "../../Utilities/WebRTC/rtc-signaler.js";
 import { ConnectionManager } from "../../Utilities/WebRTC/webrtc-base.js";
 
 
-
-function getDefaulIceServers(){
-    return {iceServers: [
-        {urls: "stun:stun.l.google.com:19302"},
-        {urls: "stun:stun1.l.google.com:19302"},
-        {urls: "stun:stun2.l.google.com:19302"},
-        {urls: "stun:stun3.l.google.com:19302"},
-        {urls: "stun:stun4.l.google.com:19302"},
-        {urls: "stun:stun01.sipphone.com"},
-        {urls: "stun:stun.ekiga.net"},
-        {urls: "stun:stun.fwdnet.net"},
-        {urls: "stun:stun.ideasip.com"},
-        {urls: "stun:stun.iptel.org"},
-        {urls: "stun:stun.rixtelecom.se"},
-        {urls: "stun:stun.schlund.de"},
-        {urls: "stun:stunserver.org"},
-        {urls: "stun:stun.softjoys.com"},
-        {urls: "stun:stun.voiparound.com"},
-        {urls: "stun:stun.voipbuster.com"},
-        {urls: "stun:stun.voipstunt.com"},
-        {urls: "stun:stun.voxgratia.org"},
-        {urls: "stun:stun.xten.com"},
-        {urls: "stun:stun.xten.com"},
-        {urls: "turn:13.239.38.47:80?transport=udp", 
-        credential: "key1", username: "username1"},
-        {urls: "turn:13.239.38.47:80?transport=tcp", 
-        credential: "key1", username: "username1"},
-        {urls: "stun:stun.xten.com"},
-    ]}
-}
-
 export class ShareContent extends Features {
     _isSharing = false;
     constructor(session, sdata){
@@ -53,25 +22,35 @@ export class ShareContent extends Features {
     }
 
 
+    /**
+     * Uploads a file to storage and sets the content info in the database
+     * @param {File} file The file to upload
+     * @return {Promise<void>}
+     */
     async uploadFile(file) {
+        // Bring up the file loader 
         this.contentView.loader.show(400);
 
         let type = file.type == "application/pdf" ? "pdf" : "image";
 
-        // // upload file
+        // upload file to storage and update progress bar
         let url = await this.sdata.uploadFile(file, "content", (e) => {
             this.contentView.loader.progress = 0.7 * e.bytesTransferred / e.totalBytes
         });
 
-        let contentInfo = {
+        // Set content info to database
+        await this.sdata.set("content-info", {
             type: type,
             url: url,
             page: 0,
-        }
-
-        await this.sdata.set("content-info", contentInfo);
+        });
     }
 
+
+    /**
+     * Prompts the user to share their screen and sets up the stream for sharing
+     * @return {Promise<void>}
+     */
     async shareScreen(){
         let stream = null;
         let oldStream = this._shareScreen.stream;
@@ -101,6 +80,7 @@ export class ShareContent extends Features {
             // clear old stream events
             if (oldStream instanceof MediaStream) oldStream.oninactive = null;
          
+            // set the stream to the connection manager and content view
             this.contentView.stream = stream;
             this._shareScreen.replaceStream(stream);
             this.contentView.setStream(stream, this.sdata.me);
@@ -118,7 +98,11 @@ export class ShareContent extends Features {
         }
     }
 
-    async  shareFile() {
+    /**
+     * Prompts the user to select a file and uploads it for sharing
+     * @return {Promise<void>}
+     */
+    async shareFile() {
         let input = new SvgPlus("input");
         input.props = {
             type: "file",
@@ -136,8 +120,10 @@ export class ShareContent extends Features {
         }        
     }
 
-
-    async stopSharing(){
+    /**
+     * Stops sharing the current screen
+     */
+    stopSharing(){
         if (this._isSharing) {
             let stream = this._shareScreen.stream;
             stream.oninactive = null;
