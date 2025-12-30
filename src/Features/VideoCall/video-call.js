@@ -77,6 +77,7 @@ export class VideoCall extends Features {
         this.topPanelWidget = new VideoPanelWidget();
         this.sidePanelWidget = new VideoPanelWidget();
         this.mainAreaWidget = new VideoPanelWidget();
+        this._allWidgets = [this.topPanelWidget, this.sidePanelWidget, this.mainAreaWidget]
 
         // store video elements for each user
         this.videos = {
@@ -84,9 +85,18 @@ export class VideoCall extends Features {
             participant: dummyVideo()
         }
         this.videos[sdata.me].muted = true;
+       
+        this._setupVideoFrameCapture();
+        this._setWidgetEvents();
+    }
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-        // For each video, set up a loop to capture frames and send them to the widgets
+    _setupVideoFrameCapture(){
+         // For each video, set up a loop to capture frames and send them to the widgets
         for (let user in this.videos) {
             const video = this.videos[user];
             video.addEventListener("suspend", () => {
@@ -95,7 +105,13 @@ export class VideoCall extends Features {
             video.addEventListener("loadeddata", () => {
                 this._setWidgetWaitingState(false, user);
             })
+
             this.mainAreaWidget.appendChild(video); // needed to get frames from some browsers
+           
+            if (!video.requestVideoFrameCallback instanceof Function) {
+                video.requestVideoFrameCallback = window.requestAnimationFrame.bind(window);
+            }
+
             let next = () => {
                 for (let w of this._allWidgets) {
                     w[user].captureFrame(video);
@@ -105,19 +121,9 @@ export class VideoCall extends Features {
             video.requestVideoFrameCallback(next);
         }
 
-
-        this._setWidgetEvents();
     }
 
 
-    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-    
-    get _allWidgets(){
-        return [this.topPanelWidget, this.sidePanelWidget, this.mainAreaWidget]
-    }
 
 
     /**
@@ -313,6 +319,7 @@ export class VideoCall extends Features {
 
 
     async _onUserLeft(){
+        this._setWidgetWaitingState(true, this.sdata.them);
         setTimeout(() => {
             if (!this.sdata.isUserActive(this.sdata.them)) {
                 this._clearWidgets(this.sdata.them);

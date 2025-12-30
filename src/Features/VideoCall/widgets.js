@@ -30,6 +30,11 @@ class VideoDisplay extends HideShow {
 
         this.videoOverlay = this.createChild("div", {class: "video-overlay"})
         this.overlayImage = this.videoOverlay.createChild("div", {class: "overlay-image"});
+        let loader = this.videoOverlay.createChild("div", {class: "simple-loader"});
+        loader.createChild("b");
+        loader.createChild("b");
+        loader.createChild("b");
+
 
         this.topLeft = this.createChild("div", {
             class: "icon-slot top-left",
@@ -88,7 +93,10 @@ class VideoDisplay extends HideShow {
 
 
     set waiting(bool) {
-        this.toggleAttribute("disabled", bool || this.video_muted === true);
+        this.toggleAttribute("waiting", bool);
+    }
+    get waiting() {
+        return this.hasAttribute("waiting");
     }
 
     /**

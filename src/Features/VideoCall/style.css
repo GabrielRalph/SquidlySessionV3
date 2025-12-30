@@ -101,7 +101,18 @@ video-display[talking] {
     background-repeat: no-repeat;
     background-image: url('data:image/svg+xml,<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 256 256"><!-- Generator: Adobe Illustrator 29.4.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 152) --><path d="M24.77,256c0-69.4,46.22-125.66,103.23-125.66s103.23,56.26,103.23,125.66"/><ellipse cx="128" cy="62.64" rx="46.42" ry="45.2"/></svg>');
 }
-video-display[disabled] .video-overlay {
+video-display[disabled] .video-overlay,
+video-display[waiting] .video-overlay {
+    opacity: 1;
+}
+video-display[disabled] canvas,
+video-display[waiting] canvas {
+    opacity: 0;
+}
+video-display[waiting] {
+    pointer-events: none;
+}
+video-display[waiting] .simple-loader{
     opacity: 1;
 }
 /* video-display[disabled] .overlay-image {
@@ -141,3 +152,64 @@ video-display[disabled] .video-overlay {
     gap: 0.3em;
     font-size: min(1.5em, calc(var(--v-height) / 6.5));
 }
+
+
+
+
+/* loader container */
+  .simple-loader {
+    --dot-size: 12px;
+    --dot-gap: 12px;
+    --dot-color: #fef8ff;
+    --duration: 0.8s;
+    --amplitude: 0.5;
+    display: inline-flex;
+    align-items: end;
+    gap: var(--dot-gap);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+  }
+
+  /* dots */
+  .simple-loader b{
+    border: 2px solid rgba(0, 0, 0, 0.635);
+    width: var(--dot-size);
+    height: var(--dot-size);
+    border-radius: var(--dot-size);
+    background: var(--dot-color);
+    display:block;
+    transform: translateY(calc(-100% * var(--amplitude)));
+    /* staggered animation using delays below */
+    animation: oscillate var(--duration) cubic-bezier(0.38, 0, 0.62, 1) infinite;
+    will-change: transform;
+  }
+
+  /* slightly different easing to feel more organic */
+  @keyframes oscillate {
+    0%   { 
+        transform: translateY(calc(-100% * var(--amplitude))); 
+    }
+    50%  { 
+        transform: translateY(calc(100% * var(--amplitude)));
+    }
+    100%  { 
+        transform: translateY(calc(-100% * var(--amplitude)));
+    }
+  }
+
+  /* Stagger the three dots to create a wave/oscillating effect */
+  .simple-loader b:nth-child(1){ animation-delay: calc(var(--duration) * -0.20); }
+  .simple-loader b:nth-child(2){ animation-delay: calc(var(--duration) * -0.40); }
+  .simple-loader b:nth-child(3){ animation-delay: calc(var(--duration) * -0.60); }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    .simple-loader b {
+      animation: none;
+      transform: translateY(0);
+      opacity: 0.95;
+    }
+  }
