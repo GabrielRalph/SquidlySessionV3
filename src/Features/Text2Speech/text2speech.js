@@ -217,7 +217,7 @@ class InvalidUtterance extends Error {
     }
 }
 
-export class Text2Speech extends Features {
+export default class Text2Speech extends Features {
     constructor(session, sdata) {
         super(session, sdata);
     }

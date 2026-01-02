@@ -1,6 +1,6 @@
 import { AccessEvent } from "./access-buttons.js";
 import { GridCard, GridIcon, GridLayout } from "./grid-icon.js";
-import { HideShow } from "./hide-show.js";
+import { HideShowTransition } from "./hide-show.js";
 import { Rotater, Slider } from "./rotater.js";
 import { relURL } from "./usefull-funcs.js";
 
@@ -40,27 +40,6 @@ const SPECIAL_LETTERS = {
         symbol: "space",
         type: "action",
         letterValue: " ",
-    }
-}
-
-class HideShowSlide extends HideShow {
-    setTransitionVariable(state) {
-        this.styles = {
-            "transform": `translateY(${(1 - state) * 100}%)`,
-        }
-    }
-
-    applyShownState() {
-        this.styles = {
-            "transform": "translateY(0%)",
-            "pointer-events": null,
-        }
-    }
-    applyHiddenState() {
-        this.styles = {
-            "transform": "translateY(100%)",
-            "pointer-events": "none",
-        }
     }
 }
 
@@ -592,9 +571,9 @@ export function filterAndSort(items, phrase, getStrings) {
     return scores.map(([_, item]) => item);
 }
 
-export class SearchWindow extends HideShowSlide {
+export class SearchWindow extends HideShowTransition {
     constructor(defaultLayout = "search") {
-        super("search-window");
+        super("search-window", "up");
         this._sgrid = this.createChild(SearchGrid, {events: {
             "change": (e) => {
                 e.stopImmediatePropagation();

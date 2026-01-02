@@ -75,22 +75,125 @@ function folderCard(size, border = BORDER_SIZE) {
              <path stroke-width = "${border}" class = "outline" d = "${outline}" />`
 }
 
-const MAKE_CARD_ICON = {
-    topic: folderCard,
-    "topic-normal": folderCard,
-    "topic-starter": folderCard,
-    "topic-noun": folderCard,
-    "topic-verb": folderCard,
-    "topic-adjective": folderCard,
-    "topic-action": folderCard,
-    "topic-emphasis": folderCard,
-    normal: plainCard,
-    starter: plainCard,
-    noun: plainCard,
-    verb: plainCard,
-    adjective: plainCard,
-    action: plainCard,
-    emphasis: plainCard,
+function cap(num, min, max) {
+    return Math.min(Math.max(num, min), max);
+}
+
+function makeDarkenedColor(color, satFac, lightFac) {
+    let hsl = color.match(/hsla?\((\d+),\s*(\d+)%,\s*(\d+)%/);
+    if (hsl) {
+        let h = parseInt(hsl[1]);
+        let s = parseInt(hsl[2]);
+        let l = parseInt(hsl[3]);
+        l = cap(l * lightFac, 0, 100);
+        s = cap(s * satFac, 0, 100);
+        color = `hsl(${h}, ${s}%, ${l}%)`;
+    }
+    return color;
+}
+
+function parseCardType(type) {
+    let isTopic = null;
+    let colorTheme = null;
+
+    if (typeof type === "string") {
+        isTopic = false;
+        let parts = type.split("-");
+        if (parts.length > 1 && parts[0] === "topic") {
+            isTopic = true;
+            colorTheme = parts[1];
+        } else if (parts.length == 1) {
+            if (type === "topic") {
+                colorTheme = "topic";
+                isTopic = true;
+            } else {
+                colorTheme = type;
+            }
+        }
+    }
+
+    return {isTopic, colorTheme};
+}
+
+const COLOR_THEMES = {
+    action: {
+        "--main": "hsla(11, 100%, 33%, 1.00)",
+        "--main-hover": "hsla(11, 100%, 23%, 1.00)",
+        "--main-active": "hsla(11, 96%, 18%, 1.00)",
+        "--tab": "hsla(11, 100%, 25%, 1.00)",
+        "--tab-hover": "hsla(11, 100%, 15%, 1.00)",
+        "--tab-active": "hsla(11, 92%, 9%, 1.00)",
+        "--icon-color": "hsl(0, 5%, 96%)",
+        "--icon-color-hover": "white",
+        "--text": "white",
+    },
+    topic: {
+        "--main": "hsl(35, 100%, 84%)",
+        "--tab": "hsl(35, 63%, 56%)",
+        "--text": "black",
+    },
+    normal: {
+        "--main": "hsl(211, 100%, 83%)",
+        "--tab": "hsl(211, 70%, 62%)"
+    },
+    starter: {
+        "--main": "hsl(102, 74%, 76%)",
+        "--tab": "hsl(102, 70%, 61%)"
+    },
+    noun: { 
+        "--main": "hsl(257, 100%, 89%)",
+        "--tab": "hsl(257, 56%, 64%)"
+    },
+    adjective: {
+        "--main": "hsl(47, 100%, 79%)",
+        "--tab": "hsl(47, 57%, 54%)"
+    },
+    verb: {
+        "--main": "hsl(353, 100%, 81%)",
+        "--tab": "hsl(353, 68%, 66%)"
+    },
+    emphasis: {
+        "--main": "hsl(18, 77%, 50%)",
+        "--tab": "hsl(18, 86%, 41%)",
+        "--text": "white",
+        "--icon-color": "hsl(0, 5%, 96%)",
+        "--icon-color-hover": "white",
+    }
+}
+
+for (let type in COLOR_THEMES) {
+    let cardColors = COLOR_THEMES[type];
+    if (!cardColors["--text"]) {
+        cardColors["--text"] = "black";
+    }
+    
+    if (!cardColors["--main-hover"]) {
+        cardColors["--main-hover"] = makeDarkenedColor(cardColors["--main"], 0.95, 0.8);
+    }
+    if (!cardColors["--tab-hover"]) {
+        cardColors["--tab-hover"] = makeDarkenedColor(cardColors["--tab"], 0.95, 0.8);
+    }
+
+    if (!cardColors["--main-active"]) {
+        cardColors["--main-active"] = makeDarkenedColor(cardColors["--main"], 1.05, 0.65);
+    }
+    if (!cardColors["--tab-active"]) {
+        cardColors["--tab-active"] = makeDarkenedColor(cardColors["--tab"], 1.05, 0.65);
+    }
+
+    if (!cardColors["--outline"]) {
+        cardColors["--outline"] = makeDarkenedColor(cardColors["--tab"], 1.2, 0.6);
+    }
+
+
+    if (!cardColors["--icon-color"]) {
+        cardColors["--icon-color"] = makeDarkenedColor(cardColors["--main"], 1, 0.3);
+    }
+
+    if (!cardColors["--icon-color-hover"]) {
+        cardColors["--icon-color-hover"] = makeDarkenedColor(cardColors["--main"], 1, 0.15);
+    }
+
 }
 
 /** A GridIconSymbol represents the image from a grid icon. */
@@ -153,10 +256,14 @@ export class GridCard extends SvgPlus {
 
         this.type = type;
 
+        let {isTopic, colorTheme} = parseCardType(type);
+        this.styles = COLOR_THEMES[colorTheme] || COLOR_THEMES["normal"];
+
         this.cardIcon = this.createChild("svg", {class: "card-icon"});
         this.content = this.createChild("div", {class: "content"});
 
-        if (type in MAKE_CARD_ICON) {
+        if (isTopic !== null) {
+            this.cardRenderer = isTopic ? folderCard : plainCard;
             let rs = new ResizeObserver(this.onresize.bind(this));
             rs.observe(this);
         }
@@ -193,13 +300,11 @@ export class GridCard extends SvgPlus {
                 let size = new Vector(width, height);
                 this.cardIcon.props = {
                     viewBox: `0 0 ${size.x} ${size.y}`,      // Update the svg viewBox.
-                    content: MAKE_CARD_ICON[this.type](size) // Recompute the svg content.
+                    content: this.cardRenderer(size) // Recompute the svg content.
                 }
             }
         }
     }
-
-    
 }
 
 /** A GridIcon represents an item from a topic. */
@@ -214,7 +319,12 @@ export class GridIcon extends GridCard {
 
     /** @param {GridIconOptions} item */
     constructor(item, accessGroup) {
-        super("access-button", item.type);
+        try {
+            super("access-button", item.type);
+        } catch (e) {
+            console.error("Error creating GridIcon with type:", item);
+            throw e;
+        }
         this.group = accessGroup || "default";
         this.item = item;
     

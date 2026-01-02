@@ -12,8 +12,6 @@ quiz-feature {
     --wave: cubic-bezier(0.32, 0, 0.68, 1);
     --c-semi: #403d3c;
     display: block;
-    transition: transform 0.5s cubic-bezier(0.32, 0, 0.68, 1);
-   
     position: absolute;
     top: 0;
     right: 0; 
@@ -27,12 +25,6 @@ quiz-feature search-window {
     background-color: var(--c-semi);
     backdrop-filter: unset;
 }
-
-quiz-feature:not([shown]) {
-    pointer-events: none;
-    transform: translateX(-100%);
-}
-
 
 quiz-list .list-body, quiz-list {
     display: flex;

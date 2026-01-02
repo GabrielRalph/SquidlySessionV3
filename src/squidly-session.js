@@ -3,10 +3,11 @@ import { FirebaseFrame } from "./Firebase/firebase-frame.js";
 import * as FB from "./Firebase/firebase.js";
 import { ERROR_CODES, SessionConnection } from "./Firebase/session-connection.js";
 import { SvgPlus, Vector } from "./SvgPlus/4.js";
-import { FrameRateMonitor } from "./Utilities/frame-rate-monitor.js";
 import { ShadowElement } from "./Utilities/shadow-element.js";
-import { delay, getQueryKey, PublicProxy, WaveStateVariable } from "./Utilities/usefull-funcs.js";
+import { delay, getQueryKey, relURL } from "./Utilities/usefull-funcs.js";
 import { get, ref } from "./Firebase/firebase.js";
+import FeaturesList from "./Features/feature-list.js"
+
 /** @param {() => Promise[]} */
 async function series(arr) {
 
@@ -31,6 +32,7 @@ const parallel = (...args) => Promise.all(...args);
 /** @typedef {import('./Features/features-interface.js').Features} Feature*/
 
 
+
 let instanceCount = 0;
 
 /** @type {SessionConnection} */
@@ -39,33 +41,92 @@ let sessionConnection = null;
 /** @type {SessionView} */
 let SessionView;
 
-/** @type {FLIBMod} */
-let Features;
 
 const $$ = new WeakMap();
 
+const LoadBar = new SvgPlus("div");
+LoadBar.class = "load-bar";
+{
+    const loader = document.querySelector("squidly-loader");
+    if (loader) {
+        loader.appendChild(LoadBar);
+        const style = new SvgPlus("style");
+        style.innerHTML = `
+        squidly-loader[has-text] .load-bar {
+            display: none;
+        }
+        .load-bar {
+            position: absolute;
+            top: 70%;
+            left: 50%;
+            width: 60%;
+            height: 1em;
+            z-index: 10001;
+            transform: translate(-50%, -50%);
+            border: 2px solid #8F53C9;
+            border-radius: 1em;
+        }
+        .load-bar::after {
+            content: attr(status);
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translate(-50%, 150%);
+            color: #8F53C9;
+            font-weight: bold;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8em;
+        }
+        .load-bar::before {
+            content: " ";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: calc(var(--progress) * 100%);
+            height: 100%;
+            background: linear-gradient(90deg, #8F53C9, #FF61A6);
+            transition: width 0.3s ease-out;
+            border-radius: 1em;
+        }`
+        document.head.appendChild(style);
+    }
+}
+
+function uncamelCase(str) {
+    str = str.replace(/([a-z])([A-Z])/g, '$1 $2');
+    str = str.replace(/([a-zA-Z])(\d+)([a-zA-Z])/g, '$1 $2 $3');
+    str = str.charAt(0).toUpperCase() + str.slice(1);
+    return str;
+}
+
 const LoadState = {}
 function logState(){
-    let sum = Object.values(LoadState).reduce((a,b)=>a+b)/28;
+    let sum = Object.values(LoadState).reduce((a,b)=>a+b)/(3 + FeaturesList.length);
     let maxstr = Math.max(...Object.keys(LoadState).map(a=>a.length));
     let hue = sum * 97;
-    let str = `%c LOAD STATE ${Math.round(sum*100)}%\n\t` +Object.keys(LoadState).map(k => `${k.padStart(maxstr)}: ${"".padStart((LoadState[k]+1)*3, LoadState[k]==2?"-":"~")}`).join("\n\t");
+    let str = `%c LOAD STATE ${Math.round(sum*100)}%\n\t` +Object.keys(LoadState).map(k => `${k.padStart(maxstr)}: ${"".padStart(Math.round((LoadState[k]+1)*10), LoadState[k]==1?"-":"~")}`).join("\n\t");
         console.log(str, `background:hsl(${hue}deg, 100%, 90%); color:hsl(${hue}deg, 100%, 30%)`);
-}
-function setLoadState(str, state) {
+    LoadBar.styles = {
+        "--progress": sum,
+    }
 
+}
+
+function setLoadState(str, state, message) {
+    if (message) LoadBar.setAttribute("status", message);
     LoadState[str] = state;
     logState();
 }
 
 async function initialiseFirebaseUser(){
-    setLoadState("firebase", 0);
+    setLoadState("firebase", 0, "Connecting to database");
     return new Promise((r) => {
         FB.addAuthChangeListener((user) => {
             if (user == null) {
                 FB.signInAnonymously();
             } else {
-                setLoadState("firebase", 2);
+                setLoadState("firebase", 1);
                 r()
             }
         })
@@ -187,6 +248,8 @@ export class SquidlySessionElement extends ShadowElement {
         super(el, "squidly-session-root")
         this.squidlySession = new SquidlySession(this);
         window.session = this.squidlySession;
+
+        
     }
 
 
@@ -270,9 +333,9 @@ export class SquidlySessionElement extends ShadowElement {
     }
 
     async initialiseSessionView(){
-        setLoadState("sessionView", 0);
+        setLoadState("sessionView", 0, "Loading session view");
         SessionView = (await import("./SessionView/session-view.js")).SessionView;
-        setLoadState("sessionView", 1);
+        setLoadState("sessionView", 0.4, "Loading session view resources");
         await SessionView.loadStyleSheets();
 
         // Create session view 
@@ -288,40 +351,42 @@ export class SquidlySessionElement extends ShadowElement {
             overflow: "hidden"
         }});
         
-        setLoadState("sessionView", 2);
+        setLoadState("sessionView", 1);
     }
 
     async initialiseFeatures() {
-        Features = (await import("./Features/features-library.js"))
-
-        await Promise.all(Features.FEATURES.map(async f => {
-            setLoadState(f.name, 0);
-            await f.class.loadResources()
-            setLoadState(f.name, 1);
+        let featureModules = await Promise.all(FeaturesList.map(async ([path, name]) => {
+            let niceName = uncamelCase(name)
+            setLoadState(name, 0, "Loading " + niceName + " feature");
+            const module = await import(path);
+            setLoadState(name, 0.2, "Loading " + niceName + " resources");
+            await module.default.loadResources()
+            setLoadState(name, 0.6, "Starting " + niceName + " feature");
+            return [module, name];
         }))
 
-        let makeFeature = (featureInfo) => {
-            let {firebaseName} = featureInfo.class;
+        let makeFeature = ([module, refName]) => {
+            let {firebaseName, layers, name} = module.default;
             let sDataFrame = new SessionDataFrame(firebaseName);
 
             /** @type {Feature} */
-            let feature = new featureInfo.class(this.squidlySession, sDataFrame);
+            let feature = new module.default(this.squidlySession, sDataFrame);
 
             // Attach feature elements to their corresponding areas on the session view.
             let occupiables = []
-            if (typeof featureInfo.layers === "object" && featureInfo.layers !== null) {
-                for (let key in featureInfo.layers) {
-                    let layer = featureInfo.layers[key]
+            if (typeof layers === "object" && layers !== null) {
+                for (let key in layers) {
+                    let layer = layers[key]
                     let func = layer.type == "panel" ? "setPanelContent" : "addScreenArea";
     
                     let element = feature[key];
                     if (!element) {
-                        console.warn(`The feature element "${key}" is missing`)
+                        console.warn(`The feature element "${key}" is missing`, feature)
                     } else if (!SvgPlus.is(element, ShadowElement)) {
                         console.warn(`The feature element "${key}" is not a shadow element.`)
                     } else {
                         let res = this.sessionView[func](layer.area, element);
-                        if (res instanceof Element) res.setAttribute("name", featureInfo.name + "." + key);
+                        if (res instanceof Element) res.setAttribute("name", name + "." + key);
                         if (layer.index) {
                             res.styles = {"z-index": layer.index}
                         }
@@ -332,7 +397,6 @@ export class SquidlySessionElement extends ShadowElement {
                 }
             }
 
-            let {name} = featureInfo;
             if (occupiables.length == 1) {
                 this.occupiables[name] = occupiables[0][0];
             } else {
@@ -341,25 +405,25 @@ export class SquidlySessionElement extends ShadowElement {
                 }
             }
 
-            this[name + "Public"] = createFeatureProxy(feature, featureInfo);
+            this[name + "Public"] = createFeatureProxy(feature, module.default);
             this[name] = feature;
 
-            return [feature, featureInfo];
+            return [feature, refName];
         }
 
         // Instantiate all features.
-        let features = Features.FEATURES.map(makeFeature);
+        let features = featureModules.map(makeFeature);
 
         // Initialise all features.
-        await Promise.all(features.map(async ([feature, info]) => {
+        await Promise.all(features.map(async ([feature, refName]) => {
             await feature.initialise() 
-            setLoadState(info.name, 2);
+            setLoadState(refName, 1);
         }));
     }
 
     async initialiseSessionConnection(){
         let error = [false, ""];
-        setLoadState("connection", 0)
+        setLoadState("connection", 0, "Connecting to session");
         if (sessionConnection === null) {
             let key = getQueryKey();
          
@@ -402,7 +466,7 @@ export class SquidlySessionElement extends ShadowElement {
                     this.loaderText = `An unexpected error occured please refresh and try again. </br> ${error}`
             }
         } else {
-            setLoadState("connection", 2);
+            setLoadState("connection", 1);
         }
 
         this.endlinkHost = this.endlinkHost;
@@ -536,6 +600,7 @@ export class SquidlySessionElement extends ShadowElement {
             }
         }
     }
+    
     async initialiseKeyboardShortcuts() {
         window.addEventListener("keydown", (e) => {
             let notInInput = document.activeElement === document.body;
@@ -568,6 +633,7 @@ export class SquidlySessionElement extends ShadowElement {
     set endlinkHost(link) {
         this["endlink-host"] = link;
     }
+
     set ["endlink-host"](link) {
         this._endLinkHost = link;
         console.log("host link - ", link);
@@ -584,6 +650,7 @@ export class SquidlySessionElement extends ShadowElement {
             }
         }
     }
+
     get endlinkHost() {
         return this._endLinkHost;
     }
@@ -591,6 +658,7 @@ export class SquidlySessionElement extends ShadowElement {
     set endlinkParticipant(link) {
         this["endlink-participant"] = link;
     }
+
     set ["endlink-participant"](link) {
         this._endLinkParticipant = link;
         console.log("participant link - ", link);
@@ -607,6 +675,7 @@ export class SquidlySessionElement extends ShadowElement {
             }
         }
     }
+
     get endlinkParticipant() {
         return this._endLinkParticipant;
     }
@@ -638,6 +707,7 @@ export class SquidlySessionElement extends ShadowElement {
                 this.squidlyLoader.appendChild(videoEl);
                 this._loaderVideoEl = videoEl;
                 videoEl.play();
+                videoEl.onclick = videoEl.play.bind(videoEl);
             }
             if (video == null || video == "") {
                 this._loaderVideoEl.remove();
@@ -667,11 +737,10 @@ export class SquidlySessionElement extends ShadowElement {
                     left: "50%",
                     transform: "translate(-50%, -50%)"
                 }            
-           
-                    
                 
                 this.squidlyLoader.appendChild(text);
                 this._loaderTextEl = text;
+                this.squidlyLoader.toggleAttribute("has-text", true);
             }
             this._loaderTextEl.innerHTML = text
         }

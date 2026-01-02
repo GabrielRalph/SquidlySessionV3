@@ -6,6 +6,7 @@ import { delay, relURL, WaveStateVariable } from "../../Utilities/usefull-funcs.
 import { Features } from "../features-interface.js";
 import { SessionView } from "../../SessionView/session-view.js";
 import { AccessButton, AccessClickEvent } from "../../Utilities/access-buttons.js";
+import { HideShowTransition } from "../../Utilities/hide-show.js";
 
 /**
  * @typedef {Object} IconsDescription
@@ -290,11 +291,17 @@ class ToolBarRing extends ShadowElement {
 
     /** @type {ToolBarFeature} */
     tools = null
+
     constructor(session) {
         super("tool-bar-ring");
         this.tools = session;
 
-        this.ring = this.createChild("ring-selector");
+        /** @type {HideShowTransition} */
+        this.ring = this.createChild(HideShowTransition, {
+            style: { "pointer-events": "all" }
+        }, "ring-selector");
+       
+     
 
         // Build ring icon svg element structure.
         this.ringIconSvg = this.ring.createChild("svg", {class: "ring-icon"});
@@ -312,14 +319,6 @@ class ToolBarRing extends ShadowElement {
         })
         this.clickBoxesG = this.ringIconSvg.createChild('g', {class: "click-boxes"});
         this.outlinesG = this.ringIconSvg.createChild('g', {class: "outlines"});
-
-        // Setup hide show wave state variable
-        this.ringWVS = new WaveStateVariable(false, 0.3, (t) => {
-            this.ring.styles = {
-                opacity: t,
-                "pointer-events": t == 1 ? "all" : "none",
-            }
-        })
 
         // Create ring icons container
         this.ringIcons = this.ring.createChild("div", {display: "contents"})
@@ -525,7 +524,7 @@ class ToolBarRing extends ShadowElement {
      * @return {boolean}
      */
     get shown(){
-        return this.ringWVS.get();
+        return this.ring.shown;
     }
 
     /** Toggle, toggles the elements visibility
@@ -534,15 +533,8 @@ class ToolBarRing extends ShadowElement {
      * @return {Promise}
      */
     async toggle(bool){
-        // try {
-        //     throw new Error()
-        // } catch (e) {
-        //     console.log(!bool ? "hiding ring" : "showing ring", e);
-            
-        // }
-        await this.ringWVS.set(bool)
+        return await this.ring.toggle(bool, 400);
     }
-
 
     static get usedStyleSheets(){
         return [relURL("./tool-bar-styles.css", import.meta)]
@@ -550,7 +542,7 @@ class ToolBarRing extends ShadowElement {
 }
 
 
-export class ToolBar extends ShadowElement {
+class ToolBar extends ShadowElement {
     constructor(){
         super("tool-bar");
     }
@@ -628,7 +620,7 @@ class GestureRecogniser {
 
 
 
-export class ToolBarFeature extends Features {
+export default class ToolBarFeature extends Features {
     selectionListeners = {};
 
     mouseY = null;
@@ -780,7 +772,6 @@ export class ToolBarFeature extends Features {
     get toolbarFixed(){
         return this._toolbarFixed;
     }
-
     
 
     get isRingShown() {
@@ -878,12 +869,15 @@ export class ToolBarFeature extends Features {
 
     static get layers() {
         return {
-            toolBarArea: {
-                zIndex: 2,
-                position: "top-left",
-                size: "auto-x auto-y",
-                margin: "0px 0px 0px 0px",
-                content: "toolBar toolBarRing",
+            toolBar: {
+                type: "panel", 
+                area: "tools",
+            },
+            toolBarRing: {
+                type: "area",
+                area: "mainScreen",
+                mode: "overlay",
+                index: 220,
             }
         }
     }

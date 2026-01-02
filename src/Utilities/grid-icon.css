@@ -1,41 +1,41 @@
 [shadow] {
-    --folder-color: #ffddad;
-    --folder-tab-color: #d69b48;
-    --word-color: #a7d2ff;
-    --word-color-dark: #5a9ce2;
-    --word-starter-color: #aeef93;
-    --word-starter-color-dark: #80e157;
-    --action-color: var(--action-red);
-    --word-noun: #d6c6ff;
-    --word-noun-dark: #8d6fd7;
-    --word-adjective-dark: #f0cf56;
-    --word-adjective: #ffe792;
-    --word-verb-dark: #e36c7a;
-    --word-verb: #ff9ca7;
-    --emphasis-color: #fb9753;
-    --emphasis-color-dark: #e2581f;
-    --emphasis-tab-color: #c1440e;
     --border: 4px;
-    --gap: 0.5em;
+    --gap: calc(1.25 * var(--border));
     --shadow-color: #bfbfbfc5;
 }
 
 .grid-icon {
+    --outline: var(--color-danger);
+
+    --icon-color: rgb(245, 244, 244);
+    --icon-color-hover: white;
+
+    --text: white;
+
+    --main: rgb(250, 70, 199);
+    --tab: rgb(200, 50, 150);
+
+    --main-hover: rgb(220, 66, 184);
+    --tab-hover: rgb(169, 22, 120);
+    
+    --main-active: rgb(180, 54, 150);
+    --tab-active: rgb(150, 10, 100);
+
+
+    --tab-color: var(--tab);
+    --main-color: var(--main);
+    --outline-color: transparent;
+
     width: 100%;
     height: 100%;
     position: relative;
 
-    user-drag: none;
 	-webkit-user-drag: none;
-	-moz-user-select: none;
 
-    --icon-color: rgb(41, 40, 40);
-    --icon-color-hover: black;
-    --tab-color: var(--word-color-dark);
-    --card-color: var(--word-color);
     cursor: pointer;
+    color: var(--text);
 }
-
+/* 
 .grid-icon.action, .grid-icon.topic-action {
     --icon-color:rgb(244 230 230);
     --icon-color-hover: white;
@@ -54,7 +54,7 @@
 .grid-icon.starter, .grid-icon.topic-starter {
     --card-color: var(--word-starter-color);
     --tab-color: var(--word-starter-color-dark);
-    --icon-color: #2f6517;
+    --icon-color: hsl(102, 70%, 24%);
     --icon-color-hover: #1d440d;
 }
 
@@ -84,7 +84,7 @@
     --card-color: var(--folder-color);
     --icon-color: #643d08;
     --icon-color-hover: #3c2303;
-}
+} */ 
 
 
 
@@ -193,38 +193,40 @@
     width: 100%;
     height: 100%;
     filter: drop-shadow(2px 2px 4px var(--shadow-color));
-    transition: filter 0.1s ease-in-out;
 }
 
 .grid-icon .card-icon .outline {
     fill: none;
+    stroke: var(--outline-color);
 }
 
 .grid-icon .card-icon .card {
-    fill: var(--card-color);
+    fill: var(--main-color);
+    transition: fill 0.15s ease-in-out
 }
 
 .grid-icon .card-icon .tab {
     fill: var(--tab-color);
+    transition: fill 0.15s ease-in-out
 }
 
-
-.grid-icon[hover] .card-icon, 
-.grid-icon:hover .card-icon {
-    filter: brightness(0.7) contrast(1.6);
-    -webkit-filter: brightness(0.7) contrast(1.6);;
+.grid-icon[hover],
+.grid-icon:hover {
+    --tab-color: var(--tab-hover);
+    --main-color: var(--main-hover);
+    --outline-color: var(--outline);
 } 
-.grid-icon:active .card-icon{
-    filter: brightness(0.6) contrast(2);
-    -webkit-filter: brightness(0.6) contrast(2);
-}
 
-.grid-icon:hover .icon {
+.grid-icon:hover .icon,
+.grid-icon[hover] .icon {
     --icon-color: var(--icon-color-hover);
 }
 
-.grid-icon[hover] .card-icon .outline {
-    stroke: var(--color-danger);
+.grid-icon:active {
+    --tab-color: var(--tab-active);
+    --main-color: var(--main-active);
+    --outline-color: var(--outline-active, var(--outline));
+    transform: scale(0.97);
 }
 
 grid-layout {

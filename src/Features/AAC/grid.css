@@ -13,16 +13,15 @@ aac-board {
     background-color: white;
     gap: var(--gap);
     pointer-events: all;
-    transition: transform 0.5s cubic-bezier(0.32, 0, 0.68, 1);
+    /* transition: transform 0.5s cubic-bezier(0.32, 0, 0.68, 1); */
 }
 
 
 
-aac-board:not([shown]) {
+/* aac-board:not([shown]) {
     pointer-events: none;
     transform: translateX(-150%);
-}
-
+} */
 
 grid-block {
     --total-row-gaps: calc(var(--rows) * var(--gap) + var(--gap));
@@ -37,9 +36,11 @@ grid-block {
     display: grid;
     gap: var(--gap);
 }
+
 grid-space {
     display: flex;
 }
+
 aac-output {
     background: #e5e0e0;
     border-radius: calc(3* var(--gap));

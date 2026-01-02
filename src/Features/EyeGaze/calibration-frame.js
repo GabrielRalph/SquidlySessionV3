@@ -1,9 +1,8 @@
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
-import { HideShow } from "../../Utilities/hide-show.js";
+import { HideShowTransition } from "../../Utilities/hide-show.js";
 import { BasePointer, SvgResize } from "../../Utilities/svg-resize.js";
 import { delay, relURL } from "../../Utilities/usefull-funcs.js";
 import * as Algorithm from "./Algorithm/index.js"
-import { linspace } from "./Algorithm/Utils/other.js";
 
 
 /**
@@ -448,7 +447,7 @@ const Guides = [
 	"squidly"
 ]
 
-export class CalibrationFrame extends HideShow {
+export class CalibrationFrame extends HideShowTransition {
 	/** @type {BasePointer} */
 	pointer = null;
 	pointerSize = 50;
@@ -510,13 +509,19 @@ export class CalibrationFrame extends HideShow {
 		return this._speed;
 	}
 
-
-	applyShownState() {
-		super.applyShownState();
-		this.styles = {
-			"pointer-events": "all"
+	set messageOpacity(value) {
+		this.message.styles = {
+			opacity: value
 		}
 	}
+
+
+	// applyShownState() {
+	// 	super.applyShownState();
+	// 	this.styles = {
+	// 		"pointer-events": "all"
+	// 	}
+	// }
 
 	onconnect() {
 		this.styles = {
@@ -527,6 +532,7 @@ export class CalibrationFrame extends HideShow {
 			bottom: 0,
 			background: "#1b1818",
 			"cursor": "none",
+			"pointer-events": "all",
 		}
 
 		let rel = this.createChild("div", {
@@ -542,18 +548,15 @@ export class CalibrationFrame extends HideShow {
 		pointers.shown = true;
 		pointers.start();
 
-		let message = new HideShow("div");
-		message.styles = {
+		this.message = this.createChild("div", { styles: {
 			position: "absolute",
 			top: "50%",
 			left: "50%",
 			transform: "translate(-50%, -50%)",
 			"text-align": "center",
 			"font-size": "1.5em",
-            color: "white"
-		}
-		this.appendChild(message);
-		this.message = message;
+			color: "white"
+		}})
 
 		Algorithm.setCalibrationPositionGetter(() => { return this.position })
 	}
@@ -591,7 +594,7 @@ export class CalibrationFrame extends HideShow {
 		this.stop = false;
 		this.pointer.shown = false;
 		this.pointer.opacity = 0;
-		this.message.opacity = 0; 
+		this.messageOpacity = 0; 
 
 		if (!(css instanceof Array)) {
 			css = [css];
@@ -605,7 +608,7 @@ export class CalibrationFrame extends HideShow {
 			for (let point of points) {
 				if (typeof point.message === "string") {
 					this.message.innerHTML = point.message;
-					this.message.opacity = (typeof point.opacity === "number" ? point.opacity : 1);
+					this.messageOpacity = (typeof point.opacity === "number" ? point.opacity : 1);
 					this.recording = false;
 
 				} else {
@@ -613,7 +616,6 @@ export class CalibrationFrame extends HideShow {
 					this.pointer.size = (point.size ? point.size : 1) * this.pointerSize;
 					this.pointer.opacity = (typeof point.opacity === "number" ? point.opacity : 1);
 					recording |= !!point.recording;
-		
 					let br = new Vector(this.pointerSize).div(this.clientWidth, this.clientHeight);
 					let fs = new Vector(1).sub(br.mul(2))
 					this.position = point.mul(fs).add(br);
@@ -642,21 +644,22 @@ export class CalibrationFrame extends HideShow {
 		await this.hideMessage();
 	}
 
-	async show(duration, hide) {
-		if (!hide) {
-			this.styles = {
-				"cursor": "none",
-				display: null,
-			}
-		}
-		await super.show(duration, hide);
-		if (hide) {
-			this.styles = {
-				"cursor": null,
-				display: "none"
-			}
-		}
-	}
+
+	// async show(duration, hide) {
+	// 	if (!hide) {
+	// 		this.styles = {
+	// 			"cursor": "none",
+	// 			display: null,
+	// 		}
+	// 	}
+	// 	await super.show(duration, hide);
+	// 	if (hide) {
+	// 		this.styles = {
+	// 			"cursor": null,
+	// 			display: "none"
+	// 		}
+	// 	}
+	// }
 
 	async loadGuides(){
 		let guides = {};

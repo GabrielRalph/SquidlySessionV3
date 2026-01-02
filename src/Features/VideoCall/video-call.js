@@ -60,7 +60,7 @@ function dummyVideo() {
     video.style.opacity = "0";
     return video;
 }
-export class VideoCall extends Features {
+export default class VideoCall extends Features {
     _muteState = {
         host: {
             video: undefined,
@@ -122,8 +122,6 @@ export class VideoCall extends Features {
         }
 
     }
-
-
 
 
     /**
@@ -484,7 +482,10 @@ export class VideoCall extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-
+    static get name() {
+        
+        return "videoCall"
+    }
     static get layers() {
         return {
             topPanelWidget: {

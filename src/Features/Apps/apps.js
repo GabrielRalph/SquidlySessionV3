@@ -1,4 +1,3 @@
-import { HideShow } from "../../Utilities/hide-show.js";
 import { filterAndSort, SearchWindow } from "../../Utilities/search.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
 import { Features, OccupiableWindow } from "../features-interface.js";
@@ -46,28 +45,10 @@ class QuizSearch extends SearchWindow {
 
 class AppsFrame extends OccupiableWindow {
     constructor(feature, sdata) {
-        let root = new HideShow("app-frame");
-        root.applyIntermediateState = () => {
-            root.styles = {
-                "display": null,
-            }
-        }
-        root.applyShownState = () => {
-            root.styles = {
-                "display": null,
-            }
-        }
-        root.applyHiddenState = () => {
-            root.styles = {
-                "display": "none",
-            }
-        }
-        root.shown = false
-        super("app-frame", root);
+        super("app-frame");
         this.feature = feature;
         this.sdata = sdata;
       
-    
         this.iframe = this.createChild("iframe", {
             style: {
                 border: "none",
@@ -162,7 +143,7 @@ class AppsFrame extends OccupiableWindow {
     static get fixToolBarWhenOpen() {return true}
 }
 
-export class Apps extends Features {
+export default class Apps extends Features {
     constructor(session, sdata){
         super(session, sdata)
         this.appFrame = new AppsFrame(this, sdata);
@@ -179,7 +160,7 @@ export class Apps extends Features {
             await this.loadAppDescriptors();
         }
         await Promise.all([
-            this.appFrame.root.show(),
+            this.appFrame.show(),
             this.appFrame.search.reset(true),
             this.appFrame.search.show()
         ])
@@ -191,7 +172,7 @@ export class Apps extends Features {
         this.currentAppIndex = null;
         await Promise.all([
             this.appFrame.setSrc("about:blank"),
-            this.appFrame.root.hide()
+            this.appFrame.hide()
         ])
     }
 
@@ -426,7 +407,7 @@ export class Apps extends Features {
                 // App was closed by other party
                 this.currentAppIndex = null;
                 this.appFrame.setSrc("about:blank");
-                this.appFrame.root.hide();
+                this.appFrame.hide();
             }
         });
 

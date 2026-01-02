@@ -1,7 +1,7 @@
 import { set } from "../../Firebase/firebase.js";
 import { Vector } from "../../SvgPlus/vector.js";
 import { addDeviceChangeCallback } from "../../Utilities/device-manager.js";
-import { HideShow } from "../../Utilities/hide-show.js";
+import { HideShowTransition } from "../../Utilities/hide-show.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { delay, relURL } from "../../Utilities/usefull-funcs.js";
@@ -14,7 +14,7 @@ class MuteEvent extends Event {
     }
 }
 
-class VideoDisplay extends HideShow {
+class VideoDisplay extends HideShowTransition {
     
     constructor(el = "video-display") {
         super(el);
@@ -73,18 +73,6 @@ class VideoDisplay extends HideShow {
                 left: 0
             }
         });
-    }
-
-    applyHiddenState() {
-        this.styles = {
-            "display": "none",
-        }
-    }
-
-    applyShownState() {
-        this.styles = {
-            "display": null,
-        }
     }
 
     _update(mode){
@@ -171,7 +159,6 @@ class VideoDisplay extends HideShow {
         this.dispatchEvent(new Event("aspect"));
     }
 
-
     set userName(name) {
         this.bottomLeft.innerHTML = "";
         this.bottomLeft.createChild("div", {
@@ -195,11 +182,6 @@ class VideoDisplay extends HideShow {
     set isTalking(bool) {
         this.toggleAttribute("talking", bool);
     }
-  
-    /** @param {boolean} bool*/
-    set hide(bool){
-        this.toggleAttribute("hide", bool);
-    }
  
     get aspect(){
         let aspect = this._aspect;
@@ -219,7 +201,6 @@ const stackModes = {
     "horizontal-height": (a1, a2, w, h, space) => [ h * a1 + h * a2 + space, h ],
 }
     
-
 export class VideoPanelWidget extends ShadowElement {
     /** @type {VideoDisplay} */
     host = null;
@@ -231,7 +212,6 @@ export class VideoPanelWidget extends ShadowElement {
 
     constructor() {
         super("video-panel-widget");
-
 
         this.stack = this.createChild("div", {class: "stack"})
 

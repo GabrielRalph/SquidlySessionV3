@@ -1,6 +1,6 @@
 import { SvgPlus } from "../../SvgPlus/4.js";
 import { Vector } from "../../SvgPlus/vector.js";
-import { HideShow } from "../../Utilities/hide-show.js";
+import { HideShowTransition } from "../../Utilities/hide-show.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { POINTERS, SvgResize } from "../../Utilities/svg-resize.js";
 import { delay, relURL } from "../../Utilities/usefull-funcs.js";
@@ -36,7 +36,7 @@ const style2Key = {
  * @property {string} guide - the svg path data for the guide
  */
 
-class Cursor extends HideShow {
+class Cursor extends HideShowTransition {
     cursorIcon = null;
     constructor(){
         super("g")
@@ -81,7 +81,7 @@ function getDefaultCursorProperties() {
     }
 }
 
-export class Cursors extends Features {
+export default class Cursors extends Features {
     cursorLibrary = {};
     referenceArea = "entireScreen";
     cursorTimeouts = {};

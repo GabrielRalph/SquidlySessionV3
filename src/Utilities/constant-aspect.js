@@ -1,6 +1,6 @@
-import { HideShow } from "./hide-show.js";
+import { HideShowTransition } from "./hide-show.js";
 
-export class ConstantAspectRatio extends HideShow {
+export class ConstantAspectRatio extends HideShowTransition {
     constructor(el = "div", startWatch = true) {
       super(el);
       this.toggleAttribute("constant-aspect")

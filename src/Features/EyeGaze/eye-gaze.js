@@ -1,8 +1,7 @@
-import { SvgPlus, Vector } from "../../SvgPlus/4.js";
+import { Vector } from "../../SvgPlus/4.js";
 import { AccessButton, AccessEvent } from "../../Utilities/access-buttons.js";
-import { GridCard, GridIcon } from "../../Utilities/grid-icon.js";
-import { HideShow } from "../../Utilities/hide-show.js";
-import { Icon } from "../../Utilities/Icons/icons.js";
+import { GridIcon } from "../../Utilities/grid-icon.js";
+import { HideShowTransition } from "../../Utilities/hide-show.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { SvgResize } from "../../Utilities/svg-resize.js";
 import { relURL, isExactSame, dotGrid, argmin, TransitionVariable } from "../../Utilities/usefull-funcs.js";
@@ -35,14 +34,7 @@ function clampV0_1(v) {
 class TestScreen extends ShadowElement {
     dotSize = 0.08;
     constructor(){
-        super("test-screen", new HideShow("test-screen"));
-        this.root.applyShownState = () => {
-            this.root.styles = {
-                "pointer-events": "all",
-                "opacity": 1,
-            }
-        }
-
+        super("test-screen", new HideShowTransition("test-screen"));
         let svg = this.createChild(SvgResize, {});
         svg.shown = true;
         this.svg = svg;
@@ -167,7 +159,7 @@ class RestButton extends ShadowElement {
 }
 
 
-export class EyeGazeFeature extends Features {
+export default class EyeGazeFeature extends Features {
     /**@type {CalibrationFrame} */
     calibrationFrame = null;
 
@@ -380,11 +372,8 @@ export class EyeGazeFeature extends Features {
             this._updateProcessingState();
             this.session.accessControl.endSwitching(true);
             
-
-            let [validation] = await Promise.all([
-                this.calibrationFrame.calibrate(),
-                this.calibrationFrame.show()
-            ]);
+            await this.calibrationFrame.show()
+            let validation = await this.calibrationFrame.calibrate();
 
             let mse = null;
             if (validation?.validation?.mse) {

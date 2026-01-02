@@ -50,7 +50,7 @@ class NotificationPanel extends ShadowElement {
 
 }
 
-export class Notifications extends Features {
+export default class Notifications extends Features {
     constructor(session, sDataFrame){
         super(session, sDataFrame);
         this.notificationPanel = new NotificationPanel();

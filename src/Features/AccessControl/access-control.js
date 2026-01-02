@@ -236,7 +236,7 @@ function getSwitchButtonGroups() {
     return switchGroups;
 }
 
-export class AccessControl extends Features {
+export default class AccessControl extends Features {
     maxTransitionTimeMS = 500;
     constructor(sesh, sdata) {
         super(sesh, sdata);
@@ -257,7 +257,6 @@ export class AccessControl extends Features {
                 this.overlay.cancelSwitch();
             }
         }
-
 
     }
 

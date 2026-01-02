@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+<script type = "module">
+    import {HideShowTransition} from './src/Utilities/hide-show.js';
+    let test = new HideShowTransition("div");
+    test.styles = {
+        background: 'red',
+        padding: '50px',
+        color: 'white'
+    }
+    document.body.appendChild(test);
+    document.body.onclick = async ()=>{
+        test.toggle(!test.shown, 1000);
+    }
+</script>
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    </style>
+</html>

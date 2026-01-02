@@ -1,5 +1,7 @@
 import { ShadowElement } from "../Utilities/shadow-element.js";
-import { PublicProxy } from "../Utilities/usefull-funcs.js";
+import { delay, PublicProxy, transition } from "../Utilities/usefull-funcs.js";
+import { SvgPlus } from "../SvgPlus/4.js";
+import { HideShowTransition } from "../Utilities/hide-show.js";
 
 /**
  * @typedef {import("../squidly-session.js").SquidlySession} SquidlySession
@@ -119,12 +121,30 @@ export class Features {
 }
 
 export class OccupiableWindow extends ShadowElement {
+    constructor(elementName, transitionMode="fade") {
+        let root = new HideShowTransition(elementName, transitionMode);
+        super(elementName, root);
+        this.shown = false;
+    }
+
+    set shown(value) {
+        this.root.shown = value;
+    }
+
+    async show(time = 400) {
+        await this.root.show(time);
+    }
+
+    async hide(time = 400) {
+        await this.root.hide(time);
+    }
+
     async open() {
-        
+        await this.show();
     }
 
     async close() {
-
+        await this.hide();
     }
 
     get fixToolBarWhenOpen(){
@@ -152,7 +172,7 @@ const PrivateProperties = {
     close: true,
 }
 
-export function createFeatureProxy(feature, f) {
+export function createFeatureProxy(feature, featureClass) {
     let privateProps = {};
 
     // Global private properties
@@ -160,14 +180,14 @@ export function createFeatureProxy(feature, f) {
 
     // If the static property "privatePropertyNames" returns 
     // an array of strings make properties with those strings private.
-    if (Array.isArray(f.class.privatePropertyNames)) {
-        for (let val of f.class.privatePropertyNames) {
+    if (Array.isArray(featureClass.privatePropertyNames)) {
+        for (let val of featureClass.privatePropertyNames) {
             if (typeof val === "string") privateProps[val] = true;
         }
     }
     // Make layer elements private 
-    if (typeof f.layers === "object" && f.layers !== null) {
-        for (let key in f.layers) privateProps[key] = true;
+    if (typeof featureClass.layers === "object" && featureClass.layers !== null) {
+        for (let key in featureClass.layers) privateProps[key] = true;
     }
     
     return new PublicProxy(feature, privateProps);

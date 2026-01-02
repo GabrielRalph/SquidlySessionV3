@@ -1,9 +1,7 @@
-import { FirebaseFrame } from "../../Firebase/firebase-frame.js";
 import { SvgPlus } from "../../SvgPlus/4.js";
 import { AccessEvent } from "../../Utilities/access-buttons.js";
 import { addDeviceChangeCallback, getDevices } from "../../Utilities/device-manager.js";
 import { GridIcon } from "../../Utilities/grid-icon.js";
-import { HideShow } from "../../Utilities/hide-show.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
 import { Rotater } from "../../Utilities/rotater.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
@@ -233,25 +231,7 @@ class SettingsWindow extends OccupiableWindow {
     settingsFeature = null;
 
     constructor(settings) {
-        let root = new HideShow("settings-window");
-        root.applyIntermediateState = () => {
-            root.styles = {
-                "display": null,
-            }
-        }
-        root.applyShownState = () => {
-            root.styles = {
-                "display": null,
-                "pointer-events": "all",
-            }
-        }
-        root.applyHiddenState = () => {
-            root.styles = {
-                "display": "none",
-            }
-        }
-        root.shown = false
-        super("settings-window", root);
+        super("settings-window");
         
         this.settingsFeature = settings;
         this.root.events = {
@@ -418,12 +398,12 @@ class SettingsWindow extends OccupiableWindow {
     }
 
     async open(){
-        await this.root.show(400)
+        await this.show(400)
     }
 
     async close(){
         this.dispatchEvent(new Event("exit"));
-        await this.root.hide(400)
+        await this.hide(400)
     }
 
     static get usedStyleSheets() {
@@ -435,7 +415,7 @@ class SettingsWindow extends OccupiableWindow {
 
 
 
-export class SettingsFeature extends Features {
+export default class SettingsFeature extends Features {
     constructor(session, sdata) {
         super(session, sdata);
         this.settingsWindow = new SettingsWindow(this);

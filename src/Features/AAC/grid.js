@@ -214,7 +214,6 @@ class Grid extends SvgPlus {
     }
 }
 
-
 class AACOutputIcon extends SvgPlus {
     /** 
      * @param {GItem} item 
@@ -238,7 +237,6 @@ class AACOutputIcon extends SvgPlus {
         })
     }
 }
-
 
 class AACOutput extends SvgPlus {
     /** @type {GItem[]} */
@@ -320,9 +318,6 @@ class AACOutput extends SvgPlus {
         await Promise.all(this.items.map(i => speakUtterance(i)))
     }
 }
-
-
-
 const ActionsTemplate = [
     {
         row: 0,
@@ -474,18 +469,9 @@ class AACGridBoard extends OccupiableWindow {
         }
     }
 
-
-    async open(){
-        this.root.toggleAttribute("shown", true);
-        await new Promise((r) => setTimeout(r, 550))
-    }
-
     async close(){
-        this.root.toggleAttribute("shown", false);
-        await Promise.all([
-            this.searchWindow.hide(550),
-            delay(550)
-        ]);
+        await super.close();
+        this.searchWindow.shown = false;
     }
 
     async startSearch(){
@@ -508,7 +494,6 @@ class AACGridBoard extends OccupiableWindow {
     }
 
     async setRootTopic(topicUID, immediate = false) {
-        let path = [topicUID]
         await Topics.getTopicCC(topicUID);
         if (topicUID !== this.currentTopic) {
             let topic = await Topics.getTopic(topicUID);
@@ -548,7 +533,6 @@ class AACGridBoard extends OccupiableWindow {
             this.aacGrid._updateTopics(this.topicPath);
         }
     }
-
   
     async setTopic(topicUID, immediate, noHist) {
         if (topicUID !== this.currentTopic) {
@@ -599,7 +583,7 @@ class AACGridBoard extends OccupiableWindow {
     static get usedStyleSheets() {return [relURL("grid.css", import.meta), GridIcon.styleSheet, ...SearchWindow.usedStyleSheets, Rotater.styleSheet]}
 }
 
-export class AACGrid extends Features {
+export default class AACGrid extends Features {
     constructor(sesh, sdata) {
         super(sesh, sdata);
         this.board = new AACGridBoard(this);
@@ -662,10 +646,7 @@ export class AACGrid extends Features {
             this.board.output.items = items;
         })
 
-        await Promise.all([
-            // this.board.currentGrid.waitForLoad(),
-            quickTalkProm
-        ]);
+        await quickTalkProm;
     }
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

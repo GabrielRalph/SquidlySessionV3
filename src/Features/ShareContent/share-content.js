@@ -5,7 +5,7 @@ import { RTCSignaler } from "../../Utilities/WebRTC/rtc-signaler.js";
 import { ConnectionManager } from "../../Utilities/WebRTC/webrtc-base.js";
 
 
-export class ShareContent extends Features {
+export default class ShareContent extends Features {
     _isSharing = false;
     constructor(session, sdata){
         super(session, sdata)

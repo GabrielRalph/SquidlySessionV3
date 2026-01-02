@@ -1,8 +1,6 @@
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
-import { AccessButton, AccessEvent } from "../../Utilities/access-buttons.js";
+import { AccessEvent } from "../../Utilities/access-buttons.js";
 import { GridIcon } from "../../Utilities/grid-icon.js";
-import { HideShow } from "../../Utilities/hide-show.js";
-import { Icon } from "../../Utilities/Icons/icons.js";
 import { delay, relURL } from "../../Utilities/usefull-funcs.js";
 import { addProcessListener } from "../../Utilities/webcam.js";
 import { OccupiableWindow } from "../features-interface.js";
@@ -302,9 +300,6 @@ class FeedbackWidget extends SvgPlus {
 }
 
 export class FeedbackWindow extends OccupiableWindow {
-    /**@type {HideShow} */
-    // root = null;
-
     /**@type {FeedbackFrame} */
     participant = null;
 
@@ -321,14 +316,7 @@ export class FeedbackWindow extends OccupiableWindow {
     session = null;
 
     constructor(session, sdata) {
-        let root = new HideShow("feedback-window");
-        root.applyShownState = () => {
-            root.styles = {
-                "pointer-events": "all",
-                "opacity": 1,
-            }
-        }
-        super("feedback-window", root);
+        super("feedback-window", "fade");
         this.sdata = sdata;
         this.session = session;
 
@@ -343,13 +331,7 @@ export class FeedbackWindow extends OccupiableWindow {
                 "access-click": (e) => this.dispatchEvent(new AccessEvent("exit", e))
             }
         })
-        // let b = head.createChild(AccessButton, {
-        //     events: {
-        //         "access-click": (e) => this.dispatchEvent(new AccessEvent("exit", e))
-        //     }
-        // }, "calibrate")
-        // b.createChild(Icon, {}, "close");
-        // b.createChild("div", {content: "Exit"})
+   
 
         // Create host and participant widgets
         let main = this.createChild("div", {class: "main"});
@@ -417,7 +399,7 @@ export class FeedbackWindow extends OccupiableWindow {
     async open(){
         this.isOpen = true;
         this.dispatchEvent(new Event("open"));
-        await this.root.show(400);
+        await this.show(400);
     }
 
     async close(){
@@ -425,7 +407,7 @@ export class FeedbackWindow extends OccupiableWindow {
         this._setFacePoints(null, this.sdata.me);
         this._setFacePoints(null, this.sdata.them);
         this.dispatchEvent(new Event("close"));
-        await this.root.hide(400);
+        await this.hide(400);
     }
 
 

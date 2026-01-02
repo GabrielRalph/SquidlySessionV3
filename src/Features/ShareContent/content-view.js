@@ -3,9 +3,9 @@ import { SvgPlus, Vector } from "../../SvgPlus/4.js"
 import * as PDF from "./pdfjs/pdf.mjs"
 import * as PDFWorker from './pdfjs/pdf.worker.mjs';
 import { OccupiableWindow } from "../features-interface.js";
-import { AccessButton, AccessClickEvent, AccessEvent } from "../../Utilities/access-buttons.js";
+import { AccessEvent } from "../../Utilities/access-buttons.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
-import { HideShow } from "../../Utilities/hide-show.js";
+import { HideShowTransition } from "../../Utilities/hide-show.js";
 import { GridIcon } from "../../Utilities/grid-icon.js";
 
 /**
@@ -291,7 +291,7 @@ class ToolIcon extends GridIcon {
   }
 }
 
-class Loader extends HideShow {
+class Loader extends HideShowTransition {
   constructor(){
     super("file-loader");
     this.icon = this.createChild(Icon, {}, "file");
@@ -335,24 +335,7 @@ export class ContentViewer extends OccupiableWindow {
   
 
   constructor(feature) {
-    let root = new HideShow("content-viewer");
-    root.applyIntermediateState = () => {
-        root.styles = {
-            "display": null,
-        }
-    }
-    root.applyShownState = () => {
-        root.styles = {
-            "display": null,
-        }
-    }
-    root.applyHiddenState = () => {
-        root.styles = {
-            "display": "none",
-        }
-    }
-    root.shown = false
-    super("content-viewer", root);
+    super("content-viewer");
     this.shareContent = feature;
     this._pageNumber = 1;
     
@@ -573,13 +556,13 @@ export class ContentViewer extends OccupiableWindow {
 
   async open(){
     this.shareContent.session.cursors.updateReferenceArea("fixedAspectArea");
-    await this.root.show(300);
+    await this.show();
   }
 
   async close(){
     this.shareContent.session.cursors.updateReferenceArea("entireScreen");
     this.shareContent.stopSharing();
-    await this.root.hide(300);
+    await this.hide();
   }
 
   get url() {

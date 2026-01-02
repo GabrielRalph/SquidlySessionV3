@@ -16,7 +16,7 @@ session-view {
     --icon-color-red: #db4a4a;
     --icon-color-red-hover: #ff4646;
 
-    --action-red: #a61f00;
+    --action-red: hsl(11, 100%, 33%);
     --action-red-dark: #811a03;
     
 

@@ -426,7 +426,6 @@ class SQuizView extends QuizView {
 class QuizSearch extends SearchWindow {
     constructor(){
         super();
- 
     }
 
     reset(imm){
@@ -457,7 +456,7 @@ class QuizWindow extends OccupiableWindow {
     /** @type {import("../features-interface.js").SessionDataFrame} */
     sdata = null;
 
-    /** @type {SearchWindow} */
+    /** @type {QuizSearch} */
     search = null;
 
     /** @param {import("../features-interface.js").SessionDataFrame} sdata */
@@ -550,16 +549,14 @@ class QuizWindow extends OccupiableWindow {
 
 
     async open(e){
-        this.root.toggleAttribute("shown", true);
-        this.search.reset(true);
-        this.isQuizOpen ? this.search.hide(true) : this.search.show(true);
-        await new Promise((r) => setTimeout(r, 550))
+        await this.search.reset(true),
+        await this.isQuizOpen ? this.search.hide(0) : this.search.show(0),
+        await this.show()
     }
 
     async close(){
-        this.root.toggleAttribute("shown", false);
-        await new Promise((r) => setTimeout(r, 550))
-        this.search.hide(true);
+        await this.hide();
+        await this.search.hide(0);
     }
 
     static get fixToolBarWhenOpen() {return true}

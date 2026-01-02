@@ -1,9 +1,9 @@
 
 import { SvgPlus, Vector } from "../SvgPlus/4.js";
-import { HideShow } from "./hide-show.js";
-import { dotGrid, linspace, transition } from "./usefull-funcs.js";
+import { HideShowTransition } from "./hide-show.js";
+import { dotGrid, transition } from "./usefull-funcs.js";
 
-export class SvgResize extends HideShow {
+export class SvgResize extends HideShowTransition {
   constructor() {
     super("svg");
     this.styles = { width: "100%", height: "100%" }
@@ -18,10 +18,10 @@ export class SvgResize extends HideShow {
   }
 
   resize() {
-    let bbox = this.getBoundingClientRect();
-    this.props = { viewBox: `0 0 ${bbox.width} ${bbox.height}` };
-    this.W = bbox.width;
-    this.H = bbox.height;
+    let {clientWidth, clientHeight} = this;
+    this.props = { viewBox: `0 0 ${clientWidth} ${clientHeight}` };
+    this.W = clientWidth;
+    this.H = clientHeight
   }
 
   addDrawable(drawable) {
@@ -81,7 +81,7 @@ const CURSOR_PATHS = {
   c: `<path d="M0,21.71c-22.06,0-40-17.94-40-40S-22.06-58.29,0-58.29s40,17.94,40,40S22.06,21.71,0,21.71ZM0-55.2c-20.36,0-36.91,16.56-36.91,36.91S-20.36,18.62,0,18.62,36.91,2.06,36.91-18.3,20.36-55.2,0-55.2Z"/>
   <path d="M0-55.2c-20.36,0-36.91,16.56-36.91,36.91S-20.36,18.62,0,18.62,36.91,2.06,36.91-18.3,20.36-55.2,0-55.2ZM1.4,15.47C1.16,12.87,0,0,0,0l-1.4,15.47c-17.53-.72-31.64-14.82-32.36-32.36l15.47-1.4s-12.87-1.16-15.47-1.4c.72-17.53,14.82-31.64,32.36-32.36l1.4,15.47s1.16-12.87,1.4-15.47c17.53.72,31.64,14.82,32.36,32.36-2.6.24-15.47,1.4-15.47,1.4l15.47,1.4C33.04.64,18.93,14.75,1.4,15.47Z"/>`
 }
-export class BasePointer extends HideShow {
+export class BasePointer extends HideShowTransition {
   constructor() {
     super("g")
   }
