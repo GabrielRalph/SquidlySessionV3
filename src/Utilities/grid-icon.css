@@ -35,59 +35,6 @@
     cursor: pointer;
     color: var(--text);
 }
-/* 
-.grid-icon.action, .grid-icon.topic-action {
-    --icon-color:rgb(244 230 230);
-    --icon-color-hover: white;
-    --card-color: var(--action-color);
-    --tab-color: var(--action-red-dark);
-    color: white;
-}
-
-.grid-icon.emphasis, .grid-icon.topic-emphasis {
-    --icon-color: #551f08;
-    --icon-color-hover: #311103;
-    --card-color: var(--emphasis-color);
-    --tab-color: var(--emphasis-tab-color);
-}
-
-.grid-icon.starter, .grid-icon.topic-starter {
-    --card-color: var(--word-starter-color);
-    --tab-color: var(--word-starter-color-dark);
-    --icon-color: hsl(102, 70%, 24%);
-    --icon-color-hover: #1d440d;
-}
-
-.grid-icon.noun, .grid-icon.topic-noun {
-    --card-color: var(--word-noun);
-    --tab-color: var(--word-noun-dark);
-    --icon-color: #3a2b5e;
-    --icon-color-hover: #21173b;
-}
-
-.grid-icon.verb, .grid-icon.topic-verb {
-    --card-color: var(--word-verb);
-    --tab-color: var(--word-verb-dark);
-    --icon-color: #7e1d20;
-    --icon-color-hover: #4a0f11;
-}
-
-.grid-icon.adjective, .grid-icon.topic-adjective {
-    --card-color: var(--word-adjective);
-    --tab-color: var(--word-adjective-dark);
-    --icon-color: #594a12;
-    --icon-color-hover: #38340d;
-}
-
-.grid-icon.topic {
-    --tab-color: var(--folder-tab-color);
-    --card-color: var(--folder-color);
-    --icon-color: #643d08;
-    --icon-color-hover: #3c2303;
-} */ 
-
-
-
 
 .grid-icon[i-hidden] {
     opacity: 0;
