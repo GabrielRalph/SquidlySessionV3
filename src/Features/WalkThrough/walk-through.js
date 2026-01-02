@@ -1,7 +1,16 @@
 import { ShadowElement } from "../../Utilities/shadow-element.js";
+import { SvgResize } from "../../Utilities/svg-resize.js";
 import { Features } from "../features-interface.js";
 
+class MaskOverlay extends SvgResize {
+    constructor() {
+        super();
+        this.areas = [];
+    }
 
+
+
+}
 
 class WalkThroughOverlayElement extends ShadowElement {
     constructor() {

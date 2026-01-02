@@ -45,19 +45,25 @@ let Text2Speech = {speak: ()=>null, loadUtterances: () => null};
 class QuizIcon extends GridIcon {
     /** @param {Answer} icon */
     constructor(icon, group, speakOnClick = true) {
+        let colorName = (icon.color || "").replace(/[a-z]-[a-z]/g, (match) => {
+            return match.charAt(0).toLowerCase() + match.charAt(2).toUpperCase();
+        });
+        console.log(colorName);
         super({
             displayValue: icon.displayValue,
             subtitle: icon.subtitle,
-            type: icon.type || "normal", 
+            type: icon.type || colorName, 
             symbol: icon.image || null
         }, "quiz-" + group);
         this.speakOnClick = speakOnClick;
+
+        
         
         this.header = icon.title;
         this.toggleAttribute("quiz-icon", true);
         this.toggleAttribute("emphasize", icon.correct === true)
         this.toggleAttribute("action", icon.isAction === true)
-        if (icon.color) this.setAttribute("color", icon.color)
+        // if (icon.color) this.setAttribute("color", icon.color)
         if (this.speakOnClick) {
             this.addEventListener("access-click", () => {
                 Text2Speech.speak(this.headerText);

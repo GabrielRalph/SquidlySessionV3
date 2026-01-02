@@ -158,4 +158,7 @@ test-screen .grid-icon {
     --shadow-color: transparent;
     /* box-shadow: unset; */
 }
+test-screen .grid-icon:active {
+    transform: translateX(-50%) scale(0.98);
+}
 

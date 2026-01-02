@@ -24,12 +24,12 @@ quiz-view {
     --button-text-color: black;
 }
 
-quiz-view[locked] .answers .grid-icon.normal {
+quiz-view[locked] .answers .grid-icon {
     pointer-events: none;
 }
 
 
-
+/* 
 .grid-icon.normal[color="light-red"] {
     --hue: 0;
     --light-0: 89%;
@@ -103,9 +103,9 @@ quiz-view[locked] .answers .grid-icon.normal {
     --light-0: 45%;
     --sat: 35%;
 
-}
+} */
 
-.grid-icon.normal[color] {
+/* .grid-icon.normal[color] {
     --adj: 1;
     --light: calc(var(--light-0) * var(--adj));
     --sat: 100%;
@@ -124,29 +124,27 @@ quiz-view[locked] .answers .grid-icon.normal {
     --button-text-color: white;
     --card-color: hsl(var(--hue), var(--sat), calc(var(--light) * 0.7));
     --tab-color: hsl(var(--hue), var(--sat), calc(var(--light) * 1.5));
-}
+} */
 *[aria-hidden="true"] {
     display: none;
 }
-.grid-icon.normal[color="empty"] {
+/* .grid-icon.normal[color="empty"] {
     pointer-events: none;
     opacity: 0;
-}
-.grid-icon.normal[color="white"] {
+} */
+/* .grid-icon.normal[color="white"] {
     --card-color: rgb(251, 251, 251);
     --card-color-select: rgb(217, 217, 217);
     --tab-color: rgb(91, 85, 85);
+} */
+
+.grid-icon[quiz-icon][selected] {
+    --main-color: var(--main-hover);
+    --outline-color: var(--outline);
 }
 
-.grid-icon.normal[quiz-icon][selected] {
-    --card-color: var(--card-color-select);
-}
-.grid-icon.normal[quiz-icon][selected] .outline {
-    stroke: var(--tab-color);
-}
 
 quiz-view .grid-icon {
-    color: var(--button-text-color);
     --shadow-color: #00000000;
 }
 
@@ -260,7 +258,7 @@ quiz-view[locked] .answers access-button[action] {
     pointer-events: all;
 } */
 
-quiz-view[locked] .answers .grid-icon.normal[emphasize]::after {
+quiz-view[locked] .answers .grid-icon[emphasize]::after {
 
     --w: max(8px, calc(3vmin - 12px));
     display: block;
@@ -271,7 +269,7 @@ quiz-view[locked] .answers .grid-icon.normal[emphasize]::after {
     top: 8px;
     right: 8px;
     position: absolute;
-    background-color: var(--tab-color);
+    background-color: var(--outline);
     
 }
 

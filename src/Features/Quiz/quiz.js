@@ -569,7 +569,7 @@ class QuizWindow extends OccupiableWindow {
     }
 }
 
-export class QuizFeature  extends Features {
+export default class QuizFeature  extends Features {
     constructor(sesh, sdata) {
         super(sesh, sdata);
         this.board = new QuizWindow(this, sdata);

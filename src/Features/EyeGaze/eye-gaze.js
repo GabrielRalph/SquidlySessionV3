@@ -176,6 +176,7 @@ export default class EyeGazeFeature extends Features {
         this.testScreen = new TestScreen();
         this.feedbackWindow = new FeedbackWindow(session, sdata);
         this.calibrationWindow = new CalibrationScreenArea();
+        this.dummyFrame = new ShadowElement("div"); // Used to measure calibration frame bbox
         this.restButton = new RestButton();
 
         this.calibrationFrame = this.calibrationWindow.calibrationFrame;
@@ -227,7 +228,9 @@ export default class EyeGazeFeature extends Features {
             if (eyeP == null || hidden) {
                 this.session.cursors.updateCursorPosition(key, null);
             } else {
-                this.session.cursors.updateCursorPosition(key, clampV0_1(eyeP), bbox)
+                eyeP = clampV0_1(eyeP);
+                console.log(eyeP);
+                this.session.cursors.updateCursorPosition(key, eyeP, bbox)
             }
         });
 
@@ -332,7 +335,7 @@ export default class EyeGazeFeature extends Features {
             eyeP = data.result.clone();
 
             // Get the bounding box of the calibration frame
-            bbox = this.calibrationFrame.bbox;
+            bbox = [new Vector(0,0), new Vector(window.innerWidth, window.innerHeight)];
 
             // Update rest watcher
             // this.restWatcher.set(eyeP.y > 1 ? 1 : 0);

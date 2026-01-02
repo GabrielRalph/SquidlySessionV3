@@ -115,7 +115,80 @@ function parseCardType(type) {
     return {isTopic, colorTheme};
 }
 
+
 const COLOR_THEMES = {
+    lightRed: {
+        "--main": "hsl(0, 100%, 89%)",
+        "--tab": "hsl(0, 56%, 64%)"
+    },
+    darkRed: {
+        "--main": "hsl(0, 70%, 38%)",
+        "--tab": "hsl(0, 56%, 28%)",
+        "--text": "white"
+    },
+    lightOrange: {
+        "--main": "hsl(30, 100%, 85%)",
+        "--tab": "hsl(30, 70%, 55%)"
+    },
+    darkOrange: {
+        "--main": "hsl(30, 80%, 45%)",
+        "--tab": "hsl(30, 70%, 35%)",
+        "--text": "white"
+    },
+    lightGold: {
+        "--main": "hsl(42, 100%, 81%)",
+        "--tab": "hsl(42, 70%, 55%)"
+    },
+    darkGold: {
+        "--main": "hsl(42, 75%, 48%)",
+        "--tab": "hsl(42, 70%, 38%)",
+        "--text": "white"
+    },
+    lightGreen: {
+        "--main": "hsl(108, 100%, 83%)",
+        "--tab": "hsl(108, 70%, 62%)"
+    },
+    darkGreen: {
+        "--main": "hsl(95, 50%, 40%)",
+        "--tab": "hsl(95, 50%, 30%)",
+        "--text": "white"
+    },
+    lightTeal: {
+        "--main": "hsl(150, 100%, 85%)",
+        "--tab": "hsl(150, 70%, 55%)"
+    },
+    darkTeal: {
+        "--main": "hsl(150, 90%, 33%)",
+        "--tab": "hsl(150, 90%, 23%)",
+        "--text": "white"
+    },
+    lightBlue: {
+        "--main": "hsl(190, 100%, 85%)",
+        "--tab": "hsl(190, 70%, 55%)"
+    },
+    darkBlue: {
+        "--main": "hsl(190, 85%, 33%)",
+        "--tab": "hsl(190, 85%, 23%)",
+        "--text": "white"
+    },
+    lightIndigo: {
+        "--main": "hsl(220, 100%, 89%)",
+        "--tab": "hsl(220, 70%, 55%)"
+    },
+    darkIndigo: {
+        "--main": "hsl(220, 50%, 45%)",
+        "--tab": "hsl(220, 50%, 35%)",
+        "--text": "white"
+    },
+    lightPurple: {
+        "--main": "hsl(270, 100%, 91%)",
+        "--tab": "hsl(270, 70%, 55%)"
+    },
+    darkPurple: {
+        "--main": "hsl(270, 35%, 45%)",
+        "--tab": "hsl(270, 35%, 35%)",
+        "--text": "white"
+    },
     action: {
         "--main": "hsla(11, 100%, 33%, 1.00)",
         "--main-hover": "hsla(11, 100%, 23%, 1.00)",
@@ -126,6 +199,12 @@ const COLOR_THEMES = {
         "--icon-color": "hsl(0, 5%, 96%)",
         "--icon-color-hover": "white",
         "--text": "white",
+    },
+    white: {
+        "--main": "hsl(0, 0%, 100%)",
+        "--tab": "hsl(0, 0%, 90%)",
+        "--text": "black",
+        "--outline": "hsla(0, 1%, 14%, 1.00)"
     },
     topic: {
         "--main": "hsl(35, 100%, 84%)",
