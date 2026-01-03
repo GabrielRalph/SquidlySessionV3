@@ -2,6 +2,13 @@ import { Vector } from "../../SvgPlus/vector.js";
 import { SvgResize } from "../../Utilities/svg-resize.js";
 
 /**
+ *  This is an example module, here I extend the SvgResize class to create
+ *  an overlay that masks out certain areas of the screen.
+ *  You can use this as a starting point.
+ */
+
+
+/**
  * @typedef {Object} MaskArea
  * @property {Vector} pos - The position of the top-left corner of the area.
  * @property {Vector} size - The size (width and height) of the area.

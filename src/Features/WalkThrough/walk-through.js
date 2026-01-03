@@ -6,7 +6,10 @@ import { delay, relURL } from "../../Utilities/usefull-funcs.js";
 import { Features } from "../features-interface.js";
 import { MaskOverlay } from "./mask-overlay.js";
 
-
+/**
+ * This is a starting point for creating a hints box for the walk-through.
+ * @extends {HideShowTransition}
+ */
 class HintsBox extends HideShowTransition {
     constructor() {
         super("hints-box");
@@ -49,6 +52,13 @@ class HintsBox extends HideShowTransition {
     }
 }
 
+
+/**
+ * This is the main overlay element for the walk-through feature.
+ * It contains the mask overlay and the hints box. You can add 
+ * more elements as needed.
+ * @extends {ShadowElement}
+ */
 class WalkThroughOverlayElement extends ShadowElement {
     constructor() {
         super("walk-through-overlay");
@@ -72,6 +82,13 @@ class WalkThroughOverlayElement extends ShadowElement {
     }
 }
 
+/**
+ * The WalkThrough feature is the main class for the walk-through functionality.
+ * It manages the overlay, mask, and hints as well as gaining access to other features
+ * and firebase if needed. 
+ * 
+ * @extends {Features}
+ */
 export default class WalkThroughFeature extends Features {
 
     /**
