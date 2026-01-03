@@ -72,7 +72,6 @@ class WalkThroughOverlayElement extends ShadowElement {
     }
 }
 
-
 export default class WalkThroughFeature extends Features {
 
     /**
