@@ -34,6 +34,7 @@ tool-bar {
     color: rgb(255, 254, 254);
     text-shadow: -1px 1px 1px rgb(0 0 0), 0px -2px 3px rgb(204 198 198 / 38%);
     cursor: pointer;
+    text-align: center;
 }
 tool-bar .tool-bar-icon {
     border: var(--border) solid var(--panel-darker-color);

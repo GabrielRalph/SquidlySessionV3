@@ -1,6 +1,6 @@
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
-import { AccessEvent } from "../../Utilities/access-buttons.js";
-import { GridIcon } from "../../Utilities/grid-icon.js";
+import { AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
+import { GridIcon } from "../../Utilities/Buttons/grid-icon.js";
 import { delay, relURL } from "../../Utilities/usefull-funcs.js";
 import { addProcessListener } from "../../Utilities/webcam.js";
 import { OccupiableWindow } from "../features-interface.js";
@@ -256,7 +256,7 @@ export class FeedbackFrame extends SvgPlus {
 }
 
 class FeedbackWidget extends SvgPlus {
-    constructor(){
+    constructor(user){
         super("feedback-widget");
 
         this.fb = this.createChild(FeedbackFrame);
@@ -270,7 +270,7 @@ class FeedbackWidget extends SvgPlus {
                    this.dispatchEvent(new AccessEvent("calibrate", e))
                 }   
            }
-        })
+        }, user + "-calibrate-button");
 
         row.createChild(GridIcon, {}, {
             type: "emphasis",
@@ -281,7 +281,7 @@ class FeedbackWidget extends SvgPlus {
                    this.dispatchEvent(new AccessEvent("test", e))
                 }   
            }
-        })
+        }, user + "-test-button");
   
     }
 
@@ -338,12 +338,12 @@ export class FeedbackWindow extends OccupiableWindow {
         this.participant = main.createChild(FeedbackWidget, { hide: true, events: {
             "calibrate": (e) => this.dispatchEvent(new AccessEvent("calibrate-participant", e)),
             "test": (e) => this.dispatchEvent(new AccessEvent("test-participant", e))
-        }});
+        }}, "participant");
         this.participant.headerText = session.settings.get("participant/profileSettings/name") || "Participant";
         this.host = main.createChild(FeedbackWidget, { hide: true, events: {
             "calibrate": (e) => this.dispatchEvent(new AccessEvent("calibrate-host", e)),
             "test": (e) => this.dispatchEvent(new AccessEvent("test-host", e))
-        }});
+        }}, "host");
         this.host.headerText = "Host"
         this.updateHostName();
 

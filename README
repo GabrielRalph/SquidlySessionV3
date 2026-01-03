@@ -1,2 +1,34 @@
-Download submodules using:
-git submodule update --init --recursive
+# This is the Squidly Session Code Base! 
+
+## Getting Started 
+
+- Make sure download submodules using:  
+```git submodule update --init --recursive```
+
+- Host the repository as a statically served site .i.e  by clicking ```((.)) Go Live``` in VS code (assuming you have the live server addon installed, and if not install it)
+
+- Go to the [Squidly console](https://squidly.com.au/Console/) and start a session. The session will apear in a new tab and will have a url like this:  
+```https://squidly.com.au/V3/?someUniqueCode```  
+change it to:  
+```https://squidly.com.au/V3Test/?someUniqueCode```    
+This will load the session but will import your local code base. You will need to refresh this page when you make edits to the code base.
+
+- In your browser you can also open the page:  
+```127.0.0.1:37374/?someUniqueCode```  
+This will use your server directly so it should refresh as you make edits (**Unfortunately edits made to css files alone do not cause an immediate refresh so you will have to refresh manually in that scenario**).
+
+## Adding Features 
+A feature template can be found in ```src/Features/TemplateFeature```. You can copy this template feature folder and make your own feature. Once your ready to test your feature, ensure that there is:
+
+- A js module that exports as default a class inheriting the Features class (this is your feature).
+- Your feature has a static getter called name that returns a constant string (i.e. the name of your feature)
+
+Once these requirments are met you can update the code base to include your feature by running the following script in your terminal:
+```
+cd Builders
+npm run build
+```
+*Note: Node js must be installed on your computer to run this*
+
+## Adding SVG Icons
+To add an svg icon and the file into the ```src/Utilities/Icons/IconLibrary```. The icon must be prefixed with "i_". After adding the icon run the build script as per adding features.

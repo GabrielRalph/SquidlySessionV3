@@ -326,6 +326,15 @@ export class SessionView extends ShadowElement {
             oldMove = move;
         })
 
+        window.addEventListener("mousedown", (e) => {
+            let elements = this.getElementsAtPoints(new Vector(e));
+            elements.forEach(el => el.dispatchEvent(copyEvent(e)))
+        })
+        window.addEventListener("mouseup", (e) => {
+            let elements = this.getElementsAtPoints(new Vector(e));
+            elements.forEach(el => el.dispatchEvent(copyEvent(e)))
+        })
+
         window.addEventListener("mouseout", (e) => {
             let leave = new MouseEvent("mouseleave");
             for (let el of oldMove) {

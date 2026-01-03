@@ -1,0 +1,12 @@
+{
+    "type": "module",
+    "name": "builders",
+    "version": "1.0.0",
+    "description": "Used to compile features and tools for squily",
+    "main": "main.js",
+    "scripts": {
+        "build": "node main.js"
+    },
+    "author": "Gabriel Ralph",
+    "license": "ISC"
+}

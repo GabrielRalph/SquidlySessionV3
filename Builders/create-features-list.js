@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { extractFunction } from './utils.js';
 
 function isDir(path) {
     return fs.lstatSync(path).isDirectory();
@@ -9,15 +10,30 @@ function getAllFeatures(directory) {
         if (isDir(`${directory}/${featureDir}`)) {
             fs.readdirSync(`${directory}/${featureDir}`).forEach(file => {
                 if (file.endsWith('.js')) {
+
+
+                    // Read the file content
                     let text = fs.readFileSync(`${directory}/${featureDir}/${file}`, 'utf8');
                     text.replace(/\/\/.*/g, ''); // remove comments
                     text = text.replace(/\/\*((.|\n)*?)\*\//g, ''); // remove line comments
+
+                    // Check if it defines a Feature class and exports it as default
                     if (text.match(/extends\s+Features/) && text.match(/export\s+default/)) {
+
+                        // Ensure it has a static name() method
                         let name = text.match(/static\s+get\s+name\(\)[\s\n]*{[\s\n]*return\s*["'`](.+?)["'`]/);
                         if (name && name[1]) {
+
+                            // Extract the class name
+                            let className = text.match(/export\s+default\s+class\s+([A-Za-z0-9_]+)/);
+                            
+                            // Add to features list
                             features.push({
+                                relPath: `./${featureDir}/${file}`,
                                 filename: `${directory}/${featureDir}/${file}`,
                                 name: name[1],
+                                code: text,
+                                className: className ? className[1] : name[1]
                             });
                         } else {
                             console.warn("Feature found but no static name():", `${directory}/${featureDir}/${file}`);
@@ -31,50 +47,28 @@ function getAllFeatures(directory) {
     return features;
 } 
 
+/**
+ * Analyzes the code of a feature to find dependencies on other features.
+ * @param {Object} feature - The feature to analyze.
+ * @param {Array} allFeatures - List of all features to check against.
+ * @returns {Object} - An object mapping feature names to dependency info.
+ */
+function getDependencies(feature, allFeatures) {
+    let {code} = feature;
 
-function extractFunction(stub, text) {
-    let funcRegex = new RegExp(`${stub}[\\s\\n]*{`, 'g');
-    let match = funcRegex.exec(text);
-    if (!match) return null;
-
-    let startIndex = match.index + match[0].length;
-    let braceCount = 1;
-    let currentIndex = startIndex;
-
-    while (braceCount > 0 && currentIndex < text.length) {
-        if (text[currentIndex] === '{') {
-            braceCount++;
-        } else if (text[currentIndex] === '}') {
-            braceCount--;
-        }
-        currentIndex++;
-    }
-
-    if (braceCount === 0) {
-        return text.slice(match.index, currentIndex);
-    } else {
-        return null; // No matching closing brace found
-    }
-}
-
-function getDependencies(featureFile, allFeatures) {
-    let text = fs.readFileSync(featureFile, 'utf8');
-    text.replace(/\/\/.*/g, '');
-    text = text.replace(/\/\*((.|\n)*?)\*\//g, '');
-
-    let featureClass = extractFunction('Features', text);
+    let featureClass = extractFunction('Features', code);
     let contructorCode = extractFunction('constructor[\\s\\n]*\\((.*?)\\)', featureClass);
     let initialiseCode = extractFunction('initialise[\\s\\n]*\\((.*?)\\)', featureClass);
 
     let dependencies = {};
-    for (let feature of allFeatures) {
-        if (featureFile !== feature.filename) {
+    for (let other of allFeatures) {
+        if (feature.filename !== other.filename) {
             
-            let importRegex = new RegExp(`session.${feature.name}`, 'g');
-            if (text.match(importRegex)) {
+            let importRegex = new RegExp(`session.${other.name}`, 'g');
+            if (code.match(importRegex)) {
                 let isInConstructor = contructorCode && contructorCode.match(importRegex);
                 let isInInitialise = initialiseCode && initialiseCode.match(importRegex);
-                dependencies[feature.name] = {
+                dependencies[other.name] = {
                         inConstructor: !!isInConstructor,
                         inInitialise: !!isInInitialise
                 };
@@ -85,9 +79,14 @@ function getDependencies(featureFile, allFeatures) {
     return dependencies;
 }
 
-function buildDependencyGraph(features) {
+/**
+ * Adds dependency and dependent information to each feature.
+ * Also sorts features by the number of dependents.
+ * @param {Array} features - List of features to process.
+ */
+function addDependencies(features) {
     features.forEach(feature => {
-        feature.dependencies = getDependencies(feature.filename, features);
+        feature.dependencies = getDependencies(feature, features);
     });
 
     features.forEach(feature => {
@@ -107,13 +106,34 @@ function buildDependencyGraph(features) {
     features.sort((a, b) => b.dependentsCount - a.dependentsCount);
 }
 
-function createFeatureList(src) {
+export function createFeatureList(src) {
     const features = getAllFeatures(src);
-    buildDependencyGraph(features);
-    const relURLs = features.map(f=>`[relURL(".${f.filename.replace(src, '')}", import.meta), "${f.name}"]`);
-    const featuresList = `import { relURL } from '../Utilities/usefull-funcs.js';\nexport default [\n\t${relURLs.join(",\n\t")}\n]`
-    fs.writeFileSync(src + '/feature-list.js', featuresList);
+    addDependencies(features);
+
+    console.log("\nFeatures: \n\t" + features.map(f => f.name).join("\n\t"));
+    const module = [
+        "import { relURL } from '../Utilities/usefull-funcs.js';",
+        "",
+        ...features.map(
+            f => `/** @typedef {import('${f.relPath}').default} ${f.className} */`
+        ),
+        "",
+        "export class SquildyFeatureProxy {",
+        "",
+        ...features.map(
+            f => `\t/** @return {${f.className}} */\n\tget ${f.name}() { return this.getFeature("${f.name}"); }\n`
+        ),
+        "\t/** @override */",
+        "\tgetFeature() { }",
+        "",
+        "}",
+        "",
+        "export const FeaturesList = [",
+        features.map(
+            f=>`\t[relURL("${f.relPath}", import.meta), "${f.name}"]`
+        ).join(",\n"),
+        "];"
+    ]
+    fs.writeFileSync(src + '/feature-list.js', module.join('\n'));
 }
 
-
-createFeatureList('./src/Features');

@@ -3,10 +3,10 @@ import { SvgPlus, Vector } from "../../SvgPlus/4.js"
 import * as PDF from "./pdfjs/pdf.mjs"
 import * as PDFWorker from './pdfjs/pdf.worker.mjs';
 import { OccupiableWindow } from "../features-interface.js";
-import { AccessEvent } from "../../Utilities/access-buttons.js";
+import { AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
 import { HideShowTransition } from "../../Utilities/hide-show.js";
-import { GridIcon } from "../../Utilities/grid-icon.js";
+import { GridIcon } from "../../Utilities/Buttons/grid-icon.js";
 
 /**
  * @typedef {Object} ContentInfo

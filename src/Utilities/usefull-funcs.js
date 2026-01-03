@@ -85,12 +85,18 @@ export function elementAtCursor(){
   return document.elementFromPoint(window.XPos, window.YPos);
 }
 
-export async function parallel() {
-  let res = [];
-  for (let argument of arguments) {
-    res.push(await argument);
-  }
-  return res;
+/** @param {() => Promise[]} */
+export async function series(arr) {
+    for (let promise of arr) {
+        await promise();
+    }
+}
+
+export function uncamelCase(str) {
+    str = str.replace(/([a-z])([A-Z])/g, '$1 $2');
+    str = str.replace(/([a-zA-Z])(\d+)([a-zA-Z])/g, '$1 $2 $3');
+    str = str.charAt(0).toUpperCase() + str.slice(1);
+    return str;
 }
 
 export async function transition(callBack, duration) {
@@ -367,12 +373,15 @@ export class PromiseChain {
   }
 }
 
-class PrivacyError extends Error{
+class ProxyObjectError extends Error{
   constructor(message) {
     super(message);
     this.stack = this.stack.replace(/\sat\s+Object.set[^\n]+\n/, "")
   }
 }
+class ProxyObjectSetError extends ProxyObjectError {}
+class ProxyObjectGetError extends ProxyObjectError {}
+
 class ProxyClass {
   constructor(...args) {
       return new Proxy(...args)
@@ -391,23 +400,25 @@ export class PublicProxy extends ProxyClass {
         if (prop in target) {
           let isF = target[prop] instanceof Function
           if (isPrivate(prop)) {
-            throw new PrivacyError(`Failed to ${isF ? "call" : "get"} ${prop} as it's a private ${isF ? "function" : "property"}.`)
+            throw new ProxyObjectGetError(`Failed to ${isF ? "call" : "get"} ${prop} as it's a private ${isF ? "function" : "property"}.`)
           } else {
             return isF ? instance[prop].bind(instance) : target[prop];
           }
         } else {
-          throw new PrivacyError(`No property or function ${prop}.`)
+          throw new ProxyObjectGetError(`No property or function named '${prop}'.`)
         }
       },
       set: (target, prop, receiver) => {
         if (prop in instance) {
           if (isPrivate(prop)) {
-            throw new PrivacyError(`Failed to set ${prop} as it's a private ${target[prop] instanceof Function ? "function" : "property"}.`)
+            throw new PrivacyError(`The ${target[prop] instanceof Function ? "function" : "property"} '${prop}' is private.`)
+          } else if (instance[prop] instanceof Function) {
+            throw new ProxyObjectSetError(`Cannot set function '${prop}'.`)
           } else {
             instance[prop] = receiver;
           }
         } else {
-          throw new PrivacyError(`No property or function ${prop}.`)
+          throw new PrivacyError(`No property or function '${prop}'.`)
         }
         return true
       }

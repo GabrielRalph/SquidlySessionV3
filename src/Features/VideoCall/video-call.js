@@ -270,7 +270,7 @@ export default class VideoCall extends Features {
             // if the user is the local user, update the toolbar icon and mute the track
             if (user === this.sdata.me) {
                 let iconName = MuteIconNames[type][bool ? 1 : 0];
-                this.session.toolBar.setIcon(`control/${type}/name`, iconName);
+                this.session.toolBar.setMenuItemProperty(`control/${type}/symbol`, iconName);
                 this._mainConnection.muteTrack(type, bool)
             }
 
@@ -338,7 +338,6 @@ export default class VideoCall extends Features {
 
 
     async initialise(){
-        await VideoPanelWidget.loadStyleSheets();
         let connection = new WebRTC.ConnectionManager();
         connection.on("state", this._onWebRTCState.bind(this));
         connection.on("data", this._onWebRTCData.bind(this));
@@ -378,15 +377,26 @@ export default class VideoCall extends Features {
             // set the local video stream to the widget
             this._setUserStream(stream, this.sdata.me)
             this._setupMuteStateListeners(presets);
-            
-            // add toolbar listeners
-            this.session.toolBar.addSelectionListener("audio", (e) => {
-                this.toggleMuted("audio", this.sdata.me);
-            })
-            this.session.toolBar.addSelectionListener("video", (e) => {
-                this.toggleMuted("video", this.sdata.me);
-            })
 
+
+            this.session.toolBar.addMenuItems("control", [
+                {
+                    name: "video",
+                    symbol: "novideo",
+                    text: "video",
+                    index: 0,
+                    onSelect: (e) => this.toggleMuted("video", this.sdata.me)
+                },
+                {
+                    name: "audio",
+                    symbol: "mute",
+                    text: "audio",
+                    index: 360,
+                    onSelect: (e) => this.toggleMuted("audio", this.sdata.me)
+                }
+            ])
+            
+        
             // listen to profile settings changes
             this.session.settings.addEventListener("change", (e) => {
                 let {user, group, setting, value, path} = e;
@@ -481,6 +491,10 @@ export default class VideoCall extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    static async loadResources() {
+        await VideoPanelWidget.loadStyleSheets();
+    }
 
     static get name() {
         

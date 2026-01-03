@@ -17,8 +17,18 @@ export default class ShareContent extends Features {
             upload: (e) => this.shareFile(),
             screen: (e) => this.shareScreen()
         }
-        this.session.toolBar.addSelectionListener("file", this.shareFile.bind(this))
-        this.session.toolBar.addSelectionListener("screen", this.shareScreen.bind(this))
+        this.session.toolBar.addMenuItems("share", [
+            {
+                name: "screen",
+                index: 0,
+                onSelect: e => e.waitFor(this.shareScreen())
+            },
+            {
+                name: "file",
+                index: 90,
+                onSelect: e => e.waitFor(this.shareFile())
+            }
+        ]);
     }
 
 

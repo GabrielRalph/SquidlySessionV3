@@ -137,7 +137,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "language",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "language-selection"
             },
             {
                 "displayValue": "Next Voice",
@@ -147,7 +148,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "voice",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "voice-selection"
             },
             {
                 "displayValue": "Next speed",
@@ -157,24 +159,28 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "speed",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "voice-speed"
             }
         ],
         [
             {
                 "setting": "language",
                 "hidden": false,
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             },
             {
                 "setting": "voice",
                 "hidden": false,
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             },
             {
                 "setting": "speed",
                 "hidden": false,
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             }
         ],
         [
@@ -186,7 +192,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "language",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "language-selection"
             },
             {
                 "displayValue": "Previous Voice",
@@ -196,7 +203,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "voice",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "voice-selection"
             },
             {
                 "displayValue": "Previous speed",
@@ -206,7 +214,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "speed",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "voice-speed"
             }
         ]
     ],
@@ -254,7 +263,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "switchTime",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "access-switch-time"
             },
             {
                 "displayValue": "Longer dwell",
@@ -264,7 +274,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "dwellTime",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "access-dwell-time"
             },
             {"hidden": true}
         ],
@@ -272,12 +283,14 @@
             {
                 "hidden": false,
                 "setting": "switchTime",
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             },
             {
                 "setting": "dwellTime",
                 "hidden": false,
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             },
             {"hidden": true}
         ],
@@ -290,7 +303,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "switchTime",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "access-switch-time"
             },
             {
                 "displayValue": "Faster dwell",
@@ -300,7 +314,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "dwellTime",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "access-dwell-time"
             },
             {"hidden": true}
         ]
@@ -315,7 +330,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "size",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "calibration-size"
             },
             {
                 "displayValue": "Next calibration speed",
@@ -325,7 +341,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "speed",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "calibration-speed"
             },
             {
                 "displayValue": "Next guide",
@@ -335,24 +352,28 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "guide",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "calibration-guide"
             }
         ],
         [
             {
                 "setting": "size",
                 "hidden": false,
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             },
             {
                 "setting": "speed",
                 "hidden": false,
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             },
             {
                 "setting": "guide",
                 "hidden": false,
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             }
         ],
         [
@@ -364,7 +385,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "size",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "calibration-size"
             },
             {
                 "displayValue": "Previous calibration speed",
@@ -374,7 +396,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "speed",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "calibration-speed"
             },
             {
                 "displayValue": "Previous guide",
@@ -384,7 +407,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "guide",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "calibration-guide"
             }
         ]
     ],
@@ -401,7 +425,8 @@
                 "utterance": "",
                 "settingKey": "level",
                 "action": "set-setting",
-                "value": 100
+                "value": 100,
+                "accessGroup": "volume-quick"
             },
             {
                 "displayValue": "Volume up",
@@ -414,7 +439,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "level",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "volume-adjust"
             },
             {
                 "hidden": true
@@ -432,12 +458,14 @@
                 "utterance": "",
                 "settingKey": "level",
                 "action": "set-setting",
-                "value": 70
+                "value": 70,
+                "accessGroup": "volume-quick"
             },
             {
                 "hidden": false,
                 "setting": "level",
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             },
             {
                 "hidden": true
@@ -455,7 +483,8 @@
                 "utterance": "",
                 "settingKey": "level",
                 "action": "set-setting",
-                "value": 20
+                "value": 20,
+                "accessGroup": "volume-quick"
             },
             {
                 "displayValue": "Volume down",
@@ -468,7 +497,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "level",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "volume-adjust"
             },
             {
                 "hidden": true
@@ -485,7 +515,9 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "cursorStyle",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "cursor-style"
+
             },
             {
                 "displayValue": "Larger cursor",
@@ -495,7 +527,8 @@
                 "utterance": "",
                 "action": "increment-setting",  
                 "settingKey": "cursorSize",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "cursor-size"
             },
             {
                 "displayValue": "Next cursor colour",
@@ -505,24 +538,28 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "cursorColour",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "cursor-colour"
             }
         ],
         [
             {
                 "hidden": false,
                 "setting": "cursorStyle",
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             },
             {
                 "hidden": false,
                 "setting": "cursorSize",
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             },
             {
                 "hidden": false,
                 "setting": "cursorColour",
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             }
         ],
         [
@@ -534,7 +571,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "cursorStyle",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "cursor-style"
             },
             {
                 "displayValue": "Smaller cursor",
@@ -544,7 +582,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "cursorSize",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "cursor-size"
             },
             {
                 "displayValue": "Previous cursor colour",
@@ -554,7 +593,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "cursorColour",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "cursor-colour"
             }
         ]
 
@@ -569,7 +609,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "layout",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "display-layout"
             },
             {
                 "displayValue": "Next Font",
@@ -579,7 +620,9 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "font",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "display-font"
+
             },
             {
                 "displayValue": "Next effect",
@@ -589,24 +632,29 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "effect",
-                "direction": 1
+                "direction": 1,
+                "accessGroup": "display-effect"
+
             }
         ],
         [ 
             {
                 "hidden": false,
                 "setting": "layout",
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             },
             {
                 "hidden": false,
                 "setting": "font",
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             },
             {
                 "hidden": false,
                 "setting": "effect",
-                "type": "normal"
+                "type": "normal",
+                "displayOnly": true
             }
        ],
        [ 
@@ -618,7 +666,8 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "layout",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "display-layout"
             },
             {
                 "displayValue": "Previous font",
@@ -628,7 +677,9 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "font",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "display-font"
+
             },
             {
                 "displayValue": "Previous effect",
@@ -638,7 +689,9 @@
                 "utterance": "",
                 "action": "increment-setting",
                 "settingKey": "effect",
-                "direction": -1
+                "direction": -1,
+                "accessGroup": "display-effect"
+
             }
         ]
     ],

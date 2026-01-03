@@ -1,5 +1,5 @@
-import { AccessEvent } from "./access-buttons.js";
-import { GridCard, GridIcon, GridLayout } from "./grid-icon.js";
+import { AccessEvent } from "./Buttons/access-buttons.js";
+import { GridCard, GridIcon, GridLayout } from "./Buttons/grid-icon.js";
 import { HideShowTransition } from "./hide-show.js";
 import { Rotater, Slider } from "./rotater.js";
 import { relURL } from "./usefull-funcs.js";
@@ -452,7 +452,7 @@ class SearchGrid extends GridLayout {
 
     /**
      * Set the type of the close icon.
-     * @param {string|import("./grid-icon.js").GridIconOptions} type - The type of the close icon, either "close", "back", or an object with icon properties.
+     * @param {string|import("./Buttons/grid-icon.js").GridIconOptions} type - The type of the close icon, either "close", "back", or an object with icon properties.
      */
     set _closeIconType(type) {
         if (type === "close") {
@@ -470,7 +470,7 @@ class SearchGrid extends GridLayout {
 
     /**
      * Set the type of the close icon.
-     * @param {string|import("./grid-icon.js").GridIconOptions} type - The type of the close icon, either "close", "back", or an object with icon properties.
+     * @param {string|import("./Buttons/grid-icon.js").GridIconOptions} type - The type of the close icon, either "close", "back", or an object with icon properties.
      */
     set closeIconType(type) {
         if (this.mode === "default") {
@@ -481,7 +481,7 @@ class SearchGrid extends GridLayout {
 
     /**
      * Get the type of the close icon.
-     * @returns {string|import("./grid-icon.js").GridIconOptions} - The type of the close icon, either "close", "back", or an object with icon properties.
+     * @returns {string|import("./Buttons/grid-icon.js").GridIconOptions} - The type of the close icon, either "close", "back", or an object with icon properties.
      * */
     get closeIconType() {
         return this.__closeIconType;

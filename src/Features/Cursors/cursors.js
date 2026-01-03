@@ -123,7 +123,6 @@ export default class Cursors extends Features {
         if (position !== null) {
             position = this.rel_bbox2rel_ref(position, bbox);
         }
-        console.log("Updating cursor position:", name, position, bbox);
        if (position == null) {
            this.sdata.set(`positions/${name}`, null);
            this._updatePosition(null, name)

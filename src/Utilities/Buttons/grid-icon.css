@@ -44,6 +44,9 @@
     opacity: 0.4;
     pointer-events: none;
 }
+.grid-icon[i-display-only] {
+    pointer-events: none;
+}
 
 .grid-icon .content {
     position: absolute;

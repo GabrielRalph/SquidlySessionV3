@@ -1,20 +1,30 @@
-import { SvgPlus, Vector } from "../SvgPlus/4.js";
-import { AccessButton } from "./access-buttons.js";
-import { Icon, isIconName } from "./Icons/icons.js";
-import { MarkdownElement } from "./markdown.js";
-import { relURL } from "./usefull-funcs.js";
+import { SvgPlus, Vector } from "../../SvgPlus/4.js";
+import { Icon, isIconName } from "../Icons/icons.js";
+import { MarkdownElement } from "../markdown.js";
+import { relURL } from "../usefull-funcs.js";
+import { COLOR_THEMES } from "./color-themes.js";
 
 /**
- * @typedef {string | {url: string}} IconSymbol
+ * GridIconSymbol can be a string or an object defining the icon symbol.
+ * If a string, it can be an icon name or a URL.
+ * If an object, it can have a 'url' property for the image URL or a 'text' property for text content.
+ * @typedef {import("../Icons/icons-library.js").IconName | {url: string} | {text: string}} IconSymbol
+ * @see /Utilities/Icons/icons-library.js
  */
 
 /**
  * @typedef {Object} GridIconOptions
- * @param {("topic"|"normal"|"starter"|"noun"|"verb"|"adjective"|"action"|"topic-normal"|"topic-starter"|"topic-verb"|"topic-adjective")} type
- * @param {string} displayValue 
- * @param {string} [subtitle] - The icon symbol, can be a string or an object with a url.
- * @param {IconSymbol} [symbol]
- * @param {boolean} [hidden] - If true, the icon will be hidden.
+ * @property {import("./color-theme.js").GridIconTypes} type - The type of the icon, which determines its appearance. 
+ *                           general type format: [topic-]colorTheme
+ *                           see COLOR_THEMES for available color themes.
+ * @property {string} displayValue - The text to display below the icon.
+ * 
+ * @property {string} [subtitle] - The icon symbol, can be a string or an object with a url.
+ * @property {IconSymbol} [symbol] - The icon symbol, see above.
+ * @property {boolean} [hidden] - If true, the icon will be hidden.
+ * @property {boolean} [disabled] - If true, the icon will be disabled and slightly see through.
+ * @property {boolean} [displayOnly] - If true, the icon will not be interactive.
+ * @property {Object.<string, Function>} [events] - An object mapping event names to event handler functions.
  */
 
 const BORDER_RADIUS_PERCENTAGE = 0.015;
@@ -75,23 +85,6 @@ function folderCard(size, border = BORDER_SIZE) {
              <path stroke-width = "${border}" class = "outline" d = "${outline}" />`
 }
 
-function cap(num, min, max) {
-    return Math.min(Math.max(num, min), max);
-}
-
-function makeDarkenedColor(color, satFac, lightFac) {
-    let hsl = color.match(/hsla?\((\d+),\s*(\d+)%,\s*(\d+)%/);
-    if (hsl) {
-        let h = parseInt(hsl[1]);
-        let s = parseInt(hsl[2]);
-        let l = parseInt(hsl[3]);
-        l = cap(l * lightFac, 0, 100);
-        s = cap(s * satFac, 0, 100);
-        color = `hsl(${h}, ${s}%, ${l}%)`;
-    }
-    return color;
-}
-
 function parseCardType(type) {
     let isTopic = null;
     let colorTheme = null;
@@ -116,167 +109,12 @@ function parseCardType(type) {
 }
 
 
-const COLOR_THEMES = {
-    lightRed: {
-        "--main": "hsl(0, 100%, 89%)",
-        "--tab": "hsl(0, 56%, 64%)"
-    },
-    darkRed: {
-        "--main": "hsl(0, 70%, 38%)",
-        "--tab": "hsl(0, 56%, 28%)",
-        "--text": "white"
-    },
-    lightOrange: {
-        "--main": "hsl(30, 100%, 85%)",
-        "--tab": "hsl(30, 70%, 55%)"
-    },
-    darkOrange: {
-        "--main": "hsl(30, 80%, 45%)",
-        "--tab": "hsl(30, 70%, 35%)",
-        "--text": "white"
-    },
-    lightGold: {
-        "--main": "hsl(42, 100%, 81%)",
-        "--tab": "hsl(42, 70%, 55%)"
-    },
-    darkGold: {
-        "--main": "hsl(42, 75%, 48%)",
-        "--tab": "hsl(42, 70%, 38%)",
-        "--text": "white"
-    },
-    lightGreen: {
-        "--main": "hsl(108, 100%, 83%)",
-        "--tab": "hsl(108, 70%, 62%)"
-    },
-    darkGreen: {
-        "--main": "hsl(95, 50%, 40%)",
-        "--tab": "hsl(95, 50%, 30%)",
-        "--text": "white"
-    },
-    lightTeal: {
-        "--main": "hsl(150, 100%, 85%)",
-        "--tab": "hsl(150, 70%, 55%)"
-    },
-    darkTeal: {
-        "--main": "hsl(150, 90%, 33%)",
-        "--tab": "hsl(150, 90%, 23%)",
-        "--text": "white"
-    },
-    lightBlue: {
-        "--main": "hsl(190, 100%, 85%)",
-        "--tab": "hsl(190, 70%, 55%)"
-    },
-    darkBlue: {
-        "--main": "hsl(190, 85%, 33%)",
-        "--tab": "hsl(190, 85%, 23%)",
-        "--text": "white"
-    },
-    lightIndigo: {
-        "--main": "hsl(220, 100%, 89%)",
-        "--tab": "hsl(220, 70%, 55%)"
-    },
-    darkIndigo: {
-        "--main": "hsl(220, 50%, 45%)",
-        "--tab": "hsl(220, 50%, 35%)",
-        "--text": "white"
-    },
-    lightPurple: {
-        "--main": "hsl(270, 100%, 91%)",
-        "--tab": "hsl(270, 70%, 55%)"
-    },
-    darkPurple: {
-        "--main": "hsl(270, 35%, 45%)",
-        "--tab": "hsl(270, 35%, 35%)",
-        "--text": "white"
-    },
-    action: {
-        "--main": "hsla(11, 100%, 33%, 1.00)",
-        "--main-hover": "hsla(11, 100%, 23%, 1.00)",
-        "--main-active": "hsla(11, 96%, 18%, 1.00)",
-        "--tab": "hsla(11, 100%, 25%, 1.00)",
-        "--tab-hover": "hsla(11, 100%, 15%, 1.00)",
-        "--tab-active": "hsla(11, 92%, 9%, 1.00)",
-        "--icon-color": "hsl(0, 5%, 96%)",
-        "--icon-color-hover": "white",
-        "--text": "white",
-    },
-    white: {
-        "--main": "hsl(0, 0%, 100%)",
-        "--tab": "hsl(0, 0%, 90%)",
-        "--text": "black",
-        "--outline": "hsla(0, 1%, 14%, 1.00)"
-    },
-    topic: {
-        "--main": "hsl(35, 100%, 84%)",
-        "--tab": "hsl(35, 63%, 56%)",
-        "--text": "black",
-    },
-    normal: {
-        "--main": "hsl(211, 100%, 83%)",
-        "--tab": "hsl(211, 70%, 62%)"
-    },
-    starter: {
-        "--main": "hsl(102, 74%, 76%)",
-        "--tab": "hsl(102, 70%, 61%)"
-    },
-    noun: { 
-        "--main": "hsl(257, 100%, 89%)",
-        "--tab": "hsl(257, 56%, 64%)"
-    },
-    adjective: {
-        "--main": "hsl(47, 100%, 79%)",
-        "--tab": "hsl(47, 57%, 54%)"
-    },
-    verb: {
-        "--main": "hsl(353, 100%, 81%)",
-        "--tab": "hsl(353, 68%, 66%)"
-    },
-    emphasis: {
-        "--main": "hsl(18, 77%, 50%)",
-        "--tab": "hsl(18, 86%, 41%)",
-        "--text": "white",
-        "--icon-color": "hsl(0, 5%, 96%)",
-        "--icon-color-hover": "white",
-    }
-}
-
-for (let type in COLOR_THEMES) {
-    let cardColors = COLOR_THEMES[type];
-    if (!cardColors["--text"]) {
-        cardColors["--text"] = "black";
-    }
-    
-    if (!cardColors["--main-hover"]) {
-        cardColors["--main-hover"] = makeDarkenedColor(cardColors["--main"], 0.95, 0.8);
-    }
-    if (!cardColors["--tab-hover"]) {
-        cardColors["--tab-hover"] = makeDarkenedColor(cardColors["--tab"], 0.95, 0.8);
-    }
-
-    if (!cardColors["--main-active"]) {
-        cardColors["--main-active"] = makeDarkenedColor(cardColors["--main"], 1.05, 0.65);
-    }
-    if (!cardColors["--tab-active"]) {
-        cardColors["--tab-active"] = makeDarkenedColor(cardColors["--tab"], 1.05, 0.65);
-    }
-
-    if (!cardColors["--outline"]) {
-        cardColors["--outline"] = makeDarkenedColor(cardColors["--tab"], 1.2, 0.6);
-    }
-
-
-    if (!cardColors["--icon-color"]) {
-        cardColors["--icon-color"] = makeDarkenedColor(cardColors["--main"], 1, 0.3);
-    }
-
-    if (!cardColors["--icon-color-hover"]) {
-        cardColors["--icon-color-hover"] = makeDarkenedColor(cardColors["--main"], 1, 0.15);
-    }
-
-}
-
 /** A GridIconSymbol represents the image from a grid icon. */
 export class GridIconSymbol extends SvgPlus{
+    /** 
+     * @param {IconSymbol} symbol
+     * @param {boolean} [useBackgroundImg=false] - If true, use a background image instead of an img element.
+     * */
     constructor(symbol, useBackgroundImg = false){
         super("div");
         this.class = "symbol";
@@ -348,6 +186,15 @@ export class GridCard extends SvgPlus {
         }
     }
 
+    /** @param {boolean} displayOnly */
+    set displayOnly(displayOnly) {
+        this.toggleAttribute("i-display-only", displayOnly);
+    }
+
+    get displayOnly() {
+        return this.hasAttribute("i-display-only");
+    }
+
     /** @param {boolean} disabled */
     set disabled(disabled) {
         this.toggleAttribute("i-disabled", disabled);
@@ -396,7 +243,10 @@ export class GridIcon extends GridCard {
     /** @type {MarkdownElement} */
     displayValueElement = null;
 
-    /** @param {GridIconOptions} item */
+    /** 
+     * @param {GridIconOptions} item 
+     * @param {string} accessGroup
+     * */
     constructor(item, accessGroup) {
         try {
             super("access-button", item.type);
@@ -425,6 +275,7 @@ export class GridIcon extends GridCard {
         this.subtitle = item.subtitle;
        
         this.disabled = item.disabled || false;
+        this.displayOnly = item.displayOnly || false;
 
         if ("events" in item) {
             this.events = item.events;
@@ -562,6 +413,8 @@ export class GridLayout extends SvgPlus {
      * @param {number} col - The starting column index (0-based).
      * @param {number} [rowEnd] - The ending row index (0-based, inclusive).
      * @param {number} [colEnd] - The ending column index (0-based, inclusive).
+     * 
+     * @returns {GridIcon|SvgPlus} The added item.
      */
     add(item, row, col, rowEnd = row, colEnd = col) {
         if (SvgPlus.is(item, SvgPlus) && typeof row === "number" && typeof col === "number") {
@@ -582,5 +435,6 @@ export class GridLayout extends SvgPlus {
             // }
             this.appendChild(item);
         }
+        return item;
     }
 }

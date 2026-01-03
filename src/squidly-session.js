@@ -4,34 +4,13 @@ import * as FB from "./Firebase/firebase.js";
 import { ERROR_CODES, SessionConnection } from "./Firebase/session-connection.js";
 import { SvgPlus, Vector } from "./SvgPlus/4.js";
 import { ShadowElement } from "./Utilities/shadow-element.js";
-import { delay, getQueryKey, relURL } from "./Utilities/usefull-funcs.js";
+import { delay, getQueryKey, series, uncamelCase } from "./Utilities/usefull-funcs.js";
 import { get, ref } from "./Firebase/firebase.js";
-import FeaturesList from "./Features/feature-list.js"
-
-/** @param {() => Promise[]} */
-async function series(arr) {
-
-    for (let promise of arr) {
-        await promise();
-    }
-}
-const parallel = (...args) => Promise.all(...args);
+import {FeaturesList, SquildyFeatureProxy} from "./Features/feature-list.js"
 
 
 /** @typedef {import('./SessionView/session-view.js').SessionView} SessionView*/
-/** @typedef {import('./Features/ToolBar/tool-bar.js').ToolBarFeature} ToolBarFeature*/
-/** @typedef {import('./Features/Cursors/cursors.js').Cursors} Cursors*/
 /** @typedef {import('./Features/features-interface.js').Features} Feature*/
-/** @typedef {import('./Features/EyeGaze/eye-gaze.js').EyeGazeFeature} EyeGazeFeature*/
-/** @typedef {import('./Features/Settings/settings.js').SettingsFeature} SettingsFeature*/
-/** @typedef {import('./Features/VideoCall/video-call.js').VideoCall} VideoCall*/
-/** @typedef {import('./Features/Text2Speech/text2speech.js').Text2Speech} Text2Speech*/
-/** @typedef {import('./Features/Notifications/notifications.js').Notifications} Notifications*/
-/** @typedef {import('./Features/AccessControl/access-control.js').AccessControl} AccessControl*/
-/** @typedef {import('./Features/features-library.js')} FLIBMod*/
-/** @typedef {import('./Features/features-interface.js').Features} Feature*/
-
-
 
 let instanceCount = 0;
 
@@ -93,12 +72,6 @@ LoadBar.class = "load-bar";
     }
 }
 
-function uncamelCase(str) {
-    str = str.replace(/([a-z])([A-Z])/g, '$1 $2');
-    str = str.replace(/([a-zA-Z])(\d+)([a-zA-Z])/g, '$1 $2 $3');
-    str = str.charAt(0).toUpperCase() + str.slice(1);
-    return str;
-}
 
 const LoadState = {}
 function logState(){
@@ -119,6 +92,8 @@ function setLoadState(str, state, message) {
     logState();
 }
 
+
+
 async function initialiseFirebaseUser(){
     setLoadState("firebase", 0, "Connecting to database");
     return new Promise((r) => {
@@ -133,7 +108,6 @@ async function initialiseFirebaseUser(){
         FB.initialise();
     })
 }
-
 
 export class SessionDataFrame extends FirebaseFrame {
     constructor(firebaseName) {
@@ -210,21 +184,6 @@ export class SquidlySessionElement extends ShadowElement {
     /** @type {SessionView} */
     sessionView = null;
 
-    /** @type {ToolBarFeature} */
-    toolBar = null;
-
-    /** @type {AccessControl} */
-    accessControl = null;
-
-    /** @type {Notifications} */
-    notifications = null;
-
-    /** @type {SettingsFeature} */
-    settings = null;
-
-     /** @type {EyeGazeFeature} */
-    eyeGaze = null;
-
     /** @type {number} */
     sharedAspectRatio = 1;
 
@@ -248,13 +207,11 @@ export class SquidlySessionElement extends ShadowElement {
         super(el, "squidly-session-root")
         this.squidlySession = new SquidlySession(this);
         window.session = this.squidlySession;
-
-        
     }
 
 
     async onconnect(){
-        await parallel([
+        await Promise.all([
             // Load resources -> initialise session view
             this.initialiseSessionView(),
 
@@ -298,9 +255,6 @@ export class SquidlySessionElement extends ShadowElement {
                 }
                 console.log(e);
             }
-
-            console.log(this.toolBar)
-            
         } else {
 
         }
@@ -328,7 +282,6 @@ export class SquidlySessionElement extends ShadowElement {
             this.currentOccupier = nextOccupier;
             this.sdata.set("occupier", name);
             await Promise.all(proms);
-            
         }
     }
 
@@ -355,6 +308,7 @@ export class SquidlySessionElement extends ShadowElement {
     }
 
     async initialiseFeatures() {
+        this.publicFeatureProxies = {};
         let featureModules = await Promise.all(FeaturesList.map(async ([path, name]) => {
             let niceName = uncamelCase(name)
             setLoadState(name, 0, "Loading " + niceName + " feature");
@@ -405,7 +359,7 @@ export class SquidlySessionElement extends ShadowElement {
                 }
             }
 
-            this[name + "Public"] = createFeatureProxy(feature, module.default);
+            this.publicFeatureProxies[name] = createFeatureProxy(feature, module.default);
             this[name] = feature;
 
             return [feature, refName];
@@ -615,29 +569,13 @@ export class SquidlySessionElement extends ShadowElement {
         });
     }
 
-    async testFR() {
-        
-        for (let j = 0; j < 100; j++) {
-            let avg = 0;
-            for (let i = 0; i < 10; i++) {
-                let t0 = performance.now();
-                await delay();
-                avg += performance.now() - t0;
-            }
-    
-            console.log(10000 / avg);
-        }
-        
-    }
-
+  
     set endlinkHost(link) {
         this["endlink-host"] = link;
     }
 
     set ["endlink-host"](link) {
         this._endLinkHost = link;
-        console.log("host link - ", link);
-        
         if (sessionConnection !== null && sessionConnection.isHost) {
             sessionConnection.onleave = async () => {
                 let hostUID = sessionConnection.hostUID;
@@ -661,8 +599,6 @@ export class SquidlySessionElement extends ShadowElement {
 
     set ["endlink-participant"](link) {
         this._endLinkParticipant = link;
-        console.log("participant link - ", link);
-        
         if (sessionConnection !== null && !sessionConnection.isHost) {
             sessionConnection.onleave = async () => {
                 let hostUID = sessionConnection.hostUID;
@@ -759,54 +695,15 @@ export class SquidlySessionElement extends ShadowElement {
     }
 }
 
-export class SquidlySession {
+export class SquidlySession extends SquildyFeatureProxy {
     constructor(sessionElement) {
+        super();
         $$.set(this, sessionElement);
     }
 
     /** @return {number} */
     get sharedAspectRatio(){
         return $$.get(this).sharedAspectRatio;
-    }
-
-     /** @return {?EyeGazeFeature} */
-     get eyeGaze(){
-        return $$.get(this).eyeGazePublic;
-    }
-
-    /** @return {?ToolBarFeature} */
-    get toolBar(){
-        return $$.get(this).toolBarPublic;
-    }
-
-     /** @return {?VideoCall} */
-    get videoCall(){
-        return $$.get(this).videoCallPublic;
-    }
-
-    /** @return {?SettingsFeature} */
-    get settings(){
-        return $$.get(this).settingsPublic;
-    }
-
-    /** @return {?Text2Speech} */
-    get text2speech(){
-        return $$.get(this).text2speechPublic;
-    }
-
-    /** @return {?AccessControl} */
-    get accessControl(){
-        return $$.get(this).accessControlPublic;
-    }
-
-     /** @return {?Cursors} */
-     get cursors(){
-        return $$.get(this).cursorsPublic;
-    }
-
-    /** @return {?Notifications} */
-    get notifications(){
-        return $$.get(this).notificationsPublic;
     }
 
     /** @return {boolean} */
@@ -820,6 +717,10 @@ export class SquidlySession {
 
     get currentOpenFeature(){
         return $$.get(this).occupier;
+    }
+
+    getFeature(name) {
+        return $$.get(this).publicFeatureProxies[name];
     }
 
     async openWindow(name) {

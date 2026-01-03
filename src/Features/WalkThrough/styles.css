@@ -1,0 +1,43 @@
+walk-through-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.mask-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.mask-overlay path {
+    pointer-events: all;
+    fill:#7d7e81cc;
+}
+
+hints-box {
+    position: absolute;
+    top: 20px;
+    left: 60%;
+    width: 33%;
+    display: flex;
+    z-index: 10;
+    flex-direction: column;
+    padding: 1em;
+    background: #04a1ef;
+    gap: 1em;
+    border-radius: calc(1.5vmin + 1em);
+    --shadow-color: transparent;
+    pointer-events: all;
+}
+
+hints-box grid-layout {
+    width: 100%;
+    height: calc(var(--height) / 4); 
+    /* Note --width and --height are the width and height of the screen area occupied */
+}

@@ -2,7 +2,7 @@ import { filterAndSort, SearchWindow } from "../../Utilities/search.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
 import { Features, OccupiableWindow } from "../features-interface.js";
 import { Vector } from "../../SvgPlus/4.js";
-import { GridIcon, GridLayout } from "../../Utilities/grid-icon.js";
+import { GridIcon, GridLayout } from "../../Utilities/Buttons/grid-icon.js";
 
 const AppsList = [
     "https://cursor-splash.squidly.com.au",
@@ -333,7 +333,12 @@ export default class Apps extends Features {
         });
     }
 
+    /**
+     * Loads app descriptors from the predefined AppsList.
+     * @returns {Promise<boolean>} True if at least one app was loaded successfully, false otherwise.
+     */
     async loadAppDescriptors() {
+        let result = false;
         let apiURL = relURL("./app-base-api.js", import.meta)
         this.appDescriptors = await Promise.all(AppsList.map(async (url) => {
             try {
@@ -363,10 +368,8 @@ export default class Apps extends Features {
         
         this.appDescriptors = this.appDescriptors.filter(d => d !== null);
 
-        if (this.appDescriptors.length == 0) {
-            this.session.toolBar.setIcon("share/apps/hidden", true);
-        } else {
-            this.session.toolBar.setIcon("share/apps/hidden", false);
+        if (this.appDescriptors.length > 0) {
+            result = true;
             this.appDescriptors = this.appDescriptors.map((item, idx) => {
                 item.index = idx;
                 return item;
@@ -388,36 +391,39 @@ export default class Apps extends Features {
             })
             this.appFrame.search.apps = this.appDescriptors;
         }
+
+        return result;
     }
 
     async initialise(){
-        await this.loadAppDescriptors();
+        if (await this.loadAppDescriptors()) {
+             // Set up toolbar button
+            this.session.toolBar.addMenuItem("share", {
+                name: "apps",
+                index: 180,
+                onSelect: e => e.waitFor(this.session.openWindow("apps")),
+            })
+            this.sdata.onValue("selected_app", (selectedApp) => {
+                if (selectedApp) {
+                    this._setApp(selectedApp.index);
+                    this.currentAppIndex = selectedApp.index;
+                    this.appFrame.search.hide();
+                } else {
+                    // App was closed by other party
+                    this.currentAppIndex = null;
+                    this.appFrame.setSrc("about:blank");
+                    this.appFrame.hide();
+                }
+            });
 
-        // Set up toolbar button
-        this.session.toolBar.addSelectionListener("apps", () => {
-            this.session.openWindow("apps");
-        })
-
-        this.sdata.onValue("selected_app", (selectedApp) => {
-            if (selectedApp) {
-                this._setApp(selectedApp.index);
-                this.currentAppIndex = selectedApp.index;
-                this.appFrame.search.hide();
-            } else {
-                // App was closed by other party
-                this.currentAppIndex = null;
-                this.appFrame.setSrc("about:blank");
-                this.appFrame.hide();
+            // Iframe API Message Listener
+            window.addEventListener("message", e => {
+            let modeFunc = "_message_" + e.data?.mode;
+            if (modeFunc in this && this[modeFunc] instanceof Function) {
+                    this[modeFunc](e);
             }
-        });
-
-        // Iframe API Message Listener
-        window.addEventListener("message", e => {
-           let modeFunc = "_message_" + e.data?.mode;
-           if (modeFunc in this && this[modeFunc] instanceof Function) {
-                this[modeFunc](e);
-           }
-        });
+            });
+        }
     }
 
     static get name() {

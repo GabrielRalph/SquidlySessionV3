@@ -26,9 +26,34 @@ let HostSettings = null;
 let ParticipantSettings = null;
 let HostUID = null;
 
-
 const profiles = {};
 const profileListeners = {};
+const settingChangeListeners = [];
+
+
+export function chooseProfile(profileID) {
+    if (ParticipantSettings && ParticipantSettings.profileID !== profileID) {
+        ParticipantSettings.dispose();
+        ParticipantSettings = null;
+    }
+
+    if (ParticipantSettings == null) {
+        let participantSettings = `users/${HostUID}/settings/default`
+        if (profileID) {
+            participantSettings = `users/${HostUID}/settings/profiles/${profileID}`
+        } 
+
+        ParticipantSettings = new SettingsFrame(new FirebaseFrame(participantSettings), ParticipantSettingOptions);
+        ParticipantSettings.profileID = profileID;
+        ParticipantSettings.addChangeListener((path,value) => {
+            for (let listener of settingChangeListeners) {
+                listener("participant/"+path, value);
+            }
+        })
+        ParticipantSettings._callUpdateForAllSettings();
+    }
+}
+
 export function watchProfiles(hostUID, callback) {
     let profilesPath = `users/${hostUID}/settings/profiles`;
     let profilesFrame = new FirebaseFrame(profilesPath);
@@ -74,7 +99,6 @@ export function getProfiles() {
     });
 }
 
-
  
 /** Initialises the settings for the session
  * @param {SessionDataFrame} sdata
@@ -106,32 +130,12 @@ function getSetting(name) {
     }
 }
 
-const settingChangeListeners = [];
-
-
-export function chooseProfile(profileID) {
-    if (ParticipantSettings && ParticipantSettings.profileID !== profileID) {
-        ParticipantSettings.dispose();
-        ParticipantSettings = null;
-    }
-
-    if (ParticipantSettings == null) {
-        let participantSettings = `users/${HostUID}/settings/default`
-        if (profileID) {
-            participantSettings = `users/${HostUID}/settings/profiles/${profileID}`
-        } 
-
-        ParticipantSettings = new SettingsFrame(new FirebaseFrame(participantSettings), ParticipantSettingOptions);
-        ParticipantSettings.profileID = profileID;
-        ParticipantSettings.addChangeListener((path,value) => {
-            for (let listener of settingChangeListeners) {
-                listener("participant/"+path, value);
-            }
-        })
-        ParticipantSettings._callUpdateForAllSettings();
-    }
+export function getSettingsAsObject() {
+    return {
+        host: HostSettings ? HostSettings.settingsAsObject : {},
+        participant: ParticipantSettings ? ParticipantSettings.settingsAsObject : {},
+    };
 }
-  
 
 /** Returns the setting value for the given name 
  * @param {string} name - The name of the setting

@@ -1,6 +1,6 @@
-import { AccessButton, AccessEvent } from "../../Utilities/access-buttons.js";
+import { AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
 import { SvgPlus } from "../../SvgPlus/4.js";
-import { GridIcon } from "../../Utilities/grid-icon.js";
+import { GridIcon } from "../../Utilities/Buttons/grid-icon.js";
 import { MarkdownElement } from "../../Utilities/markdown.js";
 
 /**
@@ -48,7 +48,6 @@ class QuizIcon extends GridIcon {
         let colorName = (icon.color || "").replace(/[a-z]-[a-z]/g, (match) => {
             return match.charAt(0).toLowerCase() + match.charAt(2).toUpperCase();
         });
-        console.log(colorName);
         super({
             displayValue: icon.displayValue,
             subtitle: icon.subtitle,

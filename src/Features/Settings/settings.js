@@ -1,16 +1,19 @@
 import { SvgPlus } from "../../SvgPlus/4.js";
-import { AccessEvent } from "../../Utilities/access-buttons.js";
+import { AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
 import { addDeviceChangeCallback, getDevices } from "../../Utilities/device-manager.js";
-import { GridIcon } from "../../Utilities/grid-icon.js";
+import { GridIcon } from "../../Utilities/Buttons/grid-icon.js";
 import { Icon } from "../../Utilities/Icons/icons.js";
 import { Rotater } from "../../Utilities/rotater.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
 import { changeDevice } from "../../Utilities/webcam.js";
+import { filterAndSort, SearchWindow } from "../../Utilities/search.js";
 
 import { Features, OccupiableWindow } from "../features-interface.js";
+
+import { SettingsDescriptor } from "./settings-base.js";
 import * as Settings from "./settings-wrapper.js";
 
-import { filterAndSort, SearchWindow } from "../../Utilities/search.js";
+
 class ProfileSearchWindow extends SearchWindow {
     constructor(){
         super();
@@ -45,9 +48,11 @@ class ProfileSearchWindow extends SearchWindow {
     }
 }
 
-
 class SettingsIcon extends GridIcon {
     constructor(icon, type) {
+        if (typeof icon.accessGroup === "string") {
+            type = icon.accessGroup;
+        }
         super(icon, type);
         this.sideDotsElement = this.createChild("div", {class: "side-dots"})
         this.activeIcon = this.createChild(Icon, {class: "icon active"}, "radioTick");
@@ -144,6 +149,7 @@ class SettingsPanel extends SvgPlus {
                 displayValue: "Exit",
                 symbol: "close",
                 action: "exit",
+                accessGroup: "settings-navigation"
                 
             }],
             [{
@@ -152,18 +158,21 @@ class SettingsPanel extends SvgPlus {
                 symbol: "home",
                 hidden: isHome,
                 action: "home",
+                accessGroup: "settings-navigation"
             }],
             isHome && isHost ? [{
                 type: "action",
                 displayValue: "Profiles",
                 symbol: "search",
                 action: "search",  
+                accessGroup: "settings-navigation"
             }] : [{
                 type: "action",
                 displayValue: "Back",
                 symbol: "back",
                 hidden: isHome,
                 action: "back",  
+                accessGroup: "settings-navigation"
             }],
         ]);
         this.path = [...path];
@@ -413,17 +422,17 @@ class SettingsWindow extends OccupiableWindow {
     static get fixToolBarWhenOpen(){return true; }
 }
 
-
-
 export default class SettingsFeature extends Features {
     constructor(session, sdata) {
         super(session, sdata);
         this.settingsWindow = new SettingsWindow(this);
 
-        this.session.toolBar.addSelectionListener("settings", (e) => {
-            e.waitFor(this.session.openWindow("settings"))  ;
-        });
-
+        this.session.toolBar.addMenuItem([], {
+            name: "settings",
+            index: 35,
+            onSelect: e => e.waitFor(this.session.openWindow("settings"))
+        })
+     
         this.settingsWindow.root.addEventListener("settings-click", (e) => { 
             if (e?.icon?.action === "exit") {
                 this.sdata.set("path", null);
@@ -454,6 +463,34 @@ export default class SettingsFeature extends Features {
         });
     }
 
+    
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    
+    get settingsPathClientHeight() {
+        return this.settingsWindow.settingsPath.clientHeight;
+    }
+
+    isValidPath(path) {
+        let valid = false;
+        if (Array.isArray(path) && path.length > 0) {
+            let root = path[0];
+            if (root === "home") {
+                let settingsObject = Settings.getSettingsAsObject();
+                for (let i = 1; i < path.length; i++) {
+                    settingsObject = settingsObject[path[i]];
+                    if (settingsObject === undefined) {
+                        break;
+                    }
+                }
+                valid = settingsObject !== undefined && !(settingsObject instanceof SettingsDescriptor);
+            }
+        } 
+        return valid;
+    }
+
     get(name) {
         return Settings.getValue(name);
     }
@@ -462,16 +499,13 @@ export default class SettingsFeature extends Features {
         return Settings.setValue(name, value);
     }
 
-
     changeDevice(user, kind, deviceId) {
-        console.log("CHANGE DEVICE", user, kind, deviceId);
         if (user === this.sdata.me) {
             changeDevice(kind, deviceId);
         }  else {
             this.session.videoCall.sendData("change-device", [kind, deviceId]);
         } 
     }
-
 
     async getDevices(user) {
         let devices = {audioinput: {}, audiooutput: {}, videoinput: {}};
@@ -485,14 +519,32 @@ export default class SettingsFeature extends Features {
     }
 
 
-    _selectProfile(profileID) {
-        this.sdata.set("profileID", profileID);
+    async gotoPath(path) {
+        if (typeof path === "string") {
+            path = path.split("/");
+        }
+
+        let valid = this.isValidPath(path);
+        if (valid) {
+            this.sdata.set("path", path);
+            await this.settingsWindow.setPath(path);
+        } else {
+            console.warn("Invalid settings path:", path.join("/"));
+        }
     }
 
+    
     get openPath() {
         return this._openPath.join("/");
     }
 
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+    
+    _selectProfile(profileID) {
+        this.sdata.set("profileID", profileID);
+    }
 
     async initialise() {
         let hostUID = this.sdata.hostUID;

@@ -4,8 +4,8 @@
  * @typedef {import("./topics.js").GItem} GItem
  */
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
-import { AccessClickEvent, AccessEvent } from "../../Utilities/access-buttons.js";
-import { GridIconSymbol, GridIcon } from "../../Utilities/grid-icon.js";
+import { AccessClickEvent, AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
+import { GridIconSymbol, GridIcon } from "../../Utilities/Buttons/grid-icon.js";
 import { Rotater } from "../../Utilities/rotater.js";
 import { filterAndSort, SearchWindow } from "../../Utilities/search.js";
 import { relURL, isExactSame, delay } from "../../Utilities/usefull-funcs.js";
@@ -595,9 +595,12 @@ export default class AACGrid extends Features {
             e.waitFor(this.session.openWindow("default"));
         })
 
-        this.session.toolBar.addSelectionListener("aac", (e) => {
-            e.waitFor(this.session.openWindow("aacGrid"));
+        this.session.toolBar.addMenuItem("access", {
+            name: "aac",
+            index: 270,
+            onSelect: e => e.waitFor(this.session.openWindow("aacGrid"))
         })
+      
     }
   
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

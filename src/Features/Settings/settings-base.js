@@ -439,7 +439,6 @@ function getAllKeys(arr) {
 }
 
 
-
 /** @type {Function[]} */
 const settingChangeListeners = [
 ]
@@ -794,7 +793,6 @@ export function getSelection(name) {
     }
     return options;
 }
-
 
 export function getName(name) {
     let setting = getSetting(name);

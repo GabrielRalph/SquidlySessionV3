@@ -1,13 +1,13 @@
 
 import {Answers, QuizView, setSpeech2TextModule} from "./quiz-view.js"
 import { Features, OccupiableWindow } from "../features-interface.js";
-import { addQuizUpdateListener, getAllQuizes, getSummary, watchQuizes } from "./quizzes.js";
+import { getAllQuizes, getSummary, watchQuizes } from "./quizzes.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
-import { AccessEvent } from "../../Utilities/access-buttons.js";
+import { AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
 import { filterAndSort, SearchWindow } from "../../Utilities/search.js";
 import { Action, ActionHistory } from "./actions.js";
 import { formatReport } from "./results.js";
-import { GridCard, GridIcon, GridLayout } from "../../Utilities/grid-icon.js";
+import { GridCard, GridIcon, GridLayout } from "../../Utilities/Buttons/grid-icon.js";
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
 import { Heatmap } from "../EyeGaze/heatmap.js";
 
@@ -599,9 +599,12 @@ export default class QuizFeature  extends Features {
         await watchQuizes();
         await this.board.initialising;
         
-        this.session.toolBar.addSelectionListener("quiz", (e) => {
-            e.waitFor(this.session.openWindow("quiz"));
-        });
+        this.session.toolBar.addMenuItem("share", {
+            name: "quiz",
+            index: 270,
+            onSelect: e => e.waitFor(this.session.openWindow("quiz"))
+        })
+        
     }
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */

@@ -1,6 +1,6 @@
 import { Vector } from "../../SvgPlus/4.js";
-import { AccessButton, AccessEvent } from "../../Utilities/access-buttons.js";
-import { GridIcon } from "../../Utilities/grid-icon.js";
+import { AccessButton, AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
+import { GridIcon } from "../../Utilities/Buttons/grid-icon.js";
 import { HideShowTransition } from "../../Utilities/hide-show.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { SvgResize } from "../../Utilities/svg-resize.js";
@@ -202,16 +202,6 @@ export default class EyeGazeFeature extends Features {
             "close": (e) => e.waitFor(this._showTestScreen(null)),
         }
         
-        // Open calibration window from toolbar
-        this.session.toolBar.addSelectionListener("calibrate", (e) => {
-            e.waitFor(this.session.openWindow("eyeGaze"));
-        })
-
-        // Toggle eye gaze processing
-        this.session.toolBar.addSelectionListener("eye", (e) => {
-            this.eyeGazeOn = !this.eyeGazeOn;
-            this.session.toolBar.setIcon("access/eye/name", this.eyeGazeOn ? "eye" : "noeye");
-        });
 
         // this.restButton.button.addEventListener("access-click", (e) => {
         //     let bool = !this.eyeDataDisabled;
@@ -404,6 +394,24 @@ export default class EyeGazeFeature extends Features {
             this.throwInitialisationError("Could not start webcam. Please check your camera permissions.", "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/videopermissions.mp4?alt=media&token=743c04cc-974e-4ed9-bb21-8f0ac56c2d83s");
         }
 
+        this.session.toolBar.addMenuItems("access", [
+            {
+                name: "calibrate",
+                index: 0,
+                color: "danger",
+                onSelect: e => e.waitFor(this.session.openWindow("eyeGaze"))
+            },
+            {
+                name: "eye",
+                text: "eye-gaze",
+                index: 45,
+                onSelect: () => {
+                    this.eyeGazeOn = !this.eyeGazeOn
+                    this.session.toolBar.setMenuItemProperty("access/eye/symbol", this.eyeGazeOn ? "eye" : "noeye");
+                }
+            }
+        ])
+
         this.session.cursors.updateCursorProperties("host-eyes", {
             size: 50,
             class: "blob",
@@ -442,7 +450,7 @@ export default class EyeGazeFeature extends Features {
         
         this.sdata.onValue(`on`, (bool) => {
             if (bool !== null) this._eyeGazeOn = !!bool;
-            this.session.toolBar.setIcon("access/eye/name", this.eyeGazeOn ? "eye" : "noeye");
+            this.session.toolBar.setMenuItemProperty("access/eye/symbol", this.eyeGazeOn ? "eye" : "noeye");
             this._updateProcessingState();
         });
 

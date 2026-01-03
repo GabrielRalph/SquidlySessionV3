@@ -1,5 +1,5 @@
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
-import { AccessButton, getButtonGroups } from "../../Utilities/access-buttons.js";
+import { AccessButton, getButtonGroups } from "../../Utilities/Buttons/access-buttons.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { delay, relURL, WaveStateVariable } from "../../Utilities/usefull-funcs.js";
 import { Features } from "../features-interface.js";
@@ -241,15 +241,19 @@ export default class AccessControl extends Features {
     constructor(sesh, sdata) {
         super(sesh, sdata);
         this.overlay = new ControlOverlay();
-        this.session.toolBar.addSelectionListener("switch", async (e) => {
-            await e.waitAll()
-            if (this.isSwitching) {
-                this.endSwitching();
-            } else {
-                this.startSwitching();
+        this.session.toolBar.addMenuItem("access", {
+            name: "switch",
+            index: 180,
+            onSelect: async (e) => {
+                await e.waitAll()
+                if (this.isSwitching) {
+                    this.endSwitching();
+                } else {
+                    this.startSwitching();
+                }
             }
         })
-
+      
         window.onkeydown =  (e) => {
             if (e.key == " ") {
                 this.overlay.selectSwitch();
@@ -266,6 +270,14 @@ export default class AccessControl extends Features {
 
 
     get isSwitching(){return this._isSwitching}
+
+
+    getButtonGroup(key){
+        let groups = getButtonGroups();
+        console.log(groups);
+        return groups[key] || [];
+    }
+
 
     /** @param {boolean} showToolbar whether to show the toolbar when switching restarts */
     async restartSwitching(showToolbar = true) {

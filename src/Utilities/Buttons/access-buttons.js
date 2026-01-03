@@ -1,4 +1,4 @@
-import { SvgPlus, Vector } from "../SvgPlus/4.js";
+import { SvgPlus, Vector } from "../../SvgPlus/4.js";
 
 export class AccessEvent extends Event {
     /** @type {?("click"|"dwell"|"switch")} */
