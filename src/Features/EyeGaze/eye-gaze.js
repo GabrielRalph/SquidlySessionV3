@@ -219,7 +219,6 @@ export default class EyeGazeFeature extends Features {
                 this.session.cursors.updateCursorPosition(key, null);
             } else {
                 eyeP = clampV0_1(eyeP);
-                console.log(eyeP);
                 this.session.cursors.updateCursorPosition(key, eyeP, bbox)
             }
         });

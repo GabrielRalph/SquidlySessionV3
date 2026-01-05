@@ -3,7 +3,7 @@ import { Features } from "../features-interface.js";
 import { AccessClickEvent } from "../../Utilities/Buttons/access-buttons.js";
 import { GestureRecogniser, ToolBar, ToolBarRing } from "./tool-bar-ui.js";
 import { Menu } from "./menu.js";
-
+import { Vector } from "../../SvgPlus/vector.js";
 
 /**
  * @type {[IconsDescription]}
@@ -234,10 +234,13 @@ export default class ToolBarFeature extends Features {
     initialise() {
         // Events regarding bringing up the toolbar.
         this.session.eyeGaze.addEyeDataListener((v, bbox) => {
+            console.log(v, bbox);
             let eyeY = null;
+
             if (v instanceof Vector && v.y < 1) {
                 eyeY = v.y * bbox[1].y;
             }
+            console.log("eyeY", eyeY);
             this.eyeY = eyeY;
         })
 
