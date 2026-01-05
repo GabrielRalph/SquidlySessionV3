@@ -12,7 +12,6 @@ import { relURL } from '../Utilities/usefull-funcs.js';
 /** @typedef {import('./Apps/apps.js').default} Apps */
 /** @typedef {import('./Quiz/quiz.js').default} QuizFeature */
 /** @typedef {import('./ShareContent/share-content.js').default} ShareContent */
-/** @typedef {import('./WalkThrough/walk-through.js').default} WalkThroughFeature */
 
 export class SquildyFeatureProxy {
 
@@ -52,9 +51,6 @@ export class SquildyFeatureProxy {
 	/** @return {ShareContent} */
 	get shareContent() { return this.getFeature("shareContent"); }
 
-	/** @return {WalkThroughFeature} */
-	get walkThrough() { return this.getFeature("walkThrough"); }
-
 	/** @override */
 	getFeature() { }
 
@@ -72,6 +68,5 @@ export const FeaturesList = [
 	[relURL("./AAC/grid.js", import.meta), "aacGrid"],
 	[relURL("./Apps/apps.js", import.meta), "apps"],
 	[relURL("./Quiz/quiz.js", import.meta), "quiz"],
-	[relURL("./ShareContent/share-content.js", import.meta), "shareContent"],
-	[relURL("./WalkThrough/walk-through.js", import.meta), "walkThrough"]
+	[relURL("./ShareContent/share-content.js", import.meta), "shareContent"]
 ];
