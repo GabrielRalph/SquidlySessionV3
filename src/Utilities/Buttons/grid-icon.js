@@ -369,6 +369,19 @@ export class GridIcon extends GridCard {
         return this._displayValue;
     }
 
+
+    set utterance(text) {
+        this.utteranceText = text;
+    }
+    get utterance() {
+        return this.utteranceText;
+    }
+
+    async speak() {
+        await this.speakUtterance();
+    }
+
+
     /** Can be used to wait for the grid symbol image to load.
      *  @return {Promise<void>}
      * */ 

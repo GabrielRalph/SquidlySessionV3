@@ -2,7 +2,7 @@ import { PromiseChain } from "../../Utilities/usefull-funcs.js";
 import * as FB from "../../Firebase/firebase.js";
 import { Features } from "../features-interface.js";
 import { getSelectedDevice } from "../../Utilities/device-manager.js";
-
+import { setText2SpeechManager } from "../../Utilities/text2speach-proxy.js";
 const DEBUG = false;
 const cmodes = {
     "normal": ["rgb(214, 109, 22)", "rgb(183, 61, 17)"],
@@ -54,8 +54,6 @@ const SPEEDS = {
     medium: 1,
     fast: 1.25
 }
-
-
 
 const synth = window.speechSynthesis;
 const speachQueue = new PromiseChain()
@@ -211,11 +209,14 @@ async function speak(utterance, isName, override = false) {
     await speachQueue.addPromise(() => playUtterance(utterance, isName), override)
 }
 
-class InvalidUtterance extends Error {
-    constructor(){
-        super("Text2Speech: Utterance must be string")
+let bufferedUtterances = [];
+setText2SpeechManager({
+    speak: async () => {},
+    loadUtterances: async (utterances) => {
+        bufferedUtterances.push(...utterances);
     }
-}
+})
+
 
 export default class Text2Speech extends Features {
     constructor(session, sdata) {
@@ -288,6 +289,7 @@ export default class Text2Speech extends Features {
 
     async initialise(){
         let names = Object.keys(MY_VOICES);
+
         await Promise.all(names.map(v => loadUtterances([v], v)));
 
         // Listen for speaking requests through webrtc
@@ -375,6 +377,19 @@ export default class Text2Speech extends Features {
         });
 
         await changeVoice(voice);
+       
+        // Load buffered utterances
+        this.loadUtterances(bufferedUtterances);
+
+        // Set text2speech manager
+        setText2SpeechManager({
+            speak: async (utterance, broadcast) => {
+                await this.speak(utterance, broadcast); 
+            },
+            loadUtterances: async (utterances) => {
+                await this.loadUtterances(utterances);
+            }
+        });
     }
 
 

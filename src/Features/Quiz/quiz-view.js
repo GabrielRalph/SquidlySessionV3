@@ -1,4 +1,4 @@
-import { AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
+import { AccessButton, AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
 import { SvgPlus } from "../../SvgPlus/4.js";
 import { GridIcon } from "../../Utilities/Buttons/grid-icon.js";
 import { MarkdownElement } from "../../Utilities/markdown.js";
@@ -38,9 +38,6 @@ const index_2_group = {
     10: (i) => Math.floor(i/5),
 }
 
-let Text2Speech = {speak: ()=>null, loadUtterances: () => null};
-
-
 
 class QuizIcon extends GridIcon {
     /** @param {Answer} icon */
@@ -54,19 +51,17 @@ class QuizIcon extends GridIcon {
             type: icon.type || colorName, 
             symbol: icon.image || null
         }, "quiz-" + group);
-        this.speakOnClick = speakOnClick;
-
-        
-        
         this.header = icon.title;
         this.toggleAttribute("quiz-icon", true);
         this.toggleAttribute("emphasize", icon.correct === true)
         this.toggleAttribute("action", icon.isAction === true)
-        // if (icon.color) this.setAttribute("color", icon.color)
-        if (this.speakOnClick) {
-            this.addEventListener("access-click", () => {
-                Text2Speech.speak(this.headerText);
-            })
+
+        console.log("quiz icon", icon);
+        if (speakOnClick) {
+            this.utterance = icon.utterance || icon.title;
+            console.log("adding speak");
+            
+            this.addEventListener("access-click", this.speak.bind(this));
         }
     }
 
@@ -86,7 +81,6 @@ class QuizIcon extends GridIcon {
     set header(text){
         this.headerText = text.toLowerCase().trim();
         this.displayValue = text;
-        if (this.speakOnClick) Text2Speech.loadUtterances([this.headerText]);
     }
 
     /** @param {?string} img*/
@@ -100,6 +94,7 @@ export class Answers extends SvgPlus {
 
     /** @param {Answer[]} answers*/
     constructor(answers){
+        console.log("Answers", answers);
         super("div");
         this.class = "answers";
 
@@ -151,7 +146,6 @@ export class Answers extends SvgPlus {
      * */
     set selected(selected){
         this.selectedAnswers = new Set();
-        // [...this.children].map((c, i) => c.toggleAttribute("selected", false))
         for (let i of selected) this.selectAnswer(i);
     }
 
@@ -174,18 +168,18 @@ export class Answers extends SvgPlus {
     }
 }
 
-class QuestionInfo extends SvgPlus {
+class QuestionInfo extends AccessButton {
     titlePrefix = "Page";
     max = 0;
     _progress = 0;
 
     constructor() {
-        super("div");
+        super("quiz-controls");
         this.class = "question-info";
-        
         this.titleEl = this.createChild("div", {class: "title"});
         this.main = this.createChild("div", {class: "main"});
         this.bar = this.createChild("div", {class: "progress", hide: true, style: {"--progress": 0}})
+        this.addEventListener("access-click", this.speak.bind(this));
     }
 
     async createMarkdown(content) {
@@ -215,6 +209,8 @@ class QuestionInfo extends SvgPlus {
                     }
                 })
             }
+
+            this.utterance = value.utterance || value.question;
             this.createMarkdown(value.question);
         }
     }
@@ -399,8 +395,4 @@ export class QuizView extends SvgPlus {
             }
         }
     }
-}
-
-export function setSpeech2TextModule(text2speech) {
-    Text2Speech = text2speech;
 }

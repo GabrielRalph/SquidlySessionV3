@@ -5,11 +5,13 @@
  * @property {string} subtitle
  * @property {?string} image
  * @property {boolean} correct
+ * @property {?string} [utterance]
  * @property {string} color
  * 
  * 
  * @typedef {Object} Question
  * @property {string} question
+ * @property {?string} [utterance]
  * @property {?string} image
  * @property {number} n_answers
  * @property {Answer[]} answers
@@ -95,6 +97,13 @@ const ANSWER_VALIDATER = {
             return null;
         }
     },
+    utterance: (utt) => {
+        if (isString(utt) && utt.length > 0 && utt.length < MAX_MULTI_LENGTH) {
+            return utt;
+        } else {
+            return null;
+        }
+    },
     color: (color) => {
         if (COLORS.has(color)) {
             return color;
@@ -114,6 +123,13 @@ const QUESTION_VALIDATER = {
     image: (img) => {
         if (isString(img) && img.length > 0 && img.length < MAX_MULTI_LENGTH) {
             return img
+        } else {
+            return null;
+        }
+    },
+    utterance: (utt) => {
+        if (isString(utt) && utt.length > 0 && utt.length < MAX_MULTI_LENGTH) {
+            return utt;
         } else {
             return null;
         }
@@ -337,6 +353,7 @@ export function getQuiz(qid){
         quiz.ownerName = quiz_master.ownerName;
         quiz.qid = qid;
     }
+    console.log("getQuiz", qid, quiz);
     return quiz;
 }
 

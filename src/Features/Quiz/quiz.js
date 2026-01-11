@@ -1,5 +1,5 @@
 
-import {Answers, QuizView, setSpeech2TextModule} from "./quiz-view.js"
+import {Answers, QuizView} from "./quiz-view.js"
 import { Features, OccupiableWindow } from "../features-interface.js";
 import { getAllQuizes, getSummary, watchQuizes } from "./quizzes.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
@@ -595,7 +595,6 @@ export default class QuizFeature  extends Features {
     
 
     async initialise(){
-        setSpeech2TextModule(this.session.text2speech);
         await watchQuizes();
         await this.board.initialising;
         

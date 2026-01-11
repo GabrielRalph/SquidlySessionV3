@@ -1,4 +1,6 @@
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
+import { loadUtterances, speak } from "../text2speach-proxy.js";
+
 
 export class AccessEvent extends Event {
     /** @type {?("click"|"dwell"|"switch")} */
@@ -14,7 +16,7 @@ export class AccessEvent extends Event {
      * @param {?("click"|"dwell"|"switch"|AccessEvent)} mode
      * @param {Event} oldEvent
      * */
-     constructor(eventName, mode, config) {
+    constructor(eventName, mode, config) {
         const Config = {cancelable: true}
         if (typeof config === "object" && config !== null) {
             for (let key in config) {
@@ -195,6 +197,28 @@ class AccessButtonRoot extends HTMLElement {
         return ($.get(this).clickBoxElement || this);
     }
 
+    /** @param {string} text */
+    set utteranceText(text) {
+        $.get(this).utteranceText = text;
+        loadUtterances([text]);
+    }
+
+    /** @return {string} */
+    get utteranceText() {
+        return $.get(this).utteranceText;
+    }
+
+    /**
+     * Speak the button's utterance text.
+     * @return {Promise<void>}
+     */
+    async speakUtterance() {
+        if (this._speaking) return;
+        this._speaking = true;
+        await speak(this.utteranceText);
+        this._speaking = false;
+    }
+
     /** 
      * @param {?("click"|"dwell"|"switch")} mode
      * @param {Event} oldEvent
@@ -228,7 +252,6 @@ class AccessButtonRoot extends HTMLElement {
     setHighlight(isHighlighted){
         this.toggleAttribute("hover", isHighlighted)
     }
-
 
     /**
      * @override
@@ -271,10 +294,6 @@ class AccessButtonRoot extends HTMLElement {
         }
     }
 }
-customElements.define("access-button", AccessButtonRoot);
-
-
-
 
 /**
  * @extends {AccessButtonRoot}
@@ -284,10 +303,32 @@ export class AccessButton extends SvgPlus {
         super("access-button");
         this.group = group;
     }
+
+    /** @param {string} text */
+    set utterance(text) {
+        this.utteranceText = text;
+    }
+
+    /** @returns {string} */
+    get utterance() {
+        return this.utteranceText;
+    }
+
+    /**
+     * Speak the button's utterance text.
+     * @return {Promise<void>}
+     */
+    async speak() {
+        await this.speakUtterance();
+    }
+
 }
 
 export function getButtonGroups(){
    return ButtonsLookup.getVisibleGroups();
 }
+
+
+customElements.define("access-button", AccessButtonRoot);
 
 window.getButtonGroups = getButtonGroups;

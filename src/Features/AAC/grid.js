@@ -522,7 +522,6 @@ class AACGridBoard extends OccupiableWindow {
   
     /** @param {IconSelectionEvent} event */
     async onIconSelect(event) {
-        
         let item = event.selectedItem;
         if (item.type !== "topic" && item.type !== "action") {
             speakUtterance(item);
