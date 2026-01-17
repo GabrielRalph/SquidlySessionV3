@@ -12,7 +12,7 @@ const AppsList = [
 
 
 class QuizSearch extends SearchWindow {
-    constructor(apps){
+    constructor(apps) {
         super();
         this.apps = apps;
         this.styles = {
@@ -20,25 +20,25 @@ class QuizSearch extends SearchWindow {
         }
     }
 
-    reset(imm){
+    reset(imm) {
         this.closeIcon = "close";
         this.resetSearchItems(imm)
     }
 
-    async getSearchResults(searchPhrase){
+    async getSearchResults(searchPhrase) {
         let apps = this.apps;
         /** @type {Answer[]} */
         let items = apps.map(q => {
             return {
                 app: q,
                 icon: {
-                    
+
                     symbol: q.icon,
                     type: "image",
                 },
             }
         })
-        items = filterAndSort(items, searchPhrase, ({app: {title, subtitle}}) => [title, subtitle]);
+        items = filterAndSort(items, searchPhrase, ({ app: { title, subtitle } }) => [title, subtitle]);
         return items;
     }
 }
@@ -48,7 +48,7 @@ class AppsFrame extends OccupiableWindow {
         super("app-frame");
         this.feature = feature;
         this.sdata = sdata;
-      
+
         this.iframe = this.createChild("iframe", {
             style: {
                 border: "none",
@@ -60,15 +60,15 @@ class AppsFrame extends OccupiableWindow {
         });
 
         this.grid = this.createChild(GridLayout, {
-            style: {position: "absolute", top: "var(--gap)", left: "var(--gap)", right: "var(--gap)", bottom: "var(--gap)"}
+            style: { position: "absolute", top: "var(--gap)", left: "var(--gap)", right: "var(--gap)", bottom: "var(--gap)" }
         }, 4, 5);
         this.search = this.createChild(QuizSearch, {
-            style: {position: "absolute", top: 0, left: 0, right: 0, bottom: 0}
+            style: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }
         });
 
         this.offsetX = 0;
         this.offsetY = 0;
-        this.observer = new ResizeObserver(([{contentRect: {x, y, width, height}}]) => {
+        this.observer = new ResizeObserver(([{ contentRect: { x, y, width, height } }]) => {
             this.offsetX = x;
             this.offsetY = y;
         });
@@ -124,7 +124,7 @@ class AppsFrame extends OccupiableWindow {
             }
             this.iframe.srcdoc = srcdoc ? src : null;
             if (!srcdoc)
-                this.iframe.props = {src};
+                this.iframe.props = { src };
         })
     }
 
@@ -134,17 +134,17 @@ class AppsFrame extends OccupiableWindow {
         this.iframe.contentWindow.postMessage(data, "*");
     }
 
-    static get usedStyleSheets(){
+    static get usedStyleSheets() {
         return [
-             ...SearchWindow.usedStyleSheets,
-             GridIcon.styleSheet,
-            ]
+            ...SearchWindow.usedStyleSheets,
+            GridIcon.styleSheet,
+        ]
     }
-    static get fixToolBarWhenOpen() {return true}
+    static get fixToolBarWhenOpen() { return true }
 }
 
 export default class Apps extends Features {
-    constructor(session, sdata){
+    constructor(session, sdata) {
         super(session, sdata)
         this.appFrame = new AppsFrame(this, sdata);
         this.appFrame.open = this.open.bind(this);
@@ -185,16 +185,16 @@ export default class Apps extends Features {
         }
     }
 
-    
+
     _message_event(e) {
         const data = e.data;
-        
+
         if (!data?.type || !data?.emode) return;
-        
+
         let event = null;
         switch (data.emode) {
-            case "mouse": 
-                const {offsetX, offsetY} = this.appFrame
+            case "mouse":
+                const { offsetX, offsetY } = this.appFrame
                 event = new MouseEvent(data.type, {
                     clientX: data.x + offsetX,
                     clientY: data.y + offsetY,
@@ -252,7 +252,7 @@ export default class Apps extends Features {
                 this.appFrame.sendMessage({
                     mode: "onIconClickCallback",
                     key: e.data.key,
-                    value: {clickMode: event.clickMode}
+                    value: { clickMode: event.clickMode }
                 });
             }
         }
@@ -325,7 +325,7 @@ export default class Apps extends Features {
         const path = e.data.path;
         this.session.settings.addEventListener("change", (event) => {
             if (event.path === path) {
-                 e.source.postMessage({
+                e.source.postMessage({
                     mode: "settingsUpdate",
                     path: path,
                     value: event.value
@@ -346,10 +346,10 @@ export default class Apps extends Features {
 
                 // Load index and info
                 const [resInfo, resIndex] = await Promise.all([
-                    fetch(url + "/info.json", {cache: "no-store"}),
-                    fetch(url + "/index.html", {cache: "no-store"})
+                    fetch(url + "/info.json", { cache: "no-store" }),
+                    fetch(url + "/index.html", { cache: "no-store" })
                 ]);
-                if(!resInfo.ok || !resIndex.ok) throw new Error("Failed to fetch app descriptor");
+                if (!resInfo.ok || !resIndex.ok) throw new Error("Failed to fetch app descriptor");
                 const [info, html] = await Promise.all([resInfo.json(), resIndex.text()]);
 
                 info.url = url;
@@ -359,14 +359,14 @@ export default class Apps extends Features {
                 }
                 // Inject API into HTML
                 info.html = html.replace(/<head\b[^>]*>/, `<head>\n\t<script src = "${apiURL}"></script>\n\t<base href="${url}/">\n\t<script>const session_info = ${JSON.stringify(session_info)}</script>`);
-                
+
                 return info;
             } catch (e) {
                 console.warn("Failed to load app from " + url, e);
                 return null;
             }
         }))
-        
+
         this.appDescriptors = this.appDescriptors.filter(d => d !== null);
 
         if (this.appDescriptors.length > 0) {
@@ -396,9 +396,9 @@ export default class Apps extends Features {
         return result;
     }
 
-    async initialise(){
+    async initialise() {
         if (await this.loadAppDescriptors()) {
-             // Set up toolbar button
+            // Set up toolbar button
             this.session.toolBar.addMenuItem("share", {
                 name: "apps",
                 index: 180,
@@ -419,10 +419,10 @@ export default class Apps extends Features {
 
             // Iframe API Message Listener
             window.addEventListener("message", e => {
-            let modeFunc = "_message_" + e.data?.mode;
-            if (modeFunc in this && this[modeFunc] instanceof Function) {
+                let modeFunc = "_message_" + e.data?.mode;
+                if (modeFunc in this && this[modeFunc] instanceof Function) {
                     this[modeFunc](e);
-            }
+                }
             });
         }
     }
@@ -441,7 +441,7 @@ export default class Apps extends Features {
         }
     }
 
-    static get firebaseName(){
+    static get firebaseName() {
         return "apps"
     }
 }
