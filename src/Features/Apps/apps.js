@@ -354,8 +354,10 @@ export default class Apps extends Features {
 
                 info.url = url;
                 // TODO: to be implemented
+                let participantActive = this.sdata.isUserActive("participant");
                 let session_info = {
                     user: this.sdata.me,
+                    participantActive,
                 }
                 // Inject API into HTML
                 info.html = html.replace(/<head\b[^>]*>/, `<head>\n\t<script src = "${apiURL}"></script>\n\t<base href="${url}/">\n\t<script>const session_info = ${JSON.stringify(session_info)}</script>`);
@@ -426,6 +428,7 @@ export default class Apps extends Features {
             });
         }
     }
+
 
     static get name() {
         return "apps"
