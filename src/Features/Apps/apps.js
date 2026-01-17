@@ -244,6 +244,7 @@ export default class Apps extends Features {
         icon.styles = {
             "--shadow-color": "transparent",
             "pointer-events": "all",
+            ...(e.data.options.styles || {})
         }
         this.appFrame.grid.add(icon, e.data.x, e.data.y);
         icon.events = {
