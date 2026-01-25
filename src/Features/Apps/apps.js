@@ -394,6 +394,23 @@ export default class Apps extends Features {
             });
         };
         
+        // Override isPointInElement to check against iframe element's bbox
+        proxy.isPointInElement = (p) => {
+            const entry = this._iframeAccessButtons.get(id);
+            if (entry && entry.state && entry.state.bbox) {
+                const { bbox } = entry.state;
+                // Translate bbox to parent coordinates
+                const x = bbox.x + offsetX;
+                const y = bbox.y + offsetY;
+                const right = x + bbox.width;
+                const bottom = y + bbox.height;
+                
+                // Check if point is within bbox
+                return p.x >= x && p.x <= right && p.y >= y && p.y <= bottom;
+            }
+            return false;
+        };
+        
         // Listen for access-click and forward to iframe
         proxy.addEventListener("access-click", (event) => {
             this.appFrame.sendMessage({
