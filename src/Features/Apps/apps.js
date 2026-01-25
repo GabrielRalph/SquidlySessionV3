@@ -3,6 +3,7 @@ import { relURL } from "../../Utilities/usefull-funcs.js";
 import { Features, OccupiableWindow } from "../features-interface.js";
 import { Vector } from "../../SvgPlus/4.js";
 import { GridIcon, GridLayout } from "../../Utilities/Buttons/grid-icon.js";
+import { AccessButton } from "../../Utilities/Buttons/access-buttons.js";
 
 const AppsList = [
     "https://cursor-splash.squidly.com.au",
@@ -151,6 +152,9 @@ export default class Apps extends Features {
         this.appFrame.close = this.close.bind(this);
         this.currentAppIndex = null;
         this._cursorListenersInitialized = false;
+        
+        /** @type {Map<string, {proxy: AccessButton, state: Object}>} */
+        this._iframeAccessButtons = new Map();
     }
 
     async open() {
@@ -170,6 +174,13 @@ export default class Apps extends Features {
         // Clear the selected app from Firebase when closing
         this.sdata.set("selected_app", null);
         this.currentAppIndex = null;
+        
+        // Clear all iframe access buttons
+        for (const [id, entry] of this._iframeAccessButtons) {
+            entry.proxy.remove();
+        }
+        this._iframeAccessButtons.clear();
+        
         await Promise.all([
             this.appFrame.setSrc("about:blank"),
             this.appFrame.hide()
@@ -332,6 +343,101 @@ export default class Apps extends Features {
                 }, "*");
             }
         });
+    }
+
+    /**
+     * Handles registration of an iframe access button.
+     * Creates a proxy AccessButton in the parent DOM that forwards clicks to the iframe.
+     */
+    _message_registerAccessButton(e) {
+        const { id, group, order, isVisible, center, bbox } = e.data;
+        
+        // Create proxy AccessButton element
+        const proxy = new AccessButton(group);
+        proxy.order = order;
+        proxy.styles = {
+            position: "absolute",
+            pointerEvents: "none",
+            opacity: "0",
+            width: "0",
+            height: "0",
+        };
+        
+        // Store iframe offset for coordinate translation
+        const { offsetX, offsetY } = this.appFrame;
+        
+        // Override getCenter to return iframe element's center (translated to parent coords)
+        proxy.getCenter = () => {
+            const entry = this._iframeAccessButtons.get(id);
+            if (entry && entry.state && entry.state.center) {
+                return new Vector(
+                    entry.state.center.x + offsetX,
+                    entry.state.center.y + offsetY
+                );
+            }
+            return new Vector(0, 0);
+        };
+        
+        // Override getIsVisible to return iframe element's visibility
+        proxy.getIsVisible = () => {
+            const entry = this._iframeAccessButtons.get(id);
+            return entry && entry.state && entry.state.isVisible;
+        };
+        
+        // Override setHighlight to forward to iframe
+        proxy.setHighlight = (isHighlighted) => {
+            proxy.toggleAttribute("hover", isHighlighted);
+            this.appFrame.sendMessage({
+                mode: "setAccessButtonHighlight",
+                id: id,
+                highlighted: isHighlighted
+            });
+        };
+        
+        // Listen for access-click and forward to iframe
+        proxy.addEventListener("access-click", (event) => {
+            this.appFrame.sendMessage({
+                mode: "accessClick",
+                id: id,
+                mode: event.clickMode || "click"
+            });
+        });
+        
+        // Store the proxy and initial state
+        this._iframeAccessButtons.set(id, {
+            proxy: proxy,
+            state: { isVisible, center, bbox }
+        });
+        
+        // Add proxy to DOM (hidden, but registered with access control)
+        this.appFrame.appendChild(proxy);
+    }
+
+    /**
+     * Handles unregistration of an iframe access button.
+     * Removes the proxy element from the DOM.
+     */
+    _message_unregisterAccessButton(e) {
+        const { id } = e.data;
+        
+        const entry = this._iframeAccessButtons.get(id);
+        if (entry) {
+            entry.proxy.remove();
+            this._iframeAccessButtons.delete(id);
+        }
+    }
+
+    /**
+     * Handles state updates for an iframe access button.
+     * Updates the stored state for the proxy element.
+     */
+    _message_accessButtonState(e) {
+        const { id, isVisible, center, bbox } = e.data;
+        
+        const entry = this._iframeAccessButtons.get(id);
+        if (entry) {
+            entry.state = { isVisible, center, bbox };
+        }
     }
 
     /**
