@@ -364,13 +364,12 @@ export default class Apps extends Features {
             height: "0",
         };
         
-        // Store iframe offset for coordinate translation
-        const { offsetX, offsetY } = this.appFrame;
-        
         // Override getCenter to return iframe element's center (translated to parent coords)
+        // Note: Get fresh offset each time since iframe position can change on resize
         proxy.getCenter = () => {
             const entry = this._iframeAccessButtons.get(id);
             if (entry && entry.state && entry.state.center) {
+                const { offsetX, offsetY } = this.appFrame;
                 return new Vector(
                     entry.state.center.x + offsetX,
                     entry.state.center.y + offsetY
@@ -396,10 +395,12 @@ export default class Apps extends Features {
         };
         
         // Override isPointInElement to check against iframe element's bbox
+        // Note: Get fresh offset each time since iframe position can change on resize
         proxy.isPointInElement = (p) => {
             const entry = this._iframeAccessButtons.get(id);
             if (entry && entry.state && entry.state.bbox) {
                 const { bbox } = entry.state;
+                const { offsetX, offsetY } = this.appFrame;
                 // Translate bbox to parent coordinates
                 const x = bbox.x + offsetX;
                 const y = bbox.y + offsetY;

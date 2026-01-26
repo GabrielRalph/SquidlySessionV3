@@ -195,6 +195,11 @@ window.updateAccessButtonStates = function() {
     }
 }
 
+// Auto-update access button states on resize
+window.addEventListener("resize", () => {
+    window.updateAccessButtonStates();
+});
+
 RESPONSE_FUNCTIONS = {
     firebaseOnValueCallback(data){
         if (data.path in FIREBASE_ON_VALUE_CALLBACKS){
