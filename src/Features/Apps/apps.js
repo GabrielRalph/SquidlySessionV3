@@ -351,6 +351,7 @@ export default class Apps extends Features {
      */
     _message_registerAccessButton(e) {
         const { id, group, order, isVisible, center, bbox } = e.data;
+        console.log("[Debug] Registering access button:", id, group, { isVisible, center, bbox });
         
         // Create proxy AccessButton element
         const proxy = new AccessButton(group);
@@ -450,6 +451,7 @@ export default class Apps extends Features {
      */
     _message_accessButtonState(e) {
         const { id, isVisible, center, bbox } = e.data;
+        console.log("[Debug] Access button state:", id, { isVisible, center, bbox });
         
         const entry = this._iframeAccessButtons.get(id);
         if (entry) {
