@@ -247,6 +247,7 @@ RESPONSE_FUNCTIONS = {
      * Parent triggers an access-click on a button.
      */
     accessClick(data){
+        console.log("[Debug] iframe received accessClick:", data);
         if (data.id in ACCESS_BUTTONS) {
             const entry = ACCESS_BUTTONS[data.id];
             const element = entry.element;
@@ -257,7 +258,7 @@ RESPONSE_FUNCTIONS = {
                 cancelable: true
             });
             // Add properties to match AccessClickEvent
-            event.clickMode = data.mode || "click";
+            event.clickMode = data.clickMode || "click";
             event.initialEvent = event;
             event.eventPromises = [];
             event.waitFor = function(promise, stopImmediatePropagation = false) {

@@ -414,10 +414,11 @@ export default class Apps extends Features {
         
         // Listen for access-click and forward to iframe
         proxy.addEventListener("access-click", (event) => {
+            console.log("[Debug] Forwarding access-click to iframe:", id, event.clickMode);
             this.appFrame.sendMessage({
                 mode: "accessClick",
                 id: id,
-                mode: event.clickMode || "click"
+                clickMode: event.clickMode || "click"
             });
         });
         
