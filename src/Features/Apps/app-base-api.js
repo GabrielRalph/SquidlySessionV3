@@ -212,6 +212,79 @@ window.addEventListener("resize", () => {
     window.updateAccessButtonStates();
 });
 
+// ============================================================================
+// AUTO-REGISTRATION FOR <access-button> ELEMENTS
+// ============================================================================
+
+/**
+ * Automatically registers an access-button element using its attributes.
+ * @param {HTMLElement} element - The access-button element
+ */
+function autoRegisterAccessButton(element) {
+    // Skip if already registered
+    if (element.dataset.accessButtonId) return;
+    
+    const group = element.getAttribute('access-group') || 'default';
+    const orderAttr = element.getAttribute('access-order');
+    const order = orderAttr !== null ? parseFloat(orderAttr) : undefined;
+    
+    registerAccessButton(element, group, order);
+}
+
+/**
+ * Automatically unregisters an access-button element.
+ * @param {HTMLElement} element - The access-button element
+ */
+function autoUnregisterAccessButton(element) {
+    if (element.dataset.accessButtonId) {
+        unregisterAccessButton(element.dataset.accessButtonId);
+    }
+}
+
+/**
+ * MutationObserver callback to watch for access-button additions/removals.
+ */
+const accessButtonObserver = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+        // Handle added nodes
+        for (const node of mutation.addedNodes) {
+            if (node.nodeType !== Node.ELEMENT_NODE) continue;
+            
+            if (node.tagName === 'ACCESS-BUTTON') {
+                autoRegisterAccessButton(node);
+            }
+            // Also check descendants
+            node.querySelectorAll?.('access-button').forEach(autoRegisterAccessButton);
+        }
+        
+        // Handle removed nodes
+        for (const node of mutation.removedNodes) {
+            if (node.nodeType !== Node.ELEMENT_NODE) continue;
+            
+            if (node.tagName === 'ACCESS-BUTTON') {
+                autoUnregisterAccessButton(node);
+            }
+            node.querySelectorAll?.('access-button').forEach(autoUnregisterAccessButton);
+        }
+    }
+});
+
+/**
+ * Starts observing the DOM for access-button elements.
+ */
+function startAccessButtonObserver() {
+    accessButtonObserver.observe(document.body, { childList: true, subtree: true });
+    // Register any existing access-button elements
+    document.querySelectorAll('access-button').forEach(autoRegisterAccessButton);
+}
+
+// Start observer when DOM is ready
+if (document.body) {
+    startAccessButtonObserver();
+} else {
+    document.addEventListener('DOMContentLoaded', startAccessButtonObserver);
+}
+
 RESPONSE_FUNCTIONS = {
     firebaseOnValueCallback(data) {
         if (data.path in FIREBASE_ON_VALUE_CALLBACKS) {
