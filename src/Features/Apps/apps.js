@@ -502,6 +502,7 @@ export default class Apps extends Features {
     async loadAppDescriptors() {
         let result = false;
         let apiURL = relURL("./app-base-api.js", import.meta)
+        let accessButtonsURL = relURL("../../Utilities/Buttons/access-buttons.js", import.meta)
         this.appDescriptors = await Promise.all(AppsList.map(async (url) => {
             try {
 
@@ -521,7 +522,7 @@ export default class Apps extends Features {
                     participantActive,
                 }
                 // Inject API into HTML
-                info.html = html.replace(/<head\b[^>]*>/, `<head>\n\t<script src = "${apiURL}"></script>\n\t<base href="${url}/">\n\t<script>const session_info = ${JSON.stringify(session_info)}</script>`);
+                info.html = html.replace(/<head\b[^>]*>/, `<head>\n\t<script type="module" src="${accessButtonsURL}"></script>\n\t<script src="${apiURL}"></script>\n\t<base href="${url}/">\n\t<script>const session_info = ${JSON.stringify(session_info)}</script>`);
 
                 return info;
             } catch (e) {

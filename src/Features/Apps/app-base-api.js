@@ -164,19 +164,58 @@ window.unregisterAccessButton = function(id) {
  */
 function getAccessButtonState(element) {
     const rect = element.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    // Check if element is visible (has dimensions and is in viewport)
-    const isVisible = rect.width > 0 && rect.height > 0 &&
-        rect.bottom > 0 && rect.top < window.innerHeight &&
-        rect.right > 0 && rect.left < window.innerWidth;
-    
-    return {
-        isVisible: isVisible,
-        center: { x: centerX, y: centerY },
-        bbox: { x: rect.left, y: rect.top, width: rect.width, height: rect.height }
-    };
+    let center = null;
+    let isVisible = null;
+    let bbox = null;
+
+    // Reuse AccessButtonRoot/AccessButton state when available
+    try {
+        if (typeof element.getIsVisible === "function") {
+            const value = element.getIsVisible();
+            if (typeof value === "boolean") isVisible = value;
+        }
+    } catch (e) {}
+    try {
+        if (typeof element.isVisible === "boolean") {
+            isVisible = element.isVisible;
+        }
+    } catch (e) {}
+    try {
+        const c = element.center;
+        if (c && typeof c.x === "number" && typeof c.y === "number") {
+            center = { x: c.x, y: c.y };
+        }
+    } catch (e) {}
+    try {
+        const b = element.bbox;
+        if (Array.isArray(b) && b.length === 2) {
+            const [pos, size] = b;
+            const width = size && (typeof size.x === "number" ? size.x : size.width);
+            const height = size && (typeof size.y === "number" ? size.y : size.height);
+            if (pos && typeof pos.x === "number" && typeof pos.y === "number" &&
+                typeof width === "number" && typeof height === "number") {
+                bbox = { x: pos.x, y: pos.y, width, height };
+            }
+        }
+    } catch (e) {}
+
+    if (!center) {
+        center = {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2
+        };
+    }
+    if (isVisible === null) {
+        // Check if element is visible (has dimensions and is in viewport)
+        isVisible = rect.width > 0 && rect.height > 0 &&
+            rect.bottom > 0 && rect.top < window.innerHeight &&
+            rect.right > 0 && rect.left < window.innerWidth;
+    }
+    if (!bbox) {
+        bbox = { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+    }
+
+    return { isVisible, center, bbox };
 }
 
 /**
