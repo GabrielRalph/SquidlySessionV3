@@ -155,6 +155,8 @@ export default class Apps extends Features {
         
         /** @type {Map<string, {proxy: AccessButton, state: Object}>} */
         this._iframeAccessButtons = new Map();
+        /** @type {Map<string, Function>} */
+        this._iframeSettingsListeners = new Map();
     }
 
     async open() {
@@ -180,6 +182,12 @@ export default class Apps extends Features {
             entry.proxy.remove();
         }
         this._iframeAccessButtons.clear();
+
+        // Remove settings listeners registered by iframe
+        for (const [path, handler] of this._iframeSettingsListeners) {
+            this.session.settings.removeEventListener("change", handler);
+        }
+        this._iframeSettingsListeners.clear();
         
         await Promise.all([
             this.appFrame.setSrc("about:blank"),
@@ -334,7 +342,9 @@ export default class Apps extends Features {
 
     _message_addSettingsListener(e) {
         const path = e.data.path;
-        this.session.settings.addEventListener("change", (event) => {
+        if (this._iframeSettingsListeners.has(path)) return;
+
+        const handler = (event) => {
             if (event.path === path) {
                 e.source.postMessage({
                     mode: "settingsUpdate",
@@ -342,7 +352,10 @@ export default class Apps extends Features {
                     value: event.value
                 }, "*");
             }
-        });
+        };
+
+        this._iframeSettingsListeners.set(path, handler);
+        this.session.settings.addEventListener("change", handler);
     }
 
     /**
