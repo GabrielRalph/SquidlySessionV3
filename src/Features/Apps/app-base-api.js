@@ -116,6 +116,25 @@ window.addSettingsListener = function(path, callback){
 window.registerAccessButton = function(element, group, order) {
     if (!(element instanceof HTMLElement)) return null;
     
+    // Check if already auto-registered - return existing ID to avoid duplicates
+    const existingId = AUTO_REGISTERED_ELEMENTS.get(element);
+    if (existingId && existingId in ACCESS_BUTTONS) {
+        // Update order if provided and different
+        if (order !== undefined && ACCESS_BUTTONS[existingId].order !== order) {
+            ACCESS_BUTTONS[existingId].order = order;
+            // Notify parent of order change
+            const state = getAccessButtonState(element);
+            window.parent.postMessage({
+                mode: "registerAccessButton",
+                id: existingId,
+                group: group,
+                order: order,
+                ...state
+            }, "*");
+        }
+        return existingId;
+    }
+    
     // Generate unique ID if element doesn't have one
     let id = element.id || "access_btn_" + Math.random().toString(36).substring(2, 15);
     if (!element.id) element.id = id;
@@ -199,6 +218,233 @@ window.updateAccessButtonStates = function() {
 window.addEventListener("resize", () => {
     window.updateAccessButtonStates();
 });
+
+// ============================================================================
+// AUTO-REGISTRATION SYSTEM (Option 4: Data Attribute Based)
+// ============================================================================
+
+/**
+ * WeakMap to track elements that have been auto-registered.
+ * Maps HTMLElement -> buttonId string
+ * @type {WeakMap<HTMLElement, string>}
+ */
+const AUTO_REGISTERED_ELEMENTS = new WeakMap();
+
+/**
+ * Flag to track if a state update is pending (for debouncing)
+ * @type {boolean}
+ */
+let _pendingStateUpdate = false;
+
+/**
+ * Checks if an element should be auto-registered based on data attributes.
+ * @param {HTMLElement} element - Element to check
+ * @returns {boolean} True if element has data-access-button attribute
+ */
+function shouldAutoRegister(element) {
+    return element instanceof HTMLElement && 
+           element.hasAttribute("data-access-button") &&
+           !AUTO_REGISTERED_ELEMENTS.has(element);
+}
+
+/**
+ * Auto-registers an element if it has the data-access-button attribute.
+ * @param {HTMLElement} element - Element to register
+ */
+function autoRegisterElement(element) {
+    if (!shouldAutoRegister(element)) return;
+    
+    const group = element.getAttribute("data-access-button");
+    const orderAttr = element.getAttribute("data-access-button-order");
+    const order = orderAttr !== null ? parseInt(orderAttr, 10) : undefined;
+    
+    // Register using existing function
+    const buttonId = window.registerAccessButton(element, group, order);
+    
+    // Track in WeakMap
+    if (buttonId) {
+        AUTO_REGISTERED_ELEMENTS.set(element, buttonId);
+    }
+}
+
+/**
+ * Auto-unregisters an element if it was auto-registered.
+ * @param {HTMLElement} element - Element to unregister
+ */
+function autoUnregisterElement(element) {
+    if (!(element instanceof HTMLElement)) return;
+    
+    const buttonId = AUTO_REGISTERED_ELEMENTS.get(element);
+    if (buttonId) {
+        window.unregisterAccessButton(buttonId);
+        AUTO_REGISTERED_ELEMENTS.delete(element);
+    }
+}
+
+/**
+ * Debounced state update function using requestAnimationFrame.
+ * Batches multiple DOM mutations into a single state update.
+ */
+function scheduleStateUpdate() {
+    if (_pendingStateUpdate) return;
+    
+    _pendingStateUpdate = true;
+    requestAnimationFrame(() => {
+        window.updateAccessButtonStates();
+        _pendingStateUpdate = false;
+    });
+}
+
+/**
+ * Recursively finds all elements with data-access-button attribute in a node tree.
+ * @param {Node} node - Root node to search from
+ * @returns {HTMLElement[]} Array of elements with data-access-button
+ */
+function findAccessButtonElements(node) {
+    const elements = [];
+    
+    if (node instanceof HTMLElement) {
+        if (node.hasAttribute("data-access-button")) {
+            elements.push(node);
+        }
+        // Also search children
+        for (const child of node.children) {
+            elements.push(...findAccessButtonElements(child));
+        }
+    }
+    
+    return elements;
+}
+
+// Set up MutationObserver for auto-registration
+if (typeof MutationObserver !== "undefined" && document.body) {
+    const observer = new MutationObserver((mutations) => {
+        let needsStateUpdate = false;
+        
+        for (const mutation of mutations) {
+            // Handle added nodes
+            if (mutation.addedNodes) {
+                for (const node of mutation.addedNodes) {
+                    if (node instanceof HTMLElement) {
+                        // Check the node itself
+                        if (shouldAutoRegister(node)) {
+                            autoRegisterElement(node);
+                            needsStateUpdate = true;
+                        }
+                        // Check all descendants
+                        const descendants = findAccessButtonElements(node);
+                        for (const element of descendants) {
+                            if (shouldAutoRegister(element)) {
+                                autoRegisterElement(element);
+                                needsStateUpdate = true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Handle removed nodes
+            if (mutation.removedNodes) {
+                for (const node of mutation.removedNodes) {
+                    if (node instanceof HTMLElement) {
+                        // Check the node itself
+                        autoUnregisterElement(node);
+                        // Check all descendants
+                        const descendants = findAccessButtonElements(node);
+                        for (const element of descendants) {
+                            autoUnregisterElement(element);
+                        }
+                        needsStateUpdate = true;
+                    }
+                }
+            }
+            
+            // Handle attribute changes (e.g., data-access-button added/removed)
+            if (mutation.type === "attributes") {
+                const target = mutation.target;
+                if (target instanceof HTMLElement) {
+                    if (mutation.attributeName === "data-access-button") {
+                        if (target.hasAttribute("data-access-button")) {
+                            // Attribute was added or changed
+                            if (shouldAutoRegister(target)) {
+                                autoRegisterElement(target);
+                                needsStateUpdate = true;
+                            }
+                        } else {
+                            // Attribute was removed
+                            autoUnregisterElement(target);
+                            needsStateUpdate = true;
+                        }
+                    } else if (mutation.attributeName === "data-access-button-order") {
+                        // Order changed - re-register to update order
+                        if (target.hasAttribute("data-access-button")) {
+                            const existingId = AUTO_REGISTERED_ELEMENTS.get(target);
+                            if (existingId) {
+                                // Unregister and re-register to update order
+                                window.unregisterAccessButton(existingId);
+                                AUTO_REGISTERED_ELEMENTS.delete(target);
+                                autoRegisterElement(target);
+                                needsStateUpdate = true;
+                            }
+                        }
+                    } else {
+                        // Other attribute changes might affect visibility/position
+                        if (AUTO_REGISTERED_ELEMENTS.has(target)) {
+                            needsStateUpdate = true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Schedule state update if needed
+        if (needsStateUpdate) {
+            scheduleStateUpdate();
+        }
+    });
+    
+    // Start observing when DOM is ready
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ["data-access-button", "data-access-button-order"]
+            });
+            
+            // Also register any existing elements with data-access-button
+            const existingElements = findAccessButtonElements(document.body);
+            for (const element of existingElements) {
+                if (shouldAutoRegister(element)) {
+                    autoRegisterElement(element);
+                }
+            }
+            if (existingElements.length > 0) {
+                scheduleStateUpdate();
+            }
+        });
+    } else {
+        // DOM already loaded
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["data-access-button", "data-access-button-order"]
+        });
+        
+        // Register any existing elements with data-access-button
+        const existingElements = findAccessButtonElements(document.body);
+        for (const element of existingElements) {
+            if (shouldAutoRegister(element)) {
+                autoRegisterElement(element);
+            }
+        }
+        if (existingElements.length > 0) {
+            scheduleStateUpdate();
+        }
+    }
+}
 
 RESPONSE_FUNCTIONS = {
     firebaseOnValueCallback(data){
