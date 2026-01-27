@@ -1,40 +1,41 @@
+// ============================================================================
+// EVENT LISTENERS SETUP
+// ============================================================================
+
 ["mousemove", "mousedown", "mouseup"].forEach(type => {
     document.addEventListener(type, e => {
         window.parent.postMessage({
-        mode: "event",
-        emode: "mouse",
-        type,
-        x: e.clientX,
-        y: e.clientY,
-        button: e.button,
-        buttons: e.buttons
+            mode: "event",
+            emode: "mouse",
+            type,
+            x: e.clientX,
+            y: e.clientY,
+            button: e.button,
+            buttons: e.buttons
         }, "*");
     });
 });
+
 ["keydown", "keyup"].forEach(type => {
     document.addEventListener(type, e => {
         window.parent.postMessage({
-        mode: "event",
-        emode: "key",
-        type,
-        key: e.key,
-        code: e.code,
-        ctrl: e.ctrlKey,
-        shift: e.shiftKey,
-        alt: e.altKey,
-        meta: e.metaKey,
-        repeat: e.repeat
+            mode: "event",
+            emode: "key",
+            type,
+            key: e.key,
+            code: e.code,
+            ctrl: e.ctrlKey,
+            shift: e.shiftKey,
+            alt: e.altKey,
+            meta: e.metaKey,
+            repeat: e.repeat
         }, "*");
     });
 });
 
-
-console.log = (...params) => {
-    window.parent.postMessage({
-        mode: "log",
-        params
-    }, "*");
-}
+// ============================================================================
+// GLOBAL VARIABLES
+// ============================================================================
 
 FIREBASE_ON_VALUE_CALLBACKS = {};
 SET_ICON_CALLBACKS = {};
@@ -43,7 +44,21 @@ GET_SETTINGS_CALLBACKS = {};
 SETTINGS_LISTENERS = {};
 ACCESS_BUTTONS = {};
 
-window.firebaseSet = function(path, value){
+// Auto-registration API (exposed by IIFE below)
+let autoRegistrationAPI = null;
+
+// ============================================================================
+// PUBLIC API (window.* functions)
+// ============================================================================
+
+console.log = (...params) => {
+    window.parent.postMessage({
+        mode: "log",
+        params
+    }, "*");
+}
+
+window.firebaseSet = function (path, value) {
     window.parent.postMessage({
         mode: "firebaseSet",
         path: path,
@@ -51,7 +66,7 @@ window.firebaseSet = function(path, value){
     }, "*");
 }
 
-window.firebaseOnValue = function(path, callback){
+window.firebaseOnValue = function (path, callback) {
     FIREBASE_ON_VALUE_CALLBACKS[path] = callback;
     window.parent.postMessage({
         mode: "firebaseOnValue",
@@ -59,7 +74,7 @@ window.firebaseOnValue = function(path, callback){
     }, "*");
 }
 
-window.setIcon = function(x, y, options, callback){
+window.setIcon = function (x, y, options, callback) {
     let key = "setIcon_" + Math.random().toString(36).substring(2, 15);
     SET_ICON_CALLBACKS[key] = callback;
     window.parent.postMessage({
@@ -71,14 +86,14 @@ window.setIcon = function(x, y, options, callback){
     }, "*");
 }
 
-window.addCursorListener = function(callback){
+window.addCursorListener = function (callback) {
     CURSOR_UPDATE_CALLBACK = callback;
     window.parent.postMessage({
         mode: "addCursorListener"
     }, "*");
 }
 
-window.setSettings = function(path, value){
+window.setSettings = function (path, value) {
     window.parent.postMessage({
         mode: "setSettings",
         path: path,
@@ -86,7 +101,7 @@ window.setSettings = function(path, value){
     }, "*");
 }
 
-window.getSettings = function(path, callback){
+window.getSettings = function (path, callback) {
     if (!callback) return;
     let key = "getSettings_" + Math.random().toString(36).substring(2, 15);
     GET_SETTINGS_CALLBACKS[key] = callback;
@@ -97,7 +112,7 @@ window.getSettings = function(path, callback){
     }, "*");
 }
 
-window.addSettingsListener = function(path, callback){
+window.addSettingsListener = function (path, callback) {
     if (!callback) return;
     SETTINGS_LISTENERS[path] = callback;
     window.parent.postMessage({
@@ -113,11 +128,11 @@ window.addSettingsListener = function(path, callback){
  * @param {number} [order] - Optional order within the group
  * @returns {string} The generated button ID
  */
-window.registerAccessButton = function(element, group, order) {
+window.registerAccessButton = function (element, group, order) {
     if (!(element instanceof HTMLElement)) return null;
-    
+
     // Check if already auto-registered - return existing ID to avoid duplicates
-    const existingId = AUTO_REGISTERED_ELEMENTS.get(element);
+    const existingId = autoRegistrationAPI?.getRegisteredId(element);
     if (existingId && existingId in ACCESS_BUTTONS) {
         // Update order if provided and different
         if (order !== undefined && ACCESS_BUTTONS[existingId].order !== order) {
@@ -134,21 +149,21 @@ window.registerAccessButton = function(element, group, order) {
         }
         return existingId;
     }
-    
+
     // Generate unique ID if element doesn't have one
     let id = element.id || "access_btn_" + Math.random().toString(36).substring(2, 15);
     if (!element.id) element.id = id;
-    
+
     // Store element reference
     ACCESS_BUTTONS[id] = {
         element: element,
         group: group,
         order: order
     };
-    
+
     // Get initial state
     const state = getAccessButtonState(element);
-    
+
     // Notify parent
     window.parent.postMessage({
         mode: "registerAccessButton",
@@ -157,7 +172,7 @@ window.registerAccessButton = function(element, group, order) {
         order: order,
         ...state
     }, "*");
-    
+
     return id;
 }
 
@@ -165,16 +180,36 @@ window.registerAccessButton = function(element, group, order) {
  * Unregisters an access button from the parent app.
  * @param {string} id - The button ID to unregister
  */
-window.unregisterAccessButton = function(id) {
+window.unregisterAccessButton = function (id) {
     if (id in ACCESS_BUTTONS) {
         delete ACCESS_BUTTONS[id];
     }
-    
+
     window.parent.postMessage({
         mode: "unregisterAccessButton",
         id: id
     }, "*");
 }
+
+/**
+ * Sends updated state for all registered access buttons to parent.
+ */
+window.updateAccessButtonStates = function () {
+    for (let id in ACCESS_BUTTONS) {
+        const entry = ACCESS_BUTTONS[id];
+        const state = getAccessButtonState(entry.element);
+
+        window.parent.postMessage({
+            mode: "accessButtonState",
+            id: id,
+            ...state
+        }, "*");
+    }
+}
+
+// ============================================================================
+// PRIVATE HELPER FUNCTIONS
+// ============================================================================
 
 /**
  * Gets the current state of an access button element.
@@ -185,12 +220,12 @@ function getAccessButtonState(element) {
     const rect = element.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    
+
     // Check if element is visible (has dimensions and is in viewport)
     const isVisible = rect.width > 0 && rect.height > 0 &&
         rect.bottom > 0 && rect.top < window.innerHeight &&
         rect.right > 0 && rect.left < window.innerWidth;
-    
+
     return {
         isVisible: isVisible,
         center: { x: centerX, y: centerY },
@@ -198,129 +233,112 @@ function getAccessButtonState(element) {
     };
 }
 
-/**
- * Sends updated state for all registered access buttons to parent.
- */
-window.updateAccessButtonStates = function() {
-    for (let id in ACCESS_BUTTONS) {
-        const entry = ACCESS_BUTTONS[id];
-        const state = getAccessButtonState(entry.element);
-        
-        window.parent.postMessage({
-            mode: "accessButtonState",
-            id: id,
-            ...state
-        }, "*");
-    }
-}
-
-// Auto-update access button states on resize
-window.addEventListener("resize", () => {
-    window.updateAccessButtonStates();
-});
-
 // ============================================================================
-// AUTO-REGISTRATION SYSTEM (Option 4: Data Attribute Based)
+// AUTO-REGISTRATION SYSTEM
 // ============================================================================
+// Encapsulated in IIFE to keep implementation details private
 
-/**
- * WeakMap to track elements that have been auto-registered.
- * Maps HTMLElement -> buttonId string
- * @type {WeakMap<HTMLElement, string>}
- */
-const AUTO_REGISTERED_ELEMENTS = new WeakMap();
+(function setupAutoRegistration() {
+    /**
+     * WeakMap to track elements that have been auto-registered.
+     * Maps HTMLElement -> buttonId string
+     * @type {WeakMap<HTMLElement, string>}
+     */
+    const AUTO_REGISTERED_ELEMENTS = new WeakMap();
 
-/**
- * Flag to track if a state update is pending (for debouncing)
- * @type {boolean}
- */
-let _pendingStateUpdate = false;
+    /**
+     * Flag to track if a state update is pending (for debouncing)
+     * @type {boolean}
+     */
+    let _pendingStateUpdate = false;
 
-/**
- * Checks if an element should be auto-registered based on data attributes.
- * @param {HTMLElement} element - Element to check
- * @returns {boolean} True if element has data-access-button attribute
- */
-function shouldAutoRegister(element) {
-    return element instanceof HTMLElement && 
-           element.hasAttribute("data-access-button") &&
-           !AUTO_REGISTERED_ELEMENTS.has(element);
-}
-
-/**
- * Auto-registers an element if it has the data-access-button attribute.
- * @param {HTMLElement} element - Element to register
- */
-function autoRegisterElement(element) {
-    if (!shouldAutoRegister(element)) return;
-    
-    const group = element.getAttribute("data-access-button");
-    const orderAttr = element.getAttribute("data-access-button-order");
-    const order = orderAttr !== null ? parseInt(orderAttr, 10) : undefined;
-    
-    // Register using existing function
-    const buttonId = window.registerAccessButton(element, group, order);
-    
-    // Track in WeakMap
-    if (buttonId) {
-        AUTO_REGISTERED_ELEMENTS.set(element, buttonId);
+    /**
+     * Checks if an element should be auto-registered based on data attributes.
+     * @param {HTMLElement} element - Element to check
+     * @returns {boolean} True if element has data-access-button attribute
+     */
+    function shouldAutoRegister(element) {
+        return element instanceof HTMLElement &&
+            element.hasAttribute("data-access-button") &&
+            !AUTO_REGISTERED_ELEMENTS.has(element);
     }
-}
 
-/**
- * Auto-unregisters an element if it was auto-registered.
- * @param {HTMLElement} element - Element to unregister
- */
-function autoUnregisterElement(element) {
-    if (!(element instanceof HTMLElement)) return;
-    
-    const buttonId = AUTO_REGISTERED_ELEMENTS.get(element);
-    if (buttonId) {
-        window.unregisterAccessButton(buttonId);
-        AUTO_REGISTERED_ELEMENTS.delete(element);
-    }
-}
+    /**
+     * Auto-registers an element if it has the data-access-button attribute.
+     * @param {HTMLElement} element - Element to register
+     */
+    function autoRegisterElement(element) {
+        if (!shouldAutoRegister(element)) return;
 
-/**
- * Debounced state update function using requestAnimationFrame.
- * Batches multiple DOM mutations into a single state update.
- */
-function scheduleStateUpdate() {
-    if (_pendingStateUpdate) return;
-    
-    _pendingStateUpdate = true;
-    requestAnimationFrame(() => {
-        window.updateAccessButtonStates();
-        _pendingStateUpdate = false;
-    });
-}
+        const group = element.getAttribute("data-access-button");
+        const orderAttr = element.getAttribute("data-access-button-order");
+        const order = orderAttr !== null ? parseInt(orderAttr, 10) : undefined;
 
-/**
- * Recursively finds all elements with data-access-button attribute in a node tree.
- * @param {Node} node - Root node to search from
- * @returns {HTMLElement[]} Array of elements with data-access-button
- */
-function findAccessButtonElements(node) {
-    const elements = [];
-    
-    if (node instanceof HTMLElement) {
-        if (node.hasAttribute("data-access-button")) {
-            elements.push(node);
-        }
-        // Also search children
-        for (const child of node.children) {
-            elements.push(...findAccessButtonElements(child));
+        // Register using existing function
+        const buttonId = window.registerAccessButton(element, group, order);
+
+        // Track in WeakMap
+        if (buttonId) {
+            AUTO_REGISTERED_ELEMENTS.set(element, buttonId);
         }
     }
-    
-    return elements;
-}
 
-// Set up MutationObserver for auto-registration
-if (typeof MutationObserver !== "undefined" && document.body) {
-    const observer = new MutationObserver((mutations) => {
+    /**
+     * Auto-unregisters an element if it was auto-registered.
+     * @param {HTMLElement} element - Element to unregister
+     */
+    function autoUnregisterElement(element) {
+        if (!(element instanceof HTMLElement)) return;
+
+        const buttonId = AUTO_REGISTERED_ELEMENTS.get(element);
+        if (buttonId) {
+            window.unregisterAccessButton(buttonId);
+            AUTO_REGISTERED_ELEMENTS.delete(element);
+        }
+    }
+
+    /**
+     * Debounced state update function using requestAnimationFrame.
+     * Batches multiple DOM mutations into a single state update.
+     */
+    function scheduleStateUpdate() {
+        if (_pendingStateUpdate) return;
+
+        _pendingStateUpdate = true;
+        requestAnimationFrame(() => {
+            window.updateAccessButtonStates();
+            _pendingStateUpdate = false;
+        });
+    }
+
+    /**
+     * Recursively finds all elements with data-access-button attribute in a node tree.
+     * @param {Node} node - Root node to search from
+     * @returns {HTMLElement[]} Array of elements with data-access-button
+     */
+    function findAccessButtonElements(node) {
+        const elements = [];
+
+        if (node instanceof HTMLElement) {
+            if (node.hasAttribute("data-access-button")) {
+                elements.push(node);
+            }
+            // Also search children
+            for (const child of node.children) {
+                elements.push(...findAccessButtonElements(child));
+            }
+        }
+
+        return elements;
+    }
+
+    /**
+     * Handles DOM mutations for auto-registration.
+     * @param {MutationRecord[]} mutations - Array of mutation records
+     */
+    function handleMutations(mutations) {
         let needsStateUpdate = false;
-        
+
         for (const mutation of mutations) {
             // Handle added nodes
             if (mutation.addedNodes) {
@@ -342,7 +360,7 @@ if (typeof MutationObserver !== "undefined" && document.body) {
                     }
                 }
             }
-            
+
             // Handle removed nodes
             if (mutation.removedNodes) {
                 for (const node of mutation.removedNodes) {
@@ -358,7 +376,7 @@ if (typeof MutationObserver !== "undefined" && document.body) {
                     }
                 }
             }
-            
+
             // Handle attribute changes (e.g., data-access-button added/removed)
             if (mutation.type === "attributes") {
                 const target = mutation.target;
@@ -396,24 +414,28 @@ if (typeof MutationObserver !== "undefined" && document.body) {
                 }
             }
         }
-        
+
         // Schedule state update if needed
         if (needsStateUpdate) {
             scheduleStateUpdate();
         }
-    });
-    
-    // Start observing when DOM is ready
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", () => {
+    }
+
+    /**
+     * Initializes the MutationObserver and registers existing elements.
+     */
+    function initializeObserver() {
+        const observer = new MutationObserver(handleMutations);
+
+        const startObserving = () => {
             observer.observe(document.body, {
                 childList: true,
                 subtree: true,
                 attributes: true,
                 attributeFilter: ["data-access-button", "data-access-button-order"]
             });
-            
-            // Also register any existing elements with data-access-button
+
+            // Register any existing elements with data-access-button
             const existingElements = findAccessButtonElements(document.body);
             for (const element of existingElements) {
                 if (shouldAutoRegister(element)) {
@@ -423,42 +445,50 @@ if (typeof MutationObserver !== "undefined" && document.body) {
             if (existingElements.length > 0) {
                 scheduleStateUpdate();
             }
-        });
-    } else {
-        // DOM already loaded
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ["data-access-button", "data-access-button-order"]
-        });
-        
-        // Register any existing elements with data-access-button
-        const existingElements = findAccessButtonElements(document.body);
-        for (const element of existingElements) {
-            if (shouldAutoRegister(element)) {
-                autoRegisterElement(element);
-            }
-        }
-        if (existingElements.length > 0) {
-            scheduleStateUpdate();
+        };
+
+        // Start observing when DOM is ready
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", startObserving);
+        } else {
+            // DOM already loaded
+            startObserving();
         }
     }
-}
+
+    // Expose minimal API for registerAccessButton to check existing registrations
+    autoRegistrationAPI = {
+        getRegisteredId: (element) => AUTO_REGISTERED_ELEMENTS.get(element)
+    };
+
+    // Initialize if MutationObserver is available
+    if (typeof MutationObserver !== "undefined" && document.body) {
+        initializeObserver();
+    }
+})();
+
+// ============================================================================
+// EVENT HANDLERS AND RESPONSE FUNCTIONS
+// ============================================================================
+
+// Auto-update access button states on resize
+window.addEventListener("resize", () => {
+    window.updateAccessButtonStates();
+});
 
 RESPONSE_FUNCTIONS = {
-    firebaseOnValueCallback(data){
-        if (data.path in FIREBASE_ON_VALUE_CALLBACKS){
+    firebaseOnValueCallback(data) {
+        if (data.path in FIREBASE_ON_VALUE_CALLBACKS) {
             FIREBASE_ON_VALUE_CALLBACKS[data.path](data.value);
         }
     },
-    onIconClickCallback(data){
-        if (data.key in SET_ICON_CALLBACKS){
+    onIconClickCallback(data) {
+        if (data.key in SET_ICON_CALLBACKS) {
             SET_ICON_CALLBACKS[data.key](data.value);
         }
     },
-    cursorUpdate(data){
-        if (CURSOR_UPDATE_CALLBACK){
+    cursorUpdate(data) {
+        if (CURSOR_UPDATE_CALLBACK) {
             CURSOR_UPDATE_CALLBACK({
                 user: data.user,
                 x: data.x,
@@ -467,25 +497,25 @@ RESPONSE_FUNCTIONS = {
             });
         }
     },
-    getSettingsResponse(data){
-        if (data.key in GET_SETTINGS_CALLBACKS){
+    getSettingsResponse(data) {
+        if (data.key in GET_SETTINGS_CALLBACKS) {
             GET_SETTINGS_CALLBACKS[data.key](data.value);
             delete GET_SETTINGS_CALLBACKS[data.key];
         }
     },
-    settingsUpdate(data){
-        if (data.path in SETTINGS_LISTENERS){
+    settingsUpdate(data) {
+        if (data.path in SETTINGS_LISTENERS) {
             SETTINGS_LISTENERS[data.path](data.value);
         }
     },
     /**
      * Parent requests current state of an access button.
      */
-    getAccessButtonState(data){
+    getAccessButtonState(data) {
         if (data.id in ACCESS_BUTTONS) {
             const entry = ACCESS_BUTTONS[data.id];
             const state = getAccessButtonState(entry.element);
-            
+
             window.parent.postMessage({
                 mode: "accessButtonState",
                 id: data.id,
@@ -497,12 +527,12 @@ RESPONSE_FUNCTIONS = {
     /**
      * Parent triggers an access-click on a button.
      */
-    accessClick(data){
+    accessClick(data) {
         console.log("[Debug] iframe received accessClick:", data);
         if (data.id in ACCESS_BUTTONS) {
             const entry = ACCESS_BUTTONS[data.id];
             const element = entry.element;
-            
+
             // Create event matching AccessClickEvent structure
             const event = new CustomEvent("access-click", {
                 bubbles: true,
@@ -512,28 +542,28 @@ RESPONSE_FUNCTIONS = {
             event.clickMode = data.clickMode || "click";
             event.initialEvent = event;
             event.eventPromises = [];
-            event.waitFor = function(promise, stopImmediatePropagation = false) {
+            event.waitFor = function (promise, stopImmediatePropagation = false) {
                 if (stopImmediatePropagation) {
                     this.stopImmediatePropagation();
                 }
                 this.eventPromises.push(promise);
                 return promise;
             };
-            event.waitAll = function() {
+            event.waitAll = function () {
                 return Promise.all(this.eventPromises);
             };
-            
+
             element.dispatchEvent(event);
         }
     },
     /**
      * Parent sets highlight state on a button.
      */
-    setAccessButtonHighlight(data){
+    setAccessButtonHighlight(data) {
         if (data.id in ACCESS_BUTTONS) {
             const entry = ACCESS_BUTTONS[data.id];
             const element = entry.element;
-            
+
             // Toggle highlight attribute/class
             if (data.highlighted) {
                 element.setAttribute("hover", "");
@@ -547,7 +577,7 @@ RESPONSE_FUNCTIONS = {
 }
 
 window.addEventListener("message", (event) => {
-    if (event.data.mode in RESPONSE_FUNCTIONS){
+    if (event.data.mode in RESPONSE_FUNCTIONS) {
         RESPONSE_FUNCTIONS[event.data.mode](event.data);
     }
 });
