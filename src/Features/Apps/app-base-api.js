@@ -188,22 +188,6 @@ function getAccessButtonState(element) {
         bbox = b;
     }
 
-    // if (!center) {
-    //     center = {
-    //         x: rect.left + rect.width / 2,
-    //         y: rect.top + rect.height / 2
-    //     };
-    // }
-    // if (isVisible === null) {
-    //     // Check if element is visible (has dimensions and is in viewport)
-    //     isVisible = rect.width > 0 && rect.height > 0 &&
-    //         rect.bottom > 0 && rect.top < window.innerHeight &&
-    //         rect.right > 0 && rect.left < window.innerWidth;
-    // }
-    // if (!bbox) {
-    //     bbox = { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
-    // }
-
     return { isVisible, center, bbox };
 }
 
