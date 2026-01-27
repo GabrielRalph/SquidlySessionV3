@@ -384,8 +384,8 @@ export default class Apps extends Features {
      * Creates a proxy AccessButton in the parent DOM that forwards clicks to the iframe.
      */
     _message_registerAccessButton(e) {
-        const { id, group, order, center, bbox } = e.data;
-        console.log("[Debug] Registering access button:", id, group, { center, bbox });
+        const { id, group, order, isVisible, center, bbox } = e.data;
+        console.log("[Debug] Registering access button:", id, group, { isVisible, center, bbox });
         
         // Create proxy AccessButton element
         const proxy = new AccessButton(group);
@@ -412,30 +412,10 @@ export default class Apps extends Features {
             return new Vector(0, 0);
         };
         
-        // Override getIsVisible to calculate visibility from bbox
-        // Visibility is now calculated here instead of in the iframe
+        // Override getIsVisible to return iframe element's visibility
         proxy.getIsVisible = () => {
             const entry = this._iframeAccessButtons.get(id);
-            if (!entry || !entry.state || !entry.state.bbox) return false;
-            
-            const { bbox } = entry.state;
-            const { offsetX, offsetY } = this.appFrame;
-            
-            // Check bbox has size
-            if (bbox.width <= 0 || bbox.height <= 0) return false;
-            
-            // Translate to parent coordinates
-            const x = bbox.x + offsetX;
-            const y = bbox.y + offsetY;
-            const right = x + bbox.width;
-            const bottom = y + bbox.height;
-            
-            // Check in parent viewport
-            if (bottom <= 0 || y >= window.innerHeight || 
-                right <= 0 || x >= window.innerWidth) return false;
-            
-            // Use isPointInElement to check if center is clickable
-            return proxy.isPointInElement(proxy.getCenter());
+            return entry && entry.state && entry.state.isVisible;
         };
         
         // Override setHighlight to forward to iframe
@@ -480,7 +460,7 @@ export default class Apps extends Features {
         // Store the proxy and initial state
         this._iframeAccessButtons.set(id, {
             proxy: proxy,
-            state: { center, bbox }
+            state: { isVisible, center, bbox }
         });
         
         // Add proxy to DOM (hidden, but registered with access control)
@@ -506,12 +486,12 @@ export default class Apps extends Features {
      * Updates the stored state for the proxy element.
      */
     _message_accessButtonState(e) {
-        const { id, center, bbox } = e.data;
-        console.log("[Debug] Access button state:", id, { center, bbox });
+        const { id, isVisible, center, bbox } = e.data;
+        console.log("[Debug] Access button state:", id, { isVisible, center, bbox });
         
         const entry = this._iframeAccessButtons.get(id);
         if (entry) {
-            entry.state = { center, bbox };
+            entry.state = { isVisible, center, bbox };
         }
     }
 
