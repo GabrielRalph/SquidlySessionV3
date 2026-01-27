@@ -213,21 +213,16 @@ window.updateAccessButtonStates = function () {
 
 /**
  * Gets the current state of an access button element.
+ * Visibility is calculated by the parent window, not here.
  * @param {HTMLElement} element - The element to get state for
- * @returns {Object} State object with isVisible, center, bbox
+ * @returns {Object} State object with center and bbox
  */
 function getAccessButtonState(element) {
     const rect = element.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
 
-    // Check if element is visible (has dimensions and is in viewport)
-    const isVisible = rect.width > 0 && rect.height > 0 &&
-        rect.bottom > 0 && rect.top < window.innerHeight &&
-        rect.right > 0 && rect.left < window.innerWidth;
-
     return {
-        isVisible: isVisible,
         center: { x: centerX, y: centerY },
         bbox: { x: rect.left, y: rect.top, width: rect.width, height: rect.height }
     };
@@ -461,9 +456,14 @@ function getAccessButtonState(element) {
         getRegisteredId: (element) => AUTO_REGISTERED_ELEMENTS.get(element)
     };
 
-    // Initialize if MutationObserver is available
-    if (typeof MutationObserver !== "undefined" && document.body) {
-        initializeObserver();
+    // Initialize when DOM is ready (script may run in <head> before body exists)
+    if (typeof MutationObserver !== "undefined") {
+        if (document.body) {
+            initializeObserver();
+        } else {
+            // Wait for DOM to be ready
+            document.addEventListener("DOMContentLoaded", initializeObserver);
+        }
     }
 })();
 
