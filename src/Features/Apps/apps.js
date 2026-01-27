@@ -157,6 +157,8 @@ export default class Apps extends Features {
         this._iframeAccessButtons = new Map();
         /** @type {Map<string, Function>} */
         this._iframeSettingsListeners = new Map();
+        /** @type {Set<GridIcon>} */
+        this._appIcons = new Set();
     }
 
     async open() {
@@ -176,6 +178,9 @@ export default class Apps extends Features {
         // Clear the selected app from Firebase when closing
         this.sdata.set("selected_app", null);
         this.currentAppIndex = null;
+        
+        // Clear all app-added icons
+        this._clearAppIcons();
         
         // Clear all iframe access buttons
         for (const [id, entry] of this._iframeAccessButtons) {
@@ -197,11 +202,25 @@ export default class Apps extends Features {
 
 
     async _setApp(idx) {
+        // Clear all app-added icons before loading new app
+        this._clearAppIcons();
+        
         await this.appFrame.setSrc("about:blank");
         if (idx >= 0 || idx < this.appDescriptors.length) {
             let app = this.appDescriptors[idx];
             await this.appFrame.setSrc(app.html, true);
         }
+    }
+
+    /**
+     * Clears all icons that were added by apps (via setIcon).
+     * Preserves the permanent Exit icon at (0, 0).
+     */
+    _clearAppIcons() {
+        for (const icon of this._appIcons) {
+            icon.remove();
+        }
+        this._appIcons.clear();
     }
 
 
@@ -275,6 +294,8 @@ export default class Apps extends Features {
                 });
             }
         }
+        // Track this icon so it can be cleared when switching apps
+        this._appIcons.add(icon);
     }
 
     _message_addCursorListener(e) {
