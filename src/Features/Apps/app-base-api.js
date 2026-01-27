@@ -168,25 +168,25 @@ function getAccessButtonState(element) {
     let isVisible = null;
     let bbox = null;
 
-    // Reuse AccessButtonRoot/AccessButton state
+    // Use AccessButtonRoot methods if available (for <access-button> elements)
+    if (typeof element.getCenter === "function") {
+        const c = element.getCenter();
+        center = { x: c.x, y: c.y };
+    } else {
+        center = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+    }
+
     if (typeof element.getIsVisible === "function") {
         isVisible = element.getIsVisible();
-    } else if (typeof element.isVisible === "boolean") {
-        isVisible = element.isVisible;
-    }
-
-    const c = element.center;
-    center = { x: c.x, y: c.y };
-
-    const b = element.bbox;
-    if (Array.isArray(b) && b.length === 2) {
-        const [pos, size] = b;
-        const width = typeof size.x === "number" ? size.x : size.width;
-        const height = typeof size.y === "number" ? size.y : size.height;
-        bbox = { x: pos.x, y: pos.y, width, height };
     } else {
-        bbox = b;
+        // Fallback: check if element has non-zero size and is within viewport
+        isVisible = rect.width > 0 && rect.height > 0 &&
+            rect.bottom > 0 && rect.right > 0 &&
+            rect.top < window.innerHeight && rect.left < window.innerWidth;
     }
+
+    // bbox is not provided by AccessButtonRoot, always use bounding rect
+    bbox = { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
 
     return { isVisible, center, bbox };
 }
