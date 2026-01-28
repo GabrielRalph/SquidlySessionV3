@@ -463,14 +463,6 @@ export default class Apps extends Features {
                 const center = element.getCenter();
                 return this._toParentCoords(center);
             }
-            // Fallback: use bounding rect center
-            // if (element) {
-            //     const rect = element.getBoundingClientRect();
-            //     return this._toParentCoords({
-            //         x: rect.x + rect.width / 2,
-            //         y: rect.y + rect.height / 2
-            //     });
-            // }
             return new Vector(0, 0);
         };
 
@@ -479,12 +471,6 @@ export default class Apps extends Features {
             if (element && typeof element.getIsVisible === "function") {
                 return element.getIsVisible();
             }
-            // Fallback: check if element exists and has size
-            // if (element) {
-            //     const rect = element.getBoundingClientRect();
-            //     return rect.width > 0 && rect.height > 0;
-            // }
-            // return false;
         };
 
         proxy.setHighlight = (isHighlighted) => {
@@ -492,15 +478,6 @@ export default class Apps extends Features {
             const element = this._getIframeElement(id);
             if (element && typeof element.setHighlight === "function") {
                 element.setHighlight(isHighlighted);
-            } else if (element) {
-                // Fallback for plain HTML elements
-                // if (isHighlighted) {
-                //     element.setAttribute("hover", "");
-                //     element.classList.add("access-highlighted");
-                // } else {
-                //     element.removeAttribute("hover");
-                //     element.classList.remove("access-highlighted");
-                // }
             }
         };
 
@@ -516,10 +493,6 @@ export default class Apps extends Features {
                 return element.isPointInElement(pIframe);
             }
 
-            // // Fallback for plain HTML elements
-            // const rect = element.getBoundingClientRect();
-            // return pIframe.x >= rect.left && pIframe.x <= rect.right &&
-            //     pIframe.y >= rect.top && pIframe.y <= rect.bottom;
         };
 
         // Handle access-click by delegating to iframe element
@@ -527,14 +500,6 @@ export default class Apps extends Features {
             const element = this._getIframeElement(id);
             if (element && typeof element.accessClick === "function") {
                 element.accessClick(event.clickMode || "click");
-            } else if (element) {
-                // Fallback: dispatch access-click event on element
-                // const iframeEvent = new CustomEvent("access-click", {
-                //     bubbles: true,
-                //     cancelable: true
-                // });
-                // iframeEvent.clickMode = event.clickMode || "click";
-                // element.dispatchEvent(iframeEvent);
             }
         });
 
