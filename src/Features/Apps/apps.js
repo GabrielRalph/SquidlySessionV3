@@ -152,7 +152,7 @@ export default class Apps extends Features {
         this.appFrame.close = this.close.bind(this);
         this.currentAppIndex = null;
         this._cursorListenersInitialized = false;
-        
+
         /** @type {Map<string, {proxy: AccessButton, state: Object}>} */
         this._iframeAccessButtons = new Map();
         /** @type {Map<string, Function>} */
@@ -178,10 +178,10 @@ export default class Apps extends Features {
         // Clear the selected app from Firebase when closing
         this.sdata.set("selected_app", null);
         this.currentAppIndex = null;
-        
+
         // Clear all app-added icons
         this._clearAppIcons();
-        
+
         // Clear all iframe access buttons
         for (const [id, entry] of this._iframeAccessButtons) {
             entry.proxy.remove();
@@ -193,7 +193,7 @@ export default class Apps extends Features {
             this.session.settings.removeEventListener("change", handler);
         }
         this._iframeSettingsListeners.clear();
-        
+
         await Promise.all([
             this.appFrame.setSrc("about:blank"),
             this.appFrame.hide()
@@ -204,7 +204,7 @@ export default class Apps extends Features {
     async _setApp(idx) {
         // Clear all app-added icons before loading new app
         this._clearAppIcons();
-        
+
         await this.appFrame.setSrc("about:blank");
         if (idx >= 0 || idx < this.appDescriptors.length) {
             let app = this.appDescriptors[idx];
@@ -379,14 +379,71 @@ export default class Apps extends Features {
         this.session.settings.addEventListener("change", handler);
     }
 
+    // =========================================================================
+    // IFRAME ACCESS BUTTON HELPERS (same-origin direct access)
+    // =========================================================================
+
+    /**
+     * Gets an element from the iframe document by ID.
+     * @param {string} id - The element ID
+     * @returns {HTMLElement|null}
+     */
+    _getIframeElement(id) {
+        try {
+            const iframeDoc = this.appFrame.iframe.contentDocument;
+            return iframeDoc?.getElementById(id) || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the iframe's bounding rect in parent coordinates.
+     * @returns {DOMRect}
+     */
+    _getIframeRect() {
+        return this.appFrame.iframe.getBoundingClientRect();
+    }
+
+    /**
+     * Converts a point from parent coordinates to iframe coordinates.
+     * @param {Object} p - Point with x, y properties
+     * @returns {Object} Point in iframe coordinates
+     */
+    _toIframeCoords(p) {
+        const rect = this._getIframeRect();
+        return { x: p.x - rect.left, y: p.y - rect.top };
+    }
+
+    /**
+     * Converts a point from iframe coordinates to parent coordinates.
+     * @param {Object} p - Point with x, y properties
+     * @returns {Vector} Point in parent coordinates
+     */
+    _toParentCoords(p) {
+        const rect = this._getIframeRect();
+        return new Vector(p.x + rect.left, p.y + rect.top);
+    }
+
+    /**
+     * Checks if a point (in parent coords) is within the iframe bounds.
+     * @param {Object} p - Point with x, y properties
+     * @returns {boolean}
+     */
+    _isPointInIframe(p) {
+        const rect = this._getIframeRect();
+        return p.x >= rect.left && p.x <= rect.right &&
+            p.y >= rect.top && p.y <= rect.bottom;
+    }
+
     /**
      * Handles registration of an iframe access button.
-     * Creates a proxy AccessButton in the parent DOM that forwards clicks to the iframe.
+     * Creates a proxy AccessButton that delegates directly to the iframe element (same-origin).
      */
     _message_registerAccessButton(e) {
-        const { id, group, order, isVisible, center, bbox } = e.data;
-        console.log("[Debug] Registering access button:", id, group, { isVisible, center, bbox });
-        
+        const { id, group, order } = e.data;
+        console.log("[Debug] Registering access button:", id, group);
+
         // Create proxy AccessButton element
         const proxy = new AccessButton(group);
         proxy.order = order;
@@ -397,72 +454,93 @@ export default class Apps extends Features {
             width: "0",
             height: "0",
         };
-        
-        // Override getCenter to return iframe element's center (translated to parent coords)
-        // Note: Get fresh offset each time since iframe position can change on resize
+
+        // All proxy methods delegate directly to iframe element via contentDocument
+
         proxy.getCenter = () => {
-            const entry = this._iframeAccessButtons.get(id);
-            if (entry && entry.state && entry.state.center) {
-                const { offsetX, offsetY } = this.appFrame;
-                return new Vector(
-                    entry.state.center.x + offsetX,
-                    entry.state.center.y + offsetY
-                );
+            const element = this._getIframeElement(id);
+            if (element && typeof element.getCenter === "function") {
+                const center = element.getCenter();
+                return this._toParentCoords(center);
             }
+            // Fallback: use bounding rect center
+            // if (element) {
+            //     const rect = element.getBoundingClientRect();
+            //     return this._toParentCoords({
+            //         x: rect.x + rect.width / 2,
+            //         y: rect.y + rect.height / 2
+            //     });
+            // }
             return new Vector(0, 0);
         };
-        
-        // Override getIsVisible to return iframe element's visibility
+
         proxy.getIsVisible = () => {
-            const entry = this._iframeAccessButtons.get(id);
-            return entry && entry.state && entry.state.isVisible;
+            const element = this._getIframeElement(id);
+            if (element && typeof element.getIsVisible === "function") {
+                return element.getIsVisible();
+            }
+            // Fallback: check if element exists and has size
+            // if (element) {
+            //     const rect = element.getBoundingClientRect();
+            //     return rect.width > 0 && rect.height > 0;
+            // }
+            // return false;
         };
-        
-        // Override setHighlight to forward to iframe
+
         proxy.setHighlight = (isHighlighted) => {
             proxy.toggleAttribute("hover", isHighlighted);
-            this.appFrame.sendMessage({
-                mode: "setAccessButtonHighlight",
-                id: id,
-                highlighted: isHighlighted
-            });
-        };
-        
-        // Override isPointInElement to check against iframe element's bbox
-        // Note: Get fresh offset each time since iframe position can change on resize
-        proxy.isPointInElement = (p) => {
-            const entry = this._iframeAccessButtons.get(id);
-            if (entry && entry.state && entry.state.bbox) {
-                const { bbox } = entry.state;
-                const { offsetX, offsetY } = this.appFrame;
-                // Translate bbox to parent coordinates
-                const x = bbox.x + offsetX;
-                const y = bbox.y + offsetY;
-                const right = x + bbox.width;
-                const bottom = y + bbox.height;
-                
-                // Check if point is within bbox
-                return p.x >= x && p.x <= right && p.y >= y && p.y <= bottom;
+            const element = this._getIframeElement(id);
+            if (element && typeof element.setHighlight === "function") {
+                element.setHighlight(isHighlighted);
+            } else if (element) {
+                // Fallback for plain HTML elements
+                // if (isHighlighted) {
+                //     element.setAttribute("hover", "");
+                //     element.classList.add("access-highlighted");
+                // } else {
+                //     element.removeAttribute("hover");
+                //     element.classList.remove("access-highlighted");
+                // }
             }
-            return false;
         };
-        
-        // Listen for access-click and forward to iframe
+
+        proxy.isPointInElement = (p) => {
+            if (!this._isPointInIframe(p)) return false;
+
+            const element = this._getIframeElement(id);
+            if (!element) return false;
+
+            const pIframe = this._toIframeCoords(p);
+
+            if (typeof element.isPointInElement === "function") {
+                return element.isPointInElement(pIframe);
+            }
+
+            // // Fallback for plain HTML elements
+            // const rect = element.getBoundingClientRect();
+            // return pIframe.x >= rect.left && pIframe.x <= rect.right &&
+            //     pIframe.y >= rect.top && pIframe.y <= rect.bottom;
+        };
+
+        // Handle access-click by delegating to iframe element
         proxy.addEventListener("access-click", (event) => {
-            console.log("[Debug] Forwarding access-click to iframe:", id, event.clickMode);
-            this.appFrame.sendMessage({
-                mode: "accessClick",
-                id: id,
-                clickMode: event.clickMode || "click"
-            });
+            const element = this._getIframeElement(id);
+            if (element && typeof element.accessClick === "function") {
+                element.accessClick(event.clickMode || "click");
+            } else if (element) {
+                // Fallback: dispatch access-click event on element
+                // const iframeEvent = new CustomEvent("access-click", {
+                //     bubbles: true,
+                //     cancelable: true
+                // });
+                // iframeEvent.clickMode = event.clickMode || "click";
+                // element.dispatchEvent(iframeEvent);
+            }
         });
-        
-        // Store the proxy and initial state
-        this._iframeAccessButtons.set(id, {
-            proxy: proxy,
-            state: { isVisible, center, bbox }
-        });
-        
+
+        // Store the proxy (no state cache needed - we access element directly)
+        this._iframeAccessButtons.set(id, { proxy });
+
         // Add proxy to DOM (hidden, but registered with access control)
         this.appFrame.appendChild(proxy);
     }
@@ -473,25 +551,11 @@ export default class Apps extends Features {
      */
     _message_unregisterAccessButton(e) {
         const { id } = e.data;
-        
+
         const entry = this._iframeAccessButtons.get(id);
         if (entry) {
             entry.proxy.remove();
             this._iframeAccessButtons.delete(id);
-        }
-    }
-
-    /**
-     * Handles state updates for an iframe access button.
-     * Updates the stored state for the proxy element.
-     */
-    _message_accessButtonState(e) {
-        const { id, isVisible, center, bbox } = e.data;
-        console.log("[Debug] Access button state:", id, { isVisible, center, bbox });
-        
-        const entry = this._iframeAccessButtons.get(id);
-        if (entry) {
-            entry.state = { isVisible, center, bbox };
         }
     }
 

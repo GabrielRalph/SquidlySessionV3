@@ -108,6 +108,7 @@ window.addSettingsListener = function (path, callback) {
 
 /**
  * Registers an element as an access button with the parent app.
+ * Parent will access the element directly via contentDocument (same-origin).
  * @param {HTMLElement} element - The DOM element to register
  * @param {string} group - The access button group name
  * @param {number} [order] - Optional order within the group
@@ -120,23 +121,19 @@ window.registerAccessButton = function (element, group, order) {
     let id = element.id || "access_btn_" + Math.random().toString(36).substring(2, 15);
     if (!element.id) element.id = id;
 
-    // Store element reference
+    // Store element reference (for local tracking)
     ACCESS_BUTTONS[id] = {
         element: element,
         group: group,
         order: order
     };
 
-    // Get initial state
-    const state = getAccessButtonState(element);
-
-    // Notify parent
+    // Notify parent - it will access the element directly via getElementById
     window.parent.postMessage({
         mode: "registerAccessButton",
         id: id,
         group: group,
-        order: order,
-        ...state
+        order: order
     }, "*");
 
     return id;
@@ -157,60 +154,8 @@ window.unregisterAccessButton = function (id) {
     }, "*");
 }
 
-/**
- * Gets the current state of an access button element.
- * @param {HTMLElement} element - The element to get state for
- * @returns {Object} State object with isVisible, center, bbox
- */
-function getAccessButtonState(element) {
-    const rect = element.getBoundingClientRect();
-    let center = null;
-    let isVisible = null;
-    let bbox = null;
-
-    // Use AccessButtonRoot methods if available (for <access-button> elements)
-    if (typeof element.getCenter === "function") {
-        const c = element.getCenter();
-        center = { x: c.x, y: c.y };
-    } else {
-        center = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-    }
-
-    if (typeof element.getIsVisible === "function") {
-        isVisible = element.getIsVisible();
-    } else {
-        // Fallback: check if element has non-zero size and is within viewport
-        isVisible = rect.width > 0 && rect.height > 0 &&
-            rect.bottom > 0 && rect.right > 0 &&
-            rect.top < window.innerHeight && rect.left < window.innerWidth;
-    }
-
-    // bbox is not provided by AccessButtonRoot, always use bounding rect
-    bbox = { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
-
-    return { isVisible, center, bbox };
-}
-
-/**
- * Sends updated state for all registered access buttons to parent.
- */
-window.updateAccessButtonStates = function () {
-    for (let id in ACCESS_BUTTONS) {
-        const entry = ACCESS_BUTTONS[id];
-        const state = getAccessButtonState(entry.element);
-
-        window.parent.postMessage({
-            mode: "accessButtonState",
-            id: id,
-            ...state
-        }, "*");
-    }
-}
-
-// Auto-update access button states on resize
-window.addEventListener("resize", () => {
-    window.updateAccessButtonStates();
-});
+// Note: State syncing (getAccessButtonState, updateAccessButtonStates) is no longer needed.
+// Parent accesses iframe elements directly via contentDocument (same-origin).
 
 // ============================================================================
 // AUTO-REGISTRATION FOR <access-button> ELEMENTS
@@ -285,6 +230,9 @@ if (document.body) {
     document.addEventListener('DOMContentLoaded', startAccessButtonObserver);
 }
 
+// Response handlers for messages from parent
+// Note: Access button methods (setHighlight, accessClick, isPointInElement) are handled
+// directly by parent via contentDocument access (same-origin), not via message passing.
 RESPONSE_FUNCTIONS = {
     firebaseOnValueCallback(data) {
         if (data.path in FIREBASE_ON_VALUE_CALLBACKS) {
@@ -316,113 +264,6 @@ RESPONSE_FUNCTIONS = {
         if (data.path in SETTINGS_LISTENERS) {
             SETTINGS_LISTENERS[data.path](data.value);
         }
-    },
-    /**
-     * Parent requests current state of an access button.
-     */
-    getAccessButtonState(data) {
-        if (data.id in ACCESS_BUTTONS) {
-            const entry = ACCESS_BUTTONS[data.id];
-            const state = getAccessButtonState(entry.element);
-
-            window.parent.postMessage({
-                mode: "accessButtonState",
-                id: data.id,
-                requestKey: data.requestKey,
-                ...state
-            }, "*");
-        }
-    },
-    /**
-     * Parent triggers an access-click on a button.
-     */
-    accessClick(data) {
-        console.log("[Debug] iframe received accessClick:", data);
-        if (data.id in ACCESS_BUTTONS) {
-            const entry = ACCESS_BUTTONS[data.id];
-            const element = entry.element;
-
-            // Delegate to element.accessClick if available (e.g. <access-button>)
-            if (typeof element.accessClick === "function") {
-                element.accessClick(data.clickMode || "click");
-            } else {
-                // Fallback for plain HTML elements
-                const event = new CustomEvent("access-click", {
-                    bubbles: true,
-                    cancelable: true
-                });
-                event.clickMode = data.clickMode || "click";
-                event.initialEvent = event;
-                event.eventPromises = [];
-                event.waitFor = function (promise, stopImmediatePropagation = false) {
-                    if (stopImmediatePropagation) {
-                        this.stopImmediatePropagation();
-                    }
-                    this.eventPromises.push(promise);
-                    return promise;
-                };
-                event.waitAll = function () {
-                    return Promise.all(this.eventPromises);
-                };
-
-                element.dispatchEvent(event);
-            }
-        }
-    },
-    /**
-     * Parent sets highlight state on a button.
-     */
-    setAccessButtonHighlight(data) {
-        if (data.id in ACCESS_BUTTONS) {
-            const entry = ACCESS_BUTTONS[data.id];
-            const element = entry.element;
-
-            // Delegate to element.setHighlight if available (e.g. <access-button>)
-            if (typeof element.setHighlight === "function") {
-                element.setHighlight(data.highlighted);
-            } else {
-                // Fallback for plain HTML elements
-                if (data.highlighted) {
-                    element.setAttribute("hover", "");
-                    element.classList.add("access-highlighted");
-                } else {
-                    element.removeAttribute("hover");
-                    element.classList.remove("access-highlighted");
-                }
-            }
-        }
-    },
-    /**
-     * Parent checks if a point is inside an access button element.
-     * Used for eye gaze hit-testing.
-     */
-    isPointInElement(data) {
-        const { id, x, y, requestKey } = data;
-        let result = false;
-
-        if (id in ACCESS_BUTTONS) {
-            const entry = ACCESS_BUTTONS[id];
-            const element = entry.element;
-
-            // Delegate to element.isPointInElement if available (e.g. <access-button>)
-            if (typeof element.isPointInElement === "function") {
-                // Create a point object with x, y properties
-                const p = { x, y };
-                result = element.isPointInElement(p);
-            } else {
-                // Fallback for plain HTML elements: check if point is in bounding rect
-                const rect = element.getBoundingClientRect();
-                result = x >= rect.left && x <= rect.right &&
-                         y >= rect.top && y <= rect.bottom;
-            }
-        }
-
-        window.parent.postMessage({
-            mode: "isPointInElementResponse",
-            id: id,
-            requestKey: requestKey,
-            result: result
-        }, "*");
     }
 }
 
