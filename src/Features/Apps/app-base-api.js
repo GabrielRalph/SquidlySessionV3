@@ -120,6 +120,9 @@ window.registerAccessButton = function (element, group, order) {
     // Generate unique ID if element doesn't have one
     let id = element.id || "access_btn_" + Math.random().toString(36).substring(2, 15);
     if (!element.id) element.id = id;
+    
+    // Mark element as registered for auto-unregister tracking
+    element.dataset.accessButtonId = id;
 
     // Store element reference (for local tracking)
     ACCESS_BUTTONS[id] = {
