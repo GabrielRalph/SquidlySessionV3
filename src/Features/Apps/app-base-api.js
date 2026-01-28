@@ -342,27 +342,31 @@ RESPONSE_FUNCTIONS = {
             const entry = ACCESS_BUTTONS[data.id];
             const element = entry.element;
 
-            // Create event matching AccessClickEvent structure
-            const event = new CustomEvent("access-click", {
-                bubbles: true,
-                cancelable: true
-            });
-            // Add properties to match AccessClickEvent
-            event.clickMode = data.clickMode || "click";
-            event.initialEvent = event;
-            event.eventPromises = [];
-            event.waitFor = function (promise, stopImmediatePropagation = false) {
-                if (stopImmediatePropagation) {
-                    this.stopImmediatePropagation();
-                }
-                this.eventPromises.push(promise);
-                return promise;
-            };
-            event.waitAll = function () {
-                return Promise.all(this.eventPromises);
-            };
+            // Delegate to element.accessClick if available (e.g. <access-button>)
+            if (typeof element.accessClick === "function") {
+                element.accessClick(data.clickMode || "click");
+            } else {
+                // Fallback for plain HTML elements
+                const event = new CustomEvent("access-click", {
+                    bubbles: true,
+                    cancelable: true
+                });
+                event.clickMode = data.clickMode || "click";
+                event.initialEvent = event;
+                event.eventPromises = [];
+                event.waitFor = function (promise, stopImmediatePropagation = false) {
+                    if (stopImmediatePropagation) {
+                        this.stopImmediatePropagation();
+                    }
+                    this.eventPromises.push(promise);
+                    return promise;
+                };
+                event.waitAll = function () {
+                    return Promise.all(this.eventPromises);
+                };
 
-            element.dispatchEvent(event);
+                element.dispatchEvent(event);
+            }
         }
     },
     /**
@@ -373,15 +377,52 @@ RESPONSE_FUNCTIONS = {
             const entry = ACCESS_BUTTONS[data.id];
             const element = entry.element;
 
-            // Toggle highlight attribute/class
-            if (data.highlighted) {
-                element.setAttribute("hover", "");
-                element.classList.add("access-highlighted");
+            // Delegate to element.setHighlight if available (e.g. <access-button>)
+            if (typeof element.setHighlight === "function") {
+                element.setHighlight(data.highlighted);
             } else {
-                element.removeAttribute("hover");
-                element.classList.remove("access-highlighted");
+                // Fallback for plain HTML elements
+                if (data.highlighted) {
+                    element.setAttribute("hover", "");
+                    element.classList.add("access-highlighted");
+                } else {
+                    element.removeAttribute("hover");
+                    element.classList.remove("access-highlighted");
+                }
             }
         }
+    },
+    /**
+     * Parent checks if a point is inside an access button element.
+     * Used for eye gaze hit-testing.
+     */
+    isPointInElement(data) {
+        const { id, x, y, requestKey } = data;
+        let result = false;
+
+        if (id in ACCESS_BUTTONS) {
+            const entry = ACCESS_BUTTONS[id];
+            const element = entry.element;
+
+            // Delegate to element.isPointInElement if available (e.g. <access-button>)
+            if (typeof element.isPointInElement === "function") {
+                // Create a point object with x, y properties
+                const p = { x, y };
+                result = element.isPointInElement(p);
+            } else {
+                // Fallback for plain HTML elements: check if point is in bounding rect
+                const rect = element.getBoundingClientRect();
+                result = x >= rect.left && x <= rect.right &&
+                         y >= rect.top && y <= rect.bottom;
+            }
+        }
+
+        window.parent.postMessage({
+            mode: "isPointInElementResponse",
+            id: id,
+            requestKey: requestKey,
+            result: result
+        }, "*");
     }
 }
 
