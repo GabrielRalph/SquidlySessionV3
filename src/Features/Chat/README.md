@@ -1,0 +1,122 @@
+# Chat Feature
+
+A real-time chat feature for Squidly Session that enables users to send and receive messages during collaborative sessions.
+
+## File Structure
+
+```
+Chat/
+├── chat.js                    # Main feature implementation
+│                              #   - ChatFeature: Main feature class
+│                              #   - ChatWindow: Visual window component (extends OccupiableWindow)
+│                              #   - ChatHistory: Message history container with scrolling
+│                              #   - ChatMessage: Unified message display component
+├── chat.css                   # Stylesheet for chat window, message history, and message elements
+├── keyboard-panel.js          # Virtual keyboard panel with word suggestions
+│                              #   - KeyboardPanel: Extends HideShowTransition
+├── keyboard-panel.css         # Stylesheet for keyboard panel
+├── letter-selector.js         # Letter selection components for 9-grid keyboard
+│                              #   - LetterIcon, LettersIcon, LetterLayout
+│                              #   - LetterEvent, LettersEvent
+├── letter-selector.css        # Stylesheet for letter selector components
+├── algorithm/                 # Algorithm modules for word prediction and completion
+│   ├── index.js              # Central export point for all algorithms
+│   ├── word-prediction.js    # Next word prediction algorithm (predicts next word after space)
+│   ├── word-completion.js    # Word completion algorithm (completes partially typed words)
+│   ├── words.js              # Word frequency data (used by algorithms)
+│   ├── basic.html            # Basic HTML test file for algorithms
+│   └── README.md             # Algorithm module documentation
+└── README.md                 # This file
+```
+
+## Architecture
+
+- **ChatFeature**: Main feature class that manages the chat functionality
+- **ChatWindow**: Visual window component (extends OccupiableWindow)
+- **ChatHistory**: Component that displays message history with scrolling
+- **ChatMessage**: Unified message representation component with hover effects and URL detection
+- **KeyboardPanel**: Virtual keyboard with 9-grid letter/number input and word suggestions
+- **Algorithm Modules**: Separate modules for word prediction and future algorithms
+
+## Firebase Structure
+
+Data is stored under `session-data/{sessionId}/chat/`:
+
+```
+chat/
+  ├── metadata/          # Session metadata (createdBy, createdAt, type)
+  ├── participants/      # Participant list (supports multiple participants)
+  │   ├── host: true
+  │   └── participant: true
+  └── messages/          # Message history
+      └── {messageId}/
+          ├── senderId
+          ├── senderName
+          ├── text
+          ├── timestamp
+          ├── status
+          └── messageType
+```
+
+## Algorithm Integration
+
+### How It Works
+
+The keyboard panel integrates with algorithm modules to provide word suggestions:
+
+1. **User Input**: When user types (via keyboard buttons or direct input), the input text is captured
+2. **Algorithm Call**: `keyboard-panel.js` calls the prediction algorithm with current input
+3. **UI Update**: Algorithm returns word suggestions, which are displayed in the right column (6 buttons)
+
+### Algorithm Module Structure
+
+All algorithms are located in `algorithm/` directory:
+
+- **`word-prediction.js`**: Predicts next word after user types a word and space
+  - Example: User types "apple " → suggests "tree", "juice", "pie"
+  - `predictNextWord(currentInput, maxSuggestions = 6)` - Async version
+  - `predictNextWordSync(currentInput, maxSuggestions = 6)` - Sync version
+
+- **`word-completion.js`**: Completes partially typed words
+  - Example: User types "hello wor" → suggests "world", "work", "word"
+  - `completeWord(partialWord, maxSuggestions = 6)` - Async version
+  - `completeWordSync(partialWord, maxSuggestions = 6)` - Sync version
+
+### How to Add/Modify Algorithms
+
+1. **Create Algorithm File**: Add new file in `algorithm/` (e.g., `word-completion.js`)
+
+2. **Export Function**: Export your algorithm function:
+   ```javascript
+   export async function completeWord(partialWord, maxSuggestions = 6) {
+       // Your algorithm logic here
+       return suggestions;
+   }
+   ```
+
+3. **Add to Index**: Export from `algorithm/index.js`:
+   ```javascript
+   export { completeWord } from "./word-completion.js";
+   ```
+
+4. **Use in UI**: Import in `keyboard-panel.js`:
+   ```javascript
+   import { predictNextWord, completeWord } from "./algorithm/index.js";
+   ```
+
+### Where to Modify
+
+**For Algorithm:**
+- **Algorithm Logic**: Modify `algorithm/word-prediction.js` or `algorithm/word-completion.js`
+- **See**: `algorithm/INTEGRATION_GUIDE.md` for detailed instructions
+- **You DON'T need to modify** `keyboard-panel.js` - it automatically calls your algorithms!
+
+**For UI:**
+- **UI Integration**: Modify `keyboard-panel.js` → `_updateWordSuggestions()` method
+- **Trigger Points**: Algorithm is called automatically when:
+  - User clicks letter buttons (`_handleLetter()`)
+  - User types in textarea (`input` event)
+  - User selects a word suggestion (`_handleWordSuggestion()`)
+  - User enters 9-grid mode (`_handleLetterGroup()`)
+
+

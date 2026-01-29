@@ -15,7 +15,7 @@ import { relURL } from "./usefull-funcs.js";
  * @property {Array} params - Parameters to pass to the class constructor
  */
 
-const LETTER_GROUPS = {
+export const LETTER_GROUPS = {
     "atoi": {
         letters: "abcdefghi",
         icon: {symbol: "atoi", type: "topic-action"},
@@ -34,7 +34,7 @@ const LETTER_GROUPS = {
     }
 }
 
-const SPECIAL_LETTERS = {
+export const SPECIAL_LETTERS = {
     "space": {
         displayValue: "Space",
         symbol: "space",
@@ -44,14 +44,14 @@ const SPECIAL_LETTERS = {
 }
 
 
-class LettersEvent extends AccessEvent {
+export class LettersEvent extends AccessEvent {
     constructor(letters, originalEvent) {
         super("show-letters", originalEvent, {bubbles: true});
         this.letters = letters;
     }
 }
 
-class LetterEvent extends AccessEvent {
+export class LetterEvent extends AccessEvent {
     constructor(letter, originalEvent) {
         super("letter", originalEvent, {bubbles: true});
         this.value = letter in SPECIAL_LETTERS ? SPECIAL_LETTERS[letter].letterValue : letter;
@@ -74,7 +74,7 @@ class OptionEvent extends AccessEvent {
 
 
 
-class SearchBar extends GridCard {
+export class SearchBar extends GridCard {
     constructor() {
         super("search-bar", "normal");
 
@@ -123,7 +123,7 @@ class SearchBar extends GridCard {
 
 }
 
-class LetterIcon extends GridIcon {
+export class LetterIcon extends GridIcon {
     constructor(letter, group) {
         let config = SPECIAL_LETTERS[letter] || {type: "adjective", symbol: {text: letter.toUpperCase()}};
         config.events = { "access-click": (e) => { this.dispatchEvent(new LetterEvent(letter, e)) }}
@@ -131,7 +131,7 @@ class LetterIcon extends GridIcon {
     }
 }
 
-class LettersIcon extends GridIcon {
+export class LettersIcon extends GridIcon {
     constructor(letterGroup, group) {
         letterGroup = letterGroup in LETTER_GROUPS ? LETTER_GROUPS[letterGroup] : letterGroup
         super(letterGroup.icon, group);

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <textarea id="word-data"></textarea>
+    <div class = "suggestions">
+        
+    </div>
+
+    <script type = "module">
+        import { words } from './words.js';
+     
+        const textarea = document.getElementById('word-data');
+        const suggestionsDiv = document.querySelector('.suggestions');
+
+        let wordsf = words.filter(word => word.Word.length > 2);
+
+        textarea.addEventListener("keyup", (event) => {
+            const value = textarea.value;
+            const last = value.split(/\s+/).pop().toLowerCase();
+        
+            const suggestions = wordsf.filter(word => word.Word.startsWith(last) && word.Word !== last).slice(0, 5);
+            suggestions.sort((a, b) => a.FREQCount - b.FREQCount);
+            console.log("Words entered:", suggestions);
+            suggestionsDiv.innerHTML = suggestions.map(s => `<div class="suggestion-item">${s.Word}</div>`).join('');
+        });
+    </script>
+</body>
+</html>

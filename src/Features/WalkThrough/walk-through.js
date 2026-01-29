@@ -187,7 +187,7 @@ export default class WalkThroughFeature extends Features {
     }
 
 
-    // Uncomment this and rebuild as per the README.
+    // // Uncomment this and rebuild as per the README.
     // static get name() {
     //     return "walkThrough"
     // }

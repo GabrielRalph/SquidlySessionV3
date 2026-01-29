@@ -1,0 +1,16 @@
+dummy-window {
+    height: 100%;
+    width: 100%;
+    display: block;
+    background: rgb(27, 29, 35);
+}
+dummy-window grid-layout {
+    --gap: 0.5px;
+    height: 100%;
+    width: 100%;
+    pointer-events: all;
+}
+
+dummy-window .grid-icon .content .symbol {
+    height: 70%;
+}

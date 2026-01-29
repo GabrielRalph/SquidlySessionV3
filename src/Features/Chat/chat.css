@@ -1,0 +1,419 @@
+/* Chat window root element styling */
+chat-window {
+    pointer-events: all;
+    display: flex;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #f7f7fb;
+    /* Match chat-history background to prevent white flash during transitions */
+    transition: transform 0.5s cubic-bezier(0.32, 0, 0.68, 1);
+    z-index: 1000 !important;
+    /* Ensure chat window is above other elements like video-display */
+}
+
+/* Ensure video-display doesn't block chat when chat window is shown */
+chat-window[shown]~video-display,
+chat-window[shown]~* video-display {
+    pointer-events: none;
+}
+
+
+chat-window .page-status {
+    display: none;
+}
+
+/* Ensure grid-layout has background to prevent white flash */
+chat-window grid-layout {
+    background: #f7f7fb !important;
+}
+
+.chat-history {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    /* Important for flex sizing */
+    min-height: 0;
+    /* Important for flex sizing */
+    max-width: 100%;
+    /* Prevent overflow */
+    max-height: 100%;
+    /* Prevent overflow */
+    box-sizing: border-box;
+    /* Include padding in size calculation */
+    position: relative;
+    /* Ensure proper stacking */
+    z-index: 1;
+    /* Ensure it's above other elements */
+    pointer-events: auto;
+    /* Ensure it can receive events */
+    /* Background color to prevent white flash during transition */
+    background: #f7f7fb !important;
+    /* Smooth transition when keyboard opens/closes */
+    transition: height 0.5s cubic-bezier(0.32, 0, 0.68, 1),
+        max-height 0.5s cubic-bezier(0.32, 0, 0.68, 1);
+    /* Hint browser to optimize for layout changes */
+    will-change: height, max-height;
+}
+
+/* When keyboard panel is shown, limit chat history to top 25% of screen */
+/* This ensures chat messages remain visible in the top 25% space */
+/* The class 'keyboard-open' will be added by JavaScript when keyboard panel is shown */
+chat-window.keyboard-open .chat-history {
+    grid-row: 1 / 2 !important;
+    /* Only occupy first row (row 1) when keyboard is open */
+    max-height: 100% !important;
+    height: 100% !important;
+    /* Fill the grid row completely */
+    overflow: hidden !important;
+    /* Maintain smooth transition when keyboard opens/closes */
+    transition: height 0.5s cubic-bezier(0.32, 0, 0.68, 1),
+        max-height 0.5s cubic-bezier(0.32, 0, 0.68, 1);
+}
+
+.chat-history .message-container {
+    flex: 1 1 0 !important;
+    /* flex-grow: 1, flex-shrink: 1, flex-basis: 0 */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: var(--gap) !important;
+    /* Use consistent padding like other windows - fills available space */
+    background: #f7f7fb;
+    display: flex;
+    flex-direction: column;
+    gap: 1.125em;
+    min-height: 0 !important;
+    /* Important for flex scrolling */
+    height: 100% !important;
+    /* Ensure it takes full height */
+    max-height: 100% !important;
+    /* Prevent overflow */
+    box-sizing: border-box;
+    /* Include padding in height calculation */
+    position: relative;
+    /* Ensure scroll works */
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scrolling on iOS */
+    z-index: 1;
+    /* Ensure it's above overlaying elements */
+    pointer-events: auto !important;
+    /* Ensure it can receive mouse and scroll events */
+    width: 100% !important;
+    /* Fill full width */
+}
+
+/* When keyboard is open, ensure message-container fills chat-history completely */
+chat-window.keyboard-open .chat-history .message-container {
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+}
+
+/* Scrollbar background matching container - comprehensive approach */
+.message-container::-webkit-scrollbar,
+.chat-history .message-container::-webkit-scrollbar,
+chat-window .chat-history .message-container::-webkit-scrollbar,
+chat-window .message-container::-webkit-scrollbar,
+div[data-scrollbar-transparent]::-webkit-scrollbar {
+    width: 8px !important;
+    background: #f7f7fb !important;
+    background-color: #f7f7fb !important;
+}
+
+.message-container::-webkit-scrollbar-track,
+.chat-history .message-container::-webkit-scrollbar-track,
+chat-window .chat-history .message-container::-webkit-scrollbar-track,
+chat-window .message-container::-webkit-scrollbar-track,
+div[data-scrollbar-transparent]::-webkit-scrollbar-track {
+    background: #f7f7fb !important;
+    background-color: #f7f7fb !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+}
+
+.message-container::-webkit-scrollbar-thumb,
+.chat-history .message-container::-webkit-scrollbar-thumb,
+chat-window .chat-history .message-container::-webkit-scrollbar-thumb,
+chat-window .message-container::-webkit-scrollbar-thumb,
+div[data-scrollbar-transparent]::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3) !important;
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border-radius: 4px !important;
+    border: none !important;
+}
+
+.message-container::-webkit-scrollbar-thumb:hover,
+.chat-history .message-container::-webkit-scrollbar-thumb:hover,
+chat-window .chat-history .message-container::-webkit-scrollbar-thumb:hover,
+chat-window .message-container::-webkit-scrollbar-thumb:hover,
+div[data-scrollbar-transparent]::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5) !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.message-container::-webkit-scrollbar-corner,
+.chat-history .message-container::-webkit-scrollbar-corner,
+chat-window .chat-history .message-container::-webkit-scrollbar-corner,
+chat-window .message-container::-webkit-scrollbar-corner,
+div[data-scrollbar-transparent]::-webkit-scrollbar-corner {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Firefox scrollbar */
+.message-container,
+.chat-history .message-container,
+chat-window .chat-history .message-container,
+chat-window .message-container,
+div[data-scrollbar-transparent] {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent !important;
+}
+
+/* More specific selector for messages */
+.chat-history .message-container .message {
+    display: flex !important;
+    gap: 0.125em;
+    /* Minimal gap to make timestamp tightly next to message */
+    align-items: center;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.chat-history .message-container .message.sent {
+    justify-content: flex-end !important;
+    flex-direction: row-reverse !important;
+    /* For sent: message on right, meta on left of message */
+    margin-right: calc(-1 * var(--gap)) !important;
+    /* Negative margin to extend to container edge, accounting for container padding */
+    padding-right: 0 !important;
+    width: fit-content !important;
+    /* Only width needed for content, not full width */
+    max-width: calc(100% + var(--gap)) !important;
+    /* But don't exceed container width */
+    margin-left: auto !important;
+    /* Push to right edge */
+    align-items: center !important;
+}
+
+.chat-history .message-container .message.received {
+    justify-content: flex-start !important;
+    /* For received: message on left, meta on right of message */
+}
+
+.chat-history .message-container .message-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375em;
+    width: fit-content !important;
+    /* Only width needed for content */
+    flex-shrink: 0 !important;
+    /* Don't shrink below content size */
+}
+
+.chat-history .message-container .message.received .message-content {
+    align-items: flex-start !important;
+    max-width: 68%;
+}
+
+.chat-history .message-container .message.sent .message-content {
+    align-items: flex-end !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    /* No padding or margin */
+    box-sizing: border-box !important;
+}
+
+.chat-history .message-container .message-bubble {
+    width: fit-content;
+    max-width: 100%;
+    padding: 0.875em 1.125em;
+    border-radius: 1em;
+    font-size: 1.2em;
+    font-weight: 300;
+    line-height: 1.5;
+    white-space: pre-line !important;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    margin: 0 !important;
+    /* No margin to ensure tight alignment */
+}
+
+/* Ensure sent message bubbles align to right edge */
+.chat-history .message-container .message.sent .message-bubble {
+    margin: 0 !important;
+    /* No margin - bubble should be flush */
+}
+
+/* Ensure all message bubbles preserve line breaks */
+.chat-history .message-container .message .message-content .message-bubble {
+    white-space: pre-line !important;
+}
+
+.chat-history .message-container .message.received .message-bubble {
+    background: #ffffff !important;
+    border: 1px solid #e9e9f0 !important;
+    box-shadow: 0 3px 4px rgba(24, 24, 35, 0.04) !important;
+    color: inherit;
+}
+
+.chat-history .message-container .message.sent .message-bubble {
+    background: #e7ddff !important;
+    color: #3d2c80 !important;
+    border: none !important;
+    /* box-shadow: 0 4px 5px rgba(129, 89, 224, 0.25) !important; */
+}
+
+.chat-history .message-container .message-meta {
+    font-size: 0.85em;
+    color: #9b9b9b;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: center;
+    pointer-events: none;
+}
+
+/* Show meta on hover */
+.chat-history .message-container .message:hover .message-meta {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Meta spacing for sent messages - tight spacing next to message */
+.chat-history .message-container .message.sent .message-meta {
+    margin-right: 0.125em;
+    /* Minimal spacing to make timestamp tightly next to message bubble */
+}
+
+/* For received messages: message on left, meta on right of message */
+.chat-history .message-container .message.received .message-meta {
+    margin-left: 0.125em;
+    /* Minimal spacing to make timestamp tightly next to message bubble */
+}
+
+/* Message link styling */
+.chat-history .message-container .message-bubble .message-link {
+    color: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+    word-break: break-all;
+}
+
+.chat-history .message-container .message.sent .message-bubble .message-link {
+    color: #3d2c80;
+    text-decoration: underline;
+}
+
+.chat-history .message-container .message.received .message-bubble .message-link {
+    color: #8159e0;
+    text-decoration: underline;
+}
+
+.chat-history .message-container .chat-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    border-radius: 50%;
+    background: #8159e0;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+chat-window .grid-icon {
+    --shadow-color: transparent;
+}
+
+/* Make SearchBar textarea clickable */
+chat-window search-bar .content {
+    pointer-events: all;
+    cursor: text;
+}
+
+chat-window search-bar .card-icon {
+    pointer-events: none;
+}
+
+/* Style textarea for multi-line input */
+chat-window search-bar textarea {
+    padding: 0.5em;
+    font-size: 1.5em;
+    width: calc(100% - 1em - 0.5em);
+    /* Reduce width to move entire textarea (including scrollbar) inward */
+    min-height: 2em;
+    max-height: 6em;
+    border: none;
+    outline: none;
+    background: transparent;
+    resize: none;
+    line-height: 1.5;
+    font-family: inherit;
+    overflow-y: auto;
+}
+
+
+chat-window search-bar textarea::placeholder {
+    color: var(--tab-color);
+    opacity: 1;
+}
+
+/* Textarea scrollbar - match history container style */
+chat-window search-bar textarea::-webkit-scrollbar {
+    width: 8px !important;
+    background: #a7d2ff !important;
+    background-color: #a7d2ff !important;
+}
+
+chat-window search-bar textarea::-webkit-scrollbar-track {
+    background: #a7d2ff !important;
+    background-color: #a7d2ff !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+}
+
+chat-window search-bar textarea::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3) !important;
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    border-radius: 4px !important;
+    border: none !important;
+}
+
+chat-window search-bar textarea::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5) !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+chat-window search-bar textarea::-webkit-scrollbar-corner {
+    background: #a7d2ff !important;
+    background-color: #a7d2ff !important;
+}
+
+/* Firefox scrollbar for textarea */
+chat-window search-bar textarea {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(0, 0, 0, 0.3) #a7d2ff !important;
+}
+
+chat-window grid-layout {
+    background: white;
+}
