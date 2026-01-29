@@ -3,6 +3,7 @@ import { relURL } from "../../Utilities/usefull-funcs.js";
 import { Features, OccupiableWindow } from "../features-interface.js";
 import { Vector } from "../../SvgPlus/4.js";
 import { GridIcon, GridLayout } from "../../Utilities/Buttons/grid-icon.js";
+import { AccessButton } from "../../Utilities/Buttons/access-buttons.js";
 
 const AppsList = [
     "https://cursor-splash.squidly.com.au",
@@ -12,7 +13,7 @@ const AppsList = [
 
 
 class QuizSearch extends SearchWindow {
-    constructor(apps){
+    constructor(apps) {
         super();
         this.apps = apps;
         this.styles = {
@@ -20,25 +21,25 @@ class QuizSearch extends SearchWindow {
         }
     }
 
-    reset(imm){
+    reset(imm) {
         this.closeIcon = "close";
         this.resetSearchItems(imm)
     }
 
-    async getSearchResults(searchPhrase){
+    async getSearchResults(searchPhrase) {
         let apps = this.apps;
         /** @type {Answer[]} */
         let items = apps.map(q => {
             return {
                 app: q,
                 icon: {
-                    
+
                     symbol: q.icon,
                     type: "image",
                 },
             }
         })
-        items = filterAndSort(items, searchPhrase, ({app: {title, subtitle}}) => [title, subtitle]);
+        items = filterAndSort(items, searchPhrase, ({ app: { title, subtitle } }) => [title, subtitle]);
         return items;
     }
 }
@@ -48,7 +49,7 @@ class AppsFrame extends OccupiableWindow {
         super("app-frame");
         this.feature = feature;
         this.sdata = sdata;
-      
+
         this.iframe = this.createChild("iframe", {
             style: {
                 border: "none",
@@ -60,15 +61,15 @@ class AppsFrame extends OccupiableWindow {
         });
 
         this.grid = this.createChild(GridLayout, {
-            style: {position: "absolute", top: "var(--gap)", left: "var(--gap)", right: "var(--gap)", bottom: "var(--gap)"}
+            style: { position: "absolute", top: "var(--gap)", left: "var(--gap)", right: "var(--gap)", bottom: "var(--gap)" }
         }, 4, 5);
         this.search = this.createChild(QuizSearch, {
-            style: {position: "absolute", top: 0, left: 0, right: 0, bottom: 0}
+            style: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }
         });
 
         this.offsetX = 0;
         this.offsetY = 0;
-        this.observer = new ResizeObserver(([{contentRect: {x, y, width, height}}]) => {
+        this.observer = new ResizeObserver(([{ contentRect: { x, y, width, height } }]) => {
             this.offsetX = x;
             this.offsetY = y;
         });
@@ -124,7 +125,7 @@ class AppsFrame extends OccupiableWindow {
             }
             this.iframe.srcdoc = srcdoc ? src : null;
             if (!srcdoc)
-                this.iframe.props = {src};
+                this.iframe.props = { src };
         })
     }
 
@@ -134,23 +135,30 @@ class AppsFrame extends OccupiableWindow {
         this.iframe.contentWindow.postMessage(data, "*");
     }
 
-    static get usedStyleSheets(){
+    static get usedStyleSheets() {
         return [
-             ...SearchWindow.usedStyleSheets,
-             GridIcon.styleSheet,
-            ]
+            ...SearchWindow.usedStyleSheets,
+            GridIcon.styleSheet,
+        ]
     }
-    static get fixToolBarWhenOpen() {return true}
+    static get fixToolBarWhenOpen() { return true }
 }
 
 export default class Apps extends Features {
-    constructor(session, sdata){
+    constructor(session, sdata) {
         super(session, sdata)
         this.appFrame = new AppsFrame(this, sdata);
         this.appFrame.open = this.open.bind(this);
         this.appFrame.close = this.close.bind(this);
         this.currentAppIndex = null;
         this._cursorListenersInitialized = false;
+
+        /** @type {Map<string, {proxy: AccessButton, state: Object}>} */
+        this._iframeAccessButtons = new Map();
+        /** @type {Map<string, Function>} */
+        this._iframeSettingsListeners = new Map();
+        /** @type {Set<GridIcon>} */
+        this._appIcons = new Set();
     }
 
     async open() {
@@ -170,6 +178,22 @@ export default class Apps extends Features {
         // Clear the selected app from Firebase when closing
         this.sdata.set("selected_app", null);
         this.currentAppIndex = null;
+
+        // Clear all app-added icons
+        this._clearAppIcons();
+
+        // Clear all iframe access buttons
+        for (const [id, entry] of this._iframeAccessButtons) {
+            entry.proxy.remove();
+        }
+        this._iframeAccessButtons.clear();
+
+        // Remove settings listeners registered by iframe
+        for (const [path, handler] of this._iframeSettingsListeners) {
+            this.session.settings.removeEventListener("change", handler);
+        }
+        this._iframeSettingsListeners.clear();
+
         await Promise.all([
             this.appFrame.setSrc("about:blank"),
             this.appFrame.hide()
@@ -178,6 +202,9 @@ export default class Apps extends Features {
 
 
     async _setApp(idx) {
+        // Clear all app-added icons before loading new app
+        this._clearAppIcons();
+
         await this.appFrame.setSrc("about:blank");
         if (idx >= 0 || idx < this.appDescriptors.length) {
             let app = this.appDescriptors[idx];
@@ -185,16 +212,27 @@ export default class Apps extends Features {
         }
     }
 
-    
+    /**
+     * Clears all icons that were added by apps (via setIcon).
+     * Preserves the permanent Exit icon at (0, 0).
+     */
+    _clearAppIcons() {
+        for (const icon of this._appIcons) {
+            icon.remove();
+        }
+        this._appIcons.clear();
+    }
+
+
     _message_event(e) {
         const data = e.data;
-        
+
         if (!data?.type || !data?.emode) return;
-        
+
         let event = null;
         switch (data.emode) {
-            case "mouse": 
-                const {offsetX, offsetY} = this.appFrame
+            case "mouse":
+                const { offsetX, offsetY } = this.appFrame
                 event = new MouseEvent(data.type, {
                     clientX: data.x + offsetX,
                     clientY: data.y + offsetY,
@@ -244,6 +282,7 @@ export default class Apps extends Features {
         icon.styles = {
             "--shadow-color": "transparent",
             "pointer-events": "all",
+            ...(e.data.options.styles || {})
         }
         this.appFrame.grid.add(icon, e.data.x, e.data.y);
         icon.events = {
@@ -251,10 +290,12 @@ export default class Apps extends Features {
                 this.appFrame.sendMessage({
                     mode: "onIconClickCallback",
                     key: e.data.key,
-                    value: {clickMode: event.clickMode}
+                    value: { clickMode: event.clickMode }
                 });
             }
         }
+        // Track this icon so it can be cleared when switching apps
+        this._appIcons.add(icon);
     }
 
     _message_addCursorListener(e) {
@@ -322,15 +363,165 @@ export default class Apps extends Features {
 
     _message_addSettingsListener(e) {
         const path = e.data.path;
-        this.session.settings.addEventListener("change", (event) => {
+        if (this._iframeSettingsListeners.has(path)) return;
+
+        const handler = (event) => {
             if (event.path === path) {
-                 e.source.postMessage({
+                e.source.postMessage({
                     mode: "settingsUpdate",
                     path: path,
                     value: event.value
                 }, "*");
             }
+        };
+
+        this._iframeSettingsListeners.set(path, handler);
+        this.session.settings.addEventListener("change", handler);
+    }
+
+    // =========================================================================
+    // IFRAME ACCESS BUTTON HELPERS (same-origin direct access)
+    // =========================================================================
+
+    /**
+     * Gets an element from the iframe document by ID.
+     * @param {string} id - The element ID
+     * @returns {HTMLElement|null}
+     */
+    _getIframeElement(id) {
+        try {
+            const iframeDoc = this.appFrame.iframe.contentDocument;
+            return iframeDoc?.getElementById(id) || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the iframe's bounding rect in parent coordinates.
+     * @returns {DOMRect}
+     */
+    _getIframeRect() {
+        return this.appFrame.iframe.getBoundingClientRect();
+    }
+
+    /**
+     * Converts a point from parent coordinates to iframe coordinates.
+     * @param {Object} p - Point with x, y properties
+     * @returns {Object} Point in iframe coordinates
+     */
+    _toIframeCoords(p) {
+        const rect = this._getIframeRect();
+        return { x: p.x - rect.left, y: p.y - rect.top };
+    }
+
+    /**
+     * Converts a point from iframe coordinates to parent coordinates.
+     * @param {Object} p - Point with x, y properties
+     * @returns {Vector} Point in parent coordinates
+     */
+    _toParentCoords(p) {
+        const rect = this._getIframeRect();
+        return new Vector(p.x + rect.left, p.y + rect.top);
+    }
+
+    /**
+     * Checks if a point (in parent coords) is within the iframe bounds.
+     * @param {Object} p - Point with x, y properties
+     * @returns {boolean}
+     */
+    _isPointInIframe(p) {
+        const rect = this._getIframeRect();
+        return p.x >= rect.left && p.x <= rect.right &&
+            p.y >= rect.top && p.y <= rect.bottom;
+    }
+
+    /**
+     * Handles registration of an iframe access button.
+     * Creates a proxy AccessButton that delegates directly to the iframe element (same-origin).
+     */
+    _message_registerAccessButton(e) {
+        const { id, group, order } = e.data;
+        console.log("[Debug] Registering access button:", id, group);
+
+        // Create proxy AccessButton element
+        const proxy = new AccessButton(group);
+        proxy.order = order;
+        proxy.styles = {
+            position: "absolute",
+            pointerEvents: "none",
+            opacity: "0",
+            width: "0",
+            height: "0",
+        };
+
+        // All proxy methods delegate directly to iframe element via contentDocument
+
+        proxy.getCenter = () => {
+            const element = this._getIframeElement(id);
+            if (element && typeof element.getCenter === "function") {
+                const center = element.getCenter();
+                return this._toParentCoords(center);
+            }
+            return new Vector(0, 0);
+        };
+
+        proxy.getIsVisible = () => {
+            const element = this._getIframeElement(id);
+            if (element && typeof element.getIsVisible === "function") {
+                return element.getIsVisible();
+            }
+        };
+
+        proxy.setHighlight = (isHighlighted) => {
+            proxy.toggleAttribute("hover", isHighlighted);
+            const element = this._getIframeElement(id);
+            if (element && typeof element.setHighlight === "function") {
+                element.setHighlight(isHighlighted);
+            }
+        };
+
+        proxy.isPointInElement = (p) => {
+            if (!this._isPointInIframe(p)) return false;
+
+            const element = this._getIframeElement(id);
+            if (!element) return false;
+
+            const pIframe = this._toIframeCoords(p);
+
+            if (typeof element.isPointInElement === "function") {
+                return element.isPointInElement(pIframe);
+            }
+
+        };
+
+        // Handle access-click by delegating to iframe element
+        proxy.addEventListener("access-click", (event) => {
+            const element = this._getIframeElement(id);
+            if (element && typeof element.accessClick === "function") {
+                element.accessClick(event.clickMode || "click");
+            }
         });
+
+        // Store the proxy (no state cache needed - we access element directly)
+        this._iframeAccessButtons.set(id, { proxy });
+
+        // Add proxy to DOM (hidden, but registered with access control)
+        this.appFrame.appendChild(proxy);
+    }
+
+    /**
+     * Handles unregistration of an iframe access button.
+     * Removes the proxy element from the DOM.
+     */
+    _message_unregisterAccessButton(e) {
+        const { id } = e.data;
+
+        const entry = this._iframeAccessButtons.get(id);
+        if (entry) {
+            entry.proxy.remove();
+            this._iframeAccessButtons.delete(id);
+        }
     }
 
     /**
@@ -340,32 +531,35 @@ export default class Apps extends Features {
     async loadAppDescriptors() {
         let result = false;
         let apiURL = relURL("./app-base-api.js", import.meta)
+        let accessButtonsURL = relURL("../../Utilities/Buttons/access-buttons.js", import.meta)
         this.appDescriptors = await Promise.all(AppsList.map(async (url) => {
             try {
 
                 // Load index and info
                 const [resInfo, resIndex] = await Promise.all([
-                    fetch(url + "/info.json", {cache: "no-store"}),
-                    fetch(url + "/index.html", {cache: "no-store"})
+                    fetch(url + "/info.json", { cache: "no-store" }),
+                    fetch(url + "/index.html", { cache: "no-store" })
                 ]);
-                if(!resInfo.ok || !resIndex.ok) throw new Error("Failed to fetch app descriptor");
+                if (!resInfo.ok || !resIndex.ok) throw new Error("Failed to fetch app descriptor");
                 const [info, html] = await Promise.all([resInfo.json(), resIndex.text()]);
 
                 info.url = url;
                 // TODO: to be implemented
+                let participantActive = this.sdata.isUserActive("participant");
                 let session_info = {
                     user: this.sdata.me,
+                    participantActive,
                 }
                 // Inject API into HTML
-                info.html = html.replace(/<head\b[^>]*>/, `<head>\n\t<script src = "${apiURL}"></script>\n\t<base href="${url}/">\n\t<script>const session_info = ${JSON.stringify(session_info)}</script>`);
-                
+                info.html = html.replace(/<head\b[^>]*>/, `<head>\n\t<script type="module" src="${accessButtonsURL}"></script>\n\t<script src="${apiURL}"></script>\n\t<base href="${url}/">\n\t<script>const session_info = ${JSON.stringify(session_info)}</script>`);
+
                 return info;
             } catch (e) {
                 console.warn("Failed to load app from " + url, e);
                 return null;
             }
         }))
-        
+
         this.appDescriptors = this.appDescriptors.filter(d => d !== null);
 
         if (this.appDescriptors.length > 0) {
@@ -395,9 +589,9 @@ export default class Apps extends Features {
         return result;
     }
 
-    async initialise(){
+    async initialise() {
         if (await this.loadAppDescriptors()) {
-             // Set up toolbar button
+            // Set up toolbar button
             this.session.toolBar.addMenuItem("share", {
                 name: "apps",
                 index: 180,
@@ -418,13 +612,14 @@ export default class Apps extends Features {
 
             // Iframe API Message Listener
             window.addEventListener("message", e => {
-            let modeFunc = "_message_" + e.data?.mode;
-            if (modeFunc in this && this[modeFunc] instanceof Function) {
+                let modeFunc = "_message_" + e.data?.mode;
+                if (modeFunc in this && this[modeFunc] instanceof Function) {
                     this[modeFunc](e);
-            }
+                }
             });
         }
     }
+
 
     static get name() {
         return "apps"
@@ -440,7 +635,7 @@ export default class Apps extends Features {
         }
     }
 
-    static get firebaseName(){
+    static get firebaseName() {
         return "apps"
     }
 }

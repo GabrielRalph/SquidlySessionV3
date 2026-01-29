@@ -294,6 +294,12 @@ class AccessButtonRoot extends HTMLElement {
         }
     }
 }
+if (!customElements.get("access-button")) {
+    customElements.define("access-button", AccessButtonRoot);
+}
+
+
+
 
 /**
  * @extends {AccessButtonRoot}
