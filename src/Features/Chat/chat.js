@@ -3,7 +3,7 @@ import { relURL } from "../../Utilities/usefull-funcs.js";
 import { Features, OccupiableWindow } from "../features-interface.js";
 import { SvgPlus } from "../../SvgPlus/4.js";
 import { GridIcon, GridLayout } from "../../Utilities/Buttons/grid-icon.js";
-import { KeyboardPanel } from "./keyboard-panel-r1.js";
+import { KeyboardPanel } from "./keyboard-panel.js";
 
 
 const ChatList = [
