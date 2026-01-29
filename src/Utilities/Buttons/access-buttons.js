@@ -294,11 +294,6 @@ class AccessButtonRoot extends HTMLElement {
         }
     }
 }
-if (!customElements.get("access-button")) {
-    customElements.define("access-button", AccessButtonRoot);
-}
-
-
 
 
 /**
@@ -335,6 +330,8 @@ export function getButtonGroups(){
 }
 
 
-customElements.define("access-button", AccessButtonRoot);
+if (!customElements.get("access-button")) {
+    customElements.define("access-button", AccessButtonRoot);
+}
 
 window.getButtonGroups = getButtonGroups;
