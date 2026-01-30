@@ -171,14 +171,6 @@ export default class Apps extends Features {
         }
         this._iframeSettingsListeners.clear();
 
-        // Remove firebase value listeners
-        if (this._onValueUnsubscribes) {
-            for (const unsub of this._onValueUnsubscribes.values()) {
-                unsub();
-            }
-            this._onValueUnsubscribes.clear();
-        }
-
         await Promise.all([
             this.appFrame.setSrc("about:blank"),
             this.appFrame.hide()
@@ -255,25 +247,13 @@ export default class Apps extends Features {
     _message_firebaseOnValue(e) {
         let path = "appdata/" + e.data.path;
 
-        // Cleanup existing listener for this path if it exists
-        // (This prevents "zombie" listeners on reload)
-        if (this._onValueUnsubscribes && this._onValueUnsubscribes.has(path)) {
-            let unsub = this._onValueUnsubscribes.get(path);
-            if (unsub) unsub();
-        }
-
-        let unsub = this.sdata.onValue(path, (value) => {
-            if (!this.appFrame?.iframe) return;
+        this.sdata.onValue(path, (value) => {
             this.appFrame.sendMessage({
                 mode: "firebaseOnValueCallback",
                 path: e.data.path,
                 value: value
             });
         });
-
-        // Store unsubscribe function
-        if (!this._onValueUnsubscribes) this._onValueUnsubscribes = new Map();
-        this._onValueUnsubscribes.set(path, unsub);
     }
 
     _message_setIcon(e) {
