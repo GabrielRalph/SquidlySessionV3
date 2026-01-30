@@ -194,6 +194,14 @@ export default class Apps extends Features {
         }
         this._iframeSettingsListeners.clear();
 
+        // Remove firebase value listeners
+        if (this._onValueUnsubscribes) {
+            for (const unsub of this._onValueUnsubscribes.values()) {
+                unsub();
+            }
+            this._onValueUnsubscribes.clear();
+        }
+
         await Promise.all([
             this.appFrame.setSrc("about:blank"),
             this.appFrame.hide()
@@ -209,6 +217,7 @@ export default class Apps extends Features {
         if (idx >= 0 || idx < this.appDescriptors.length) {
             let app = this.appDescriptors[idx];
             await this.appFrame.setSrc(app.html, true);
+            this._sendSessionInfoUpdate();
         }
     }
 
@@ -268,13 +277,26 @@ export default class Apps extends Features {
 
     _message_firebaseOnValue(e) {
         let path = "appdata/" + e.data.path;
-        this.sdata.onValue(path, (value) => {
+
+        // Cleanup existing listener for this path if it exists
+        // (This prevents "zombie" listeners on reload)
+        if (this._onValueUnsubscribes && this._onValueUnsubscribes.has(path)) {
+            let unsub = this._onValueUnsubscribes.get(path);
+            if (unsub) unsub();
+        }
+
+        let unsub = this.sdata.onValue(path, (value) => {
+            if (!this.appFrame?.iframe) return;
             this.appFrame.sendMessage({
                 mode: "firebaseOnValueCallback",
                 path: e.data.path,
                 value: value
             });
         });
+
+        // Store unsubscribe function
+        if (!this._onValueUnsubscribes) this._onValueUnsubscribes = new Map();
+        this._onValueUnsubscribes.set(path, unsub);
     }
 
     _message_setIcon(e) {
@@ -363,7 +385,12 @@ export default class Apps extends Features {
 
     _message_addSettingsListener(e) {
         const path = e.data.path;
-        if (this._iframeSettingsListeners.has(path)) return;
+        
+        // Remove existing listener if found (cleanup for reloads)
+        if (this._iframeSettingsListeners.has(path)) {
+            const oldHandler = this._iframeSettingsListeners.get(path);
+            this.session.settings.removeEventListener("change", oldHandler);
+        }
 
         const handler = (event) => {
             if (event.path === path) {
@@ -377,6 +404,15 @@ export default class Apps extends Features {
 
         this._iframeSettingsListeners.set(path, handler);
         this.session.settings.addEventListener("change", handler);
+    }
+
+    _sendSessionInfoUpdate() {
+        if (!this.appFrame?.iframe) return;
+        let participantActive = this.sdata.isUserActive("participant");
+        this.appFrame.sendMessage({
+            mode: "sessionInfoUpdate",
+            participantActive
+        });
     }
 
     // =========================================================================
@@ -443,6 +479,13 @@ export default class Apps extends Features {
     _message_registerAccessButton(e) {
         const { id, group, order } = e.data;
         console.log("[Debug] Registering access button:", id, group);
+
+        // Remove existing proxy if it exists (cleanup for reloads)
+        if (this._iframeAccessButtons.has(id)) {
+            const entry = this._iframeAccessButtons.get(id);
+            entry.proxy.remove();
+            this._iframeAccessButtons.delete(id);
+        }
 
         // Create proxy AccessButton element
         const proxy = new AccessButton(group);
@@ -551,7 +594,7 @@ export default class Apps extends Features {
                     participantActive,
                 }
                 // Inject API into HTML
-                info.html = html.replace(/<head\b[^>]*>/, `<head>\n\t<script type="module" src="${accessButtonsURL}"></script>\n\t<script src="${apiURL}"></script>\n\t<base href="${url}/">\n\t<script>const session_info = ${JSON.stringify(session_info)}</script>`);
+                info.html = html.replace(/<head\b[^>]*>/, `<head>\n\t<script type="module" src="${accessButtonsURL}"></script>\n\t<script src="${apiURL}"></script>\n\t<base href="${url}/">\n\t<script>window.session_info = ${JSON.stringify(session_info)}</script>`);
 
                 return info;
             } catch (e) {
@@ -617,6 +660,10 @@ export default class Apps extends Features {
                     this[modeFunc](e);
                 }
             });
+
+            // Listen for changes in session info
+            this.sdata.onUser("joined", () => this._sendSessionInfoUpdate());
+            this.sdata.onUser("left", () => this._sendSessionInfoUpdate());
         }
     }
 

@@ -106,6 +106,12 @@ window.addSettingsListener = function (path, callback) {
     }, "*");
 }
 
+window.addSessionInfoListener = function (callback) {
+    if (!callback) return;
+    if (window.session_info) callback(window.session_info);
+    window.addEventListener("sessionInfoUpdate", (e) => callback(e.detail));
+}
+
 /**
  * Registers an element as an access button with the parent app.
  * Parent will access the element directly via contentDocument (same-origin).
@@ -266,6 +272,15 @@ RESPONSE_FUNCTIONS = {
     settingsUpdate(data) {
         if (data.path in SETTINGS_LISTENERS) {
             SETTINGS_LISTENERS[data.path](data.value);
+        }
+    },
+    sessionInfoUpdate(data) {
+        if (window.session_info) {
+            const { mode, ...updates } = data;
+            Object.assign(window.session_info, updates);
+            window.dispatchEvent(new CustomEvent("sessionInfoUpdate", {
+                detail: window.session_info
+            }));
         }
     }
 }
