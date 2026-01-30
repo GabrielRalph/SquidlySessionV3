@@ -157,8 +157,8 @@ export default class Apps extends Features {
         this._iframeAccessButtons = new Map();
         /** @type {Map<string, Function>} */
         this._iframeSettingsListeners = new Map();
-        /** @type {Set<GridIcon>} */
-        this._appIcons = new Set();
+        /** @type {Map<string, GridIcon>} */
+        this._appIcons = new Map();
     }
 
     async open() {
@@ -226,7 +226,7 @@ export default class Apps extends Features {
      * Preserves the permanent Exit icon at (0, 0).
      */
     _clearAppIcons() {
-        for (const icon of this._appIcons) {
+        for (const icon of this._appIcons.values()) {
             icon.remove();
         }
         this._appIcons.clear();
@@ -316,8 +316,17 @@ export default class Apps extends Features {
                 });
             }
         }
-        // Track this icon so it can be cleared when switching apps
-        this._appIcons.add(icon);
+        // Track this icon so it can be cleared when switching apps or removed specifically
+        this._appIcons.set(e.data.key, icon);
+    }
+
+    _message_removeIcon(e) {
+        let key = e.data.key;
+        if (this._appIcons.has(key)) {
+            let icon = this._appIcons.get(key);
+            icon.remove();
+            this._appIcons.delete(key);
+        }
     }
 
     _message_addCursorListener(e) {

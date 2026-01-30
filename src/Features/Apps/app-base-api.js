@@ -69,6 +69,17 @@ window.setIcon = function (x, y, options, callback) {
         y: y,
         options: options,
     }, "*");
+    return key;
+}
+
+window.removeIcon = function (key) {
+    if (key in SET_ICON_CALLBACKS) {
+        delete SET_ICON_CALLBACKS[key];
+    }
+    window.parent.postMessage({
+        mode: "removeIcon",
+        key: key
+    }, "*");
 }
 
 window.addCursorListener = function (callback) {
