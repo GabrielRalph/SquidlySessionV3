@@ -91,30 +91,7 @@ class AppsFrame extends OccupiableWindow {
             "pointer-events": "all",
         }
 
-        // Add switch app icon
-        // let switchAppIcon = new GridIcon({
-        //     symbol: "switch",
-        //     displayValue: "Switch Mode",
-        //     type: "action",
-        //     // TODO: add switch app logic
-        //     // Send message to iframe to switch app
-        //     events: {
-        //         "access-click": (e) => {
-        //             // this.feature.switchApp();
-        //             // only send "switch_app" command
-        //             this.sendMessage({
-        //                 command: "switch_app",
-        //                 // app: this.feature.appDescriptors[0]
-        //             });
-        //         }
-        //     }
-        // }, "apps");
-        // switchAppIcon.styles = {
-        //     "pointer-events": "all",
-        // }
-
         this.grid.add(closeIcon, 0, 0);
-        // this.grid.add(switchAppIcon, 1, 0);
     }
 
     // Set iframe src or srcdoc
@@ -596,14 +573,22 @@ export default class Apps extends Features {
                 const [info, html] = await Promise.all([resInfo.json(), resIndex.text()]);
 
                 info.url = url;
-                // TODO: to be implemented
                 let participantActive = this.sdata.isUserActive("participant");
-                let session_info = {
+                const session_info = {
                     user: this.sdata.me,
                     participantActive,
-                }
-                // Inject API into HTML
-                info.html = html.replace(/<head\b[^>]*>/, `<head>\n\t<script type="module" src="${accessButtonsURL}"></script>\n\t<script src="${apiURL}"></script>\n\t<base href="${url}/">\n\t<script>window.session_info = ${JSON.stringify(session_info)}</script>`);
+                };
+
+                // Escape < to prevent </script> from terminating the injection prematurely.
+                const safe_session_info = JSON.stringify(session_info).replace(/</g, '\\u003c');
+                const injection = [
+                    `<script type="module" src="${accessButtonsURL}"></script>`,
+                    `<script src="${apiURL}"></script>`,
+                    `<base href="${url}/">`,
+                    `<script>window.session_info = ${safe_session_info};</script>`
+                ].join('\n\t');
+
+                info.html = html.replace(/<head\b[^>]*>/, `$& \n\t${injection}`);
 
                 return info;
             } catch (e) {
