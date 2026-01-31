@@ -7,6 +7,7 @@ import { AccessButton } from "../../Utilities/Buttons/access-buttons.js";
 
 const AppsList = [
     "https://cursor-splash.squidly.com.au",
+    "https://starfin-adventure.squidly.com.au",
     "http://127.0.0.1:5500",
     "http://127.0.0.1:5501"
 ]
