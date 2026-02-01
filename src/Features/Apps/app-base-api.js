@@ -2,6 +2,18 @@
     // Avoid re-declaring if injected multiple times
     if (window.SquidlyAPI) return;
 
+    // Inject grid-icon.css
+    const link = document.createElement("link");
+    link.rel = "stylesheet"; 
+    link.href = "https://v3.squidly.com.au/src/Utilities/grid-icon.css";
+    
+    if (document.currentScript && document.currentScript.src) {
+        try {
+            link.href = new URL("../../Utilities/Buttons/grid-icon.css", document.currentScript.src).href;
+        } catch (e) { }
+    }
+    document.head.appendChild(link);
+
     // ============================================================================
     // PRIVATE STATE
     // ============================================================================
