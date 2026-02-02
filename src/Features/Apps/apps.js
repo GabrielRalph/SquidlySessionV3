@@ -302,8 +302,10 @@ export default class Apps extends Features {
                         this.appFrame.sendMessage({
                             mode: "cursorUpdate",
                             user: `${user}-${inputType}`,
-                            x: e.screenPos._x * window.innerWidth,
-                            y: e.screenPos._y * window.innerHeight,
+                            ...this._toIframeCoords({
+                                x: e.screenPos._x * window.innerWidth, 
+                                y: e.screenPos._y * window.innerHeight
+                            }),
                             source: user === this.sdata.me ? "local" : "remote"
                         });
                     }
