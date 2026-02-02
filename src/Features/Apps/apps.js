@@ -68,13 +68,7 @@ class AppsFrame extends OccupiableWindow {
             style: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }
         });
 
-        this.offsetX = 0;
-        this.offsetY = 0;
-        this.observer = new ResizeObserver(([{ contentRect: { x, y, width, height } }]) => {
-            this.offsetX = x;
-            this.offsetY = y;
-        });
-        this.observer.observe(this.iframe);
+
         let closeIcon = new GridIcon({
             symbol: "close",
             displayValue: "Exit",
@@ -211,10 +205,10 @@ export default class Apps extends Features {
         let event = null;
         switch (data.emode) {
             case "mouse":
-                const { offsetX, offsetY } = this.appFrame
+                const globalP = this._toParentCoords({x: data.x, y: data.y});
                 event = new MouseEvent(data.type, {
-                    clientX: data.x + offsetX,
-                    clientY: data.y + offsetY,
+                    clientX: globalP.x,
+                    clientY: globalP.y,
                     button: data.button,
                     buttons: data.buttons,
                     bubbles: true
@@ -408,7 +402,13 @@ export default class Apps extends Features {
      */
     _toIframeCoords(p) {
         const rect = this._getIframeRect();
-        return { x: p.x - rect.left, y: p.y - rect.top };
+        const scaleX = this.appFrame.iframe.offsetWidth / rect.width;
+        const scaleY = this.appFrame.iframe.offsetHeight / rect.height;
+
+        return { 
+            x: (p.x - rect.left) * scaleX, 
+            y: (p.y - rect.top) * scaleY 
+        };
     }
 
     /**
@@ -418,7 +418,9 @@ export default class Apps extends Features {
      */
     _toParentCoords(p) {
         const rect = this._getIframeRect();
-        return new Vector(p.x + rect.left, p.y + rect.top);
+        const scaleX = rect.width / this.appFrame.iframe.offsetWidth;
+        const scaleY = rect.height / this.appFrame.iframe.offsetHeight;
+        return new Vector(p.x * scaleX + rect.left, p.y * scaleY + rect.top);
     }
 
     /**
