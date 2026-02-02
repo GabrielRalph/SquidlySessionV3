@@ -178,7 +178,7 @@ export default class Apps extends Features {
         this._clearAppIcons();
 
         await this.appFrame.setSrc("about:blank");
-        if (idx >= 0 || idx < this.appDescriptors.length) {
+        if (idx >= 0 && idx < this.appDescriptors.length) {
             let app = this.appDescriptors[idx];
             await this.appFrame.setSrc(app.html, true);
             this._sendSessionInfoUpdate();
@@ -296,10 +296,9 @@ export default class Apps extends Features {
                         this.appFrame.sendMessage({
                             mode: "cursorUpdate",
                             user: `${user}-${inputType}`,
-                            ...this._toIframeCoords({
-                                x: e.screenPos._x * window.innerWidth, 
-                                y: e.screenPos._y * window.innerHeight
-                            }),
+                            // remove the iframe coords transformation
+                            x: e.screenPos._x * window.innerWidth, 
+                            y: e.screenPos._y * window.innerHeight,
                             source: user === this.sdata.me ? "local" : "remote"
                         });
                     }
@@ -400,16 +399,16 @@ export default class Apps extends Features {
      * @param {Object} p - Point with x, y properties
      * @returns {Object} Point in iframe coordinates
      */
-    _toIframeCoords(p) {
-        const rect = this._getIframeRect();
-        const scaleX = this.appFrame.iframe.offsetWidth / rect.width;
-        const scaleY = this.appFrame.iframe.offsetHeight / rect.height;
+    // _toIframeCoords(p) {
+    //     const rect = this._getIframeRect();
+    //     const scaleX = this.appFrame.iframe.offsetWidth / rect.width;
+    //     const scaleY = this.appFrame.iframe.offsetHeight / rect.height;
 
-        return { 
-            x: (p.x - rect.left) * scaleX, 
-            y: (p.y - rect.top) * scaleY 
-        };
-    }
+    //     return { 
+    //         x: (p.x - rect.left) * scaleX, 
+    //         y: (p.y - rect.top) * scaleY 
+    //     };
+    // }
 
     /**
      * Converts a point from iframe coordinates to parent coordinates.
@@ -610,38 +609,44 @@ export default class Apps extends Features {
                 index: 180,
                 onSelect: e => e.waitFor(this.session.openWindow("apps")),
             })
-            this.sdata.onValue("selected_app", (selectedApp) => {
-                if (selectedApp) {
-                    this._setApp(selectedApp.index);
-                    this.currentAppIndex = selectedApp.index;
-                    this.appFrame.search.hide();
-                    // Ensure the window is open for the user
-                    this.session.openWindow("apps");
-                } else {
-                    // App was closed by other party
-                    this.currentAppIndex = null;
-                    this.appFrame.setSrc("about:blank");
-                    this.appFrame.hide();
-                    
-                    // If we are currently on the apps screen, go back to default
-                    // But checking "if (this.session.windowManager.currentWindow === ...)" is hard here
-                    // safely just trying to open default is usually fine if we are intending to close apps
-                    this.session.openWindow("default");
-                }
-            });
-
-            // Iframe API Message Listener
-            window.addEventListener("message", e => {
-                let modeFunc = "_message_" + e.data?.mode;
-                if (modeFunc in this && this[modeFunc] instanceof Function) {
-                    this[modeFunc](e);
-                }
-            });
-
-            // Listen for changes in session info
-            this.sdata.onUser("joined", () => this._sendSessionInfoUpdate());
-            this.sdata.onUser("left", () => this._sendSessionInfoUpdate());
         }
+        
+        this.sdata.onValue("selected_app", async (selectedApp) => {
+            // If descriptors failed to load initially, try loading them now
+            if ((!this.appDescriptors || this.appDescriptors.length === 0) && selectedApp) {
+                await this.loadAppDescriptors();
+            }
+
+            if (selectedApp) {
+                this._setApp(selectedApp.index);
+                this.currentAppIndex = selectedApp.index;
+                this.appFrame.search.hide();
+                // Ensure the window is open for the user
+                this.session.openWindow("apps");
+            } else {
+                // App was closed by other party
+                this.currentAppIndex = null;
+                this.appFrame.setSrc("about:blank");
+                this.appFrame.hide();
+                
+                // If we are currently on the apps screen, go back to default
+                // But checking "if (this.session.windowManager.currentWindow === ...)" is hard here
+                // safely just trying to open default is usually fine if we are intending to close apps
+                this.session.openWindow("default");
+            }
+        });
+
+        // Iframe API Message Listener
+        window.addEventListener("message", e => {
+            let modeFunc = "_message_" + e.data?.mode;
+            if (modeFunc in this && this[modeFunc] instanceof Function) {
+                this[modeFunc](e);
+            }
+        });
+
+        // Listen for changes in session info
+        this.sdata.onUser("joined", () => this._sendSessionInfoUpdate());
+        this.sdata.onUser("left", () => this._sendSessionInfoUpdate());
     }
 
 
