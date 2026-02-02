@@ -293,12 +293,19 @@ export default class Apps extends Features {
             inputs.forEach(inputType => {
                 this.session.cursors.addEventListener(`${user}-${inputType}`, (e) => {
                     if (this.appFrame?.iframe) {
+                        const iframeRect = this.appFrame.iframe.getBoundingClientRect();
+                        const cursorX = e.screenPos._x * window.innerWidth;
+                        const cursorY = e.screenPos._y * window.innerHeight;
+                        
+                        // Convert to iframe-relative coordinates
+                        const iframeCursorX = cursorX - iframeRect.left;
+                        const iframeCursorY = cursorY - iframeRect.top;
+
                         this.appFrame.sendMessage({
                             mode: "cursorUpdate",
                             user: `${user}-${inputType}`,
-                            // remove the iframe coords transformation
-                            x: e.screenPos._x * window.innerWidth, 
-                            y: e.screenPos._y * window.innerHeight,
+                            x: iframeCursorX,
+                            y: iframeCursorY,
                             source: user === this.sdata.me ? "local" : "remote"
                         });
                     }
