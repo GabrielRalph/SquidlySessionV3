@@ -399,16 +399,16 @@ export default class Apps extends Features {
      * @param {Object} p - Point with x, y properties
      * @returns {Object} Point in iframe coordinates
      */
-    // _toIframeCoords(p) {
-    //     const rect = this._getIframeRect();
-    //     const scaleX = this.appFrame.iframe.offsetWidth / rect.width;
-    //     const scaleY = this.appFrame.iframe.offsetHeight / rect.height;
+    _toIframeCoords(p) {
+        const rect = this._getIframeRect();
+        const scaleX = this.appFrame.iframe.offsetWidth / rect.width;
+        const scaleY = this.appFrame.iframe.offsetHeight / rect.height;
 
-    //     return { 
-    //         x: (p.x - rect.left) * scaleX, 
-    //         y: (p.y - rect.top) * scaleY 
-    //     };
-    // }
+        return { 
+            x: (p.x - rect.left) * scaleX, 
+            y: (p.y - rect.top) * scaleY 
+        };
+    }
 
     /**
      * Converts a point from iframe coordinates to parent coordinates.
