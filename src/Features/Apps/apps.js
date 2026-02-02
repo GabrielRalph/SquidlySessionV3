@@ -293,19 +293,17 @@ export default class Apps extends Features {
             inputs.forEach(inputType => {
                 this.session.cursors.addEventListener(`${user}-${inputType}`, (e) => {
                     if (this.appFrame?.iframe) {
-                        const iframeRect = this.appFrame.iframe.getBoundingClientRect();
                         const cursorX = e.screenPos._x * window.innerWidth;
                         const cursorY = e.screenPos._y * window.innerHeight;
-                        
-                        // Convert to iframe-relative coordinates
-                        const iframeCursorX = cursorX - iframeRect.left;
-                        const iframeCursorY = cursorY - iframeRect.top;
+
+                        // Convert window coords to iframe coords (handles offset + scaling)
+                        const iframeCoords = this._toIframeCoords({ x: cursorX, y: cursorY });
 
                         this.appFrame.sendMessage({
                             mode: "cursorUpdate",
                             user: `${user}-${inputType}`,
-                            x: iframeCursorX,
-                            y: iframeCursorY,
+                            x: iframeCoords.x,
+                            y: iframeCoords.y,
                             source: user === this.sdata.me ? "local" : "remote"
                         });
                     }
