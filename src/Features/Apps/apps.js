@@ -292,31 +292,22 @@ export default class Apps extends Features {
         if (this._cursorListenersInitialized) return;
         this._cursorListenersInitialized = true;
 
-        // Listen to LOCAL eye gaze data (current user's own eye gaze)
-        this.session.eyeGaze.addEyeDataListener((eyeP, bbox, hidden) => {
-            if (eyeP instanceof Vector && !hidden && this.appFrame?.iframe) {
-                this.appFrame.sendMessage({
-                    mode: "cursorUpdate",
-                    user: this.sdata.me + "-eyes",
-                    x: eyeP.x * bbox[1]._x,
-                    y: eyeP.y * bbox[1]._y,
-                    source: "local"
-                });
-            }
-        });
+        const users = [this.sdata.me, this.sdata.them];
+        const inputs = ["mouse", "eyes"];
 
-        // Listen to all remote cursor events (mouse and eye gaze)
-        ["mouse", "eyes"].forEach(cursorType => {
-            this.session.cursors.addEventListener(this.sdata.them + "-" + cursorType, (e) => {
-                if (this.appFrame?.iframe) {
-                    this.appFrame.sendMessage({
-                        mode: "cursorUpdate",
-                        user: this.sdata.them + "-" + cursorType,
-                        x: e.screenPos._x * window.innerWidth,
-                        y: e.screenPos._y * window.innerHeight,
-                        source: "remote"
-                    });
-                }
+        users.forEach(user => {
+            inputs.forEach(inputType => {
+                this.session.cursors.addEventListener(`${user}-${inputType}`, (e) => {
+                    if (this.appFrame?.iframe) {
+                        this.appFrame.sendMessage({
+                            mode: "cursorUpdate",
+                            user: `${user}-${inputType}`,
+                            x: e.screenPos._x * window.innerWidth,
+                            y: e.screenPos._y * window.innerHeight,
+                            source: user === this.sdata.me ? "local" : "remote"
+                        });
+                    }
+                });
             });
         });
     }
