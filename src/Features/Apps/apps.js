@@ -611,11 +611,18 @@ export default class Apps extends Features {
                     this._setApp(selectedApp.index);
                     this.currentAppIndex = selectedApp.index;
                     this.appFrame.search.hide();
+                    // Ensure the window is open for the user
+                    this.session.openWindow("apps");
                 } else {
                     // App was closed by other party
                     this.currentAppIndex = null;
                     this.appFrame.setSrc("about:blank");
                     this.appFrame.hide();
+                    
+                    // If we are currently on the apps screen, go back to default
+                    // But checking "if (this.session.windowManager.currentWindow === ...)" is hard here
+                    // safely just trying to open default is usually fine if we are intending to close apps
+                    this.session.openWindow("default");
                 }
             });
 
