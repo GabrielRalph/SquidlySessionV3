@@ -27,7 +27,7 @@
     // ============================================================================
     // INPUT FORWARDING
     // ============================================================================
-    ["mousedown", "mouseup"].forEach(type => {
+    ["mousemove", "mousedown", "mouseup"].forEach(type => {
         document.addEventListener(type, e => {
             window.parent.postMessage({
                 mode: "event",
