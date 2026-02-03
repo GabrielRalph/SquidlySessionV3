@@ -235,8 +235,26 @@ export default class Apps extends Features {
     }
 
     _message_firebaseSet(e) {
-        let path = "appdata/" + e.data.path;
-        this.sdata.set(path, e.data.value);
+        const {path, value} = e.data;
+
+        // Block mutable types (Objects and Arrays) to prevent database bloat
+        // Only primitives (string, number, boolean, null) are allowed
+        if (value !== null && typeof value === 'object') {
+            console.log(`Firebase set failed: Mutable types (Objects and Arrays) are not allowed at path "${path}". Use individual primitive keys instead.`);
+            return;
+        }
+
+        const MAX_BYTES = 1024 * 5; // TODO: 5KB for now, evaluate before changing
+
+        let serialized = JSON.stringify(value);
+        const encoder = new TextEncoder();
+        // Check if the serialized value exceeds the maximum size
+        if (encoder.encode(serialized).length > MAX_BYTES) {
+            console.log("Firebase set failed: value is too large");
+            return;
+        }
+
+        this.sdata.set("appdata/" + path, value);
     }
 
     _message_firebaseOnValue(e) {
