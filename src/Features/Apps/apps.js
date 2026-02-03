@@ -623,6 +623,11 @@ export default class Apps extends Features {
             }
 
             if (selectedApp) {
+                // Ensure the window is open BEFORE loading app content
+                // This fixes participant iframe loading by ensuring frame is visible first
+                await this.session.openWindow("apps");
+                this.appFrame.search.hide();
+                
                 // Use URL for stable lookup across users (index may differ if descriptors loaded in different order)
                 const app = this.appDescriptors?.find(a => a.url === selectedApp.app?.url);
                 if (app) {
@@ -633,9 +638,6 @@ export default class Apps extends Features {
                     this._setApp(selectedApp.index);
                     this.currentAppIndex = selectedApp.index;
                 }
-                this.appFrame.search.hide();
-                // Ensure the window is open for the user
-                this.session.openWindow("apps");
             } else {
                 // App was closed by other party
                 this.currentAppIndex = null;
