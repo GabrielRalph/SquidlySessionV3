@@ -235,26 +235,35 @@ export default class Apps extends Features {
     }
 
     _message_firebaseSet(e) {
-        const {path, value} = e.data;
+        // Get all app paths, if length > 100, reject
+        this.sdata.get("appdata").then((data) => {
+            const appPaths = data ? Object.keys(data) : [];
+            if (appPaths.length >= 1) {
+                console.log("Firebase set failed: Too many app paths");
+                return;
+            }
 
-        // Block mutable types (Objects and Arrays) to prevent database bloat
-        // Only primitives (string, number, boolean, null) are allowed
-        if (value !== null && typeof value === 'object') {
-            console.log(`Firebase set failed: Mutable types (Objects and Arrays) are not allowed at path "${path}". Use individual primitive keys instead.`);
-            return;
-        }
+            const {path, value} = e.data;
 
-        const MAX_BYTES = 1024 * 5; // TODO: 5KB for now, evaluate before changing
+            // Block mutable types (Objects and Arrays) to prevent database bloat
+            // Only primitives (string, number, boolean, null) are allowed
+            if (value !== null && typeof value === 'object') {
+                console.log(`Firebase set failed: Mutable types (Objects and Arrays) are not allowed at path "${path}". Use individual primitive keys instead.`);
+                return;
+            }
 
-        let serialized = JSON.stringify(value);
-        const encoder = new TextEncoder();
-        // Check if the serialized value exceeds the maximum size
-        if (encoder.encode(serialized).length > MAX_BYTES) {
-            console.log("Firebase set failed: value is too large");
-            return;
-        }
+            const MAX_BYTES = 1024 * 5; // TODO: 5KB for now, evaluate before changing
 
-        this.sdata.set("appdata/" + path, value);
+            let serialized = JSON.stringify(value);
+            const encoder = new TextEncoder();
+            // Check if the serialized value exceeds the maximum size
+            if (encoder.encode(serialized).length > MAX_BYTES) {
+                console.log("Firebase set failed: value is too large");
+                return;
+            }
+
+            this.sdata.set("appdata/" + path, value);
+        })
     }
 
     _message_firebaseOnValue(e) {
