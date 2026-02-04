@@ -462,8 +462,6 @@ export default class Apps extends Features {
      */
     _message_registerAccessButton(e) {
         const { id, group, order } = e.data;
-        console.log("[Debug] Registering access button:", id, group);
-
         // Remove existing proxy if it exists (cleanup for reloads)
         if (this._iframeAccessButtons.has(id)) {
             const entry = this._iframeAccessButtons.get(id);
