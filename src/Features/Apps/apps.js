@@ -582,6 +582,7 @@ export default class Apps extends Features {
                 const session_info = {
                     user: this.sdata.me,
                     participantActive,
+                    appName: info.name,
                 };
 
                 // Escape < to prevent </script> from terminating the injection prematurely.
