@@ -235,16 +235,25 @@ export default class Apps extends Features {
     }
 
     _message_firebaseSet(e) {
-        // Get all app paths, if length > 100, reject
-        this.sdata.get("appdata").then((data) => {
-            console.log("Firebase set:", data);
-            const appPaths = data ? Object.keys(data) : [];
-            if (appPaths.length >= 100) {
-                console.log("Firebase set failed: Too many app paths");
+        const {path, value} = e.data;
+        
+        // Extract app name from path (first segment, e.g., "Starfin Adventure/score" → "Starfin Adventure")
+        const appName = path.split("/")[0];
+        if (!appName) {
+            console.log("Firebase set failed: Invalid path (no app name)");
+            return;
+        }
+
+        // Get only this app's data to check key count
+        this.sdata.get(`appdata/${appName}`).then((appData) => {
+            console.log(`Firebase set [${appName}]:`, appData);
+            
+            // Check if this app has too many keys (limit per app, not global)
+            const appKeys = appData ? Object.keys(appData) : [];
+            if (appKeys.length >= 1) {
+                console.log(`Firebase set failed: Too many keys in app "${appName}" (${appKeys.length}/1)`);
                 return;
             }
-
-            const {path, value} = e.data;
 
             // Block mutable types (Objects and Arrays) to prevent database bloat
             // Only primitives (string, number, boolean, null) are allowed
@@ -264,7 +273,7 @@ export default class Apps extends Features {
             }
 
             this.sdata.set("appdata/" + path, value);
-        })
+        });
     }
 
     _message_firebaseOnValue(e) {
