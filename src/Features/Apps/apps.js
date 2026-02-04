@@ -246,12 +246,10 @@ export default class Apps extends Features {
 
         // Get only this app's data to check key count
         this.sdata.get(`appdata/${appName}`).then((appData) => {
-            console.log(`Firebase set [${appName}]:`, appData);
-            
             // Check if this app has too many keys (limit per app, not global)
             const appKeys = appData ? Object.keys(appData) : [];
-            if (appKeys.length >= 1) {
-                console.log(`Firebase set failed: Too many keys in app "${appName}" (${appKeys.length}/1)`);
+            if (appKeys.length > 100) {
+                console.log(`Firebase set failed: Too many keys in app "${appName}" (${appKeys.length}/100)`);
                 return;
             }
 
