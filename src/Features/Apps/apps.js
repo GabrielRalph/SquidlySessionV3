@@ -237,6 +237,7 @@ export default class Apps extends Features {
     _message_firebaseSet(e) {
         // Get all app paths, if length > 100, reject
         this.sdata.get("appdata").then((data) => {
+            console.log("Firebase set: data", data);
             const appPaths = data ? Object.keys(data) : [];
             if (appPaths.length >= 1) {
                 console.log("Firebase set failed: Too many app paths");
