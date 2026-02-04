@@ -239,7 +239,7 @@ export default class Apps extends Features {
         this.sdata.get("appdata").then((data) => {
             console.log("Firebase set: data", data);
             const appPaths = data ? Object.keys(data) : [];
-            if (appPaths.length >= 1) {
+            if (appPaths.length >= 100) {
                 console.log("Firebase set failed: Too many app paths");
                 return;
             }
