@@ -20,6 +20,7 @@ lamp-window .text {
     margin: calc(var(--border)/2);
     border-radius: 1.5vmin;
     padding: var(--border) calc(var(--border) * 2);
+    font-size: 1.7em;
 }
 
 lamp-window .grid-icon {
