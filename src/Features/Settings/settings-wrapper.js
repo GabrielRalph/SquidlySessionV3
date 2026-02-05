@@ -99,6 +99,17 @@ export function getProfiles() {
     });
 }
 
+export async function createProfile(hostUID, name) {
+    let frame = new FirebaseFrame(`users/${hostUID}/settings/profiles`);
+    let id = frame.push();
+    await frame.set(id, {
+        profileSettings: {
+            name,
+        }
+    });
+    return id;
+}
+
  
 /** Initialises the settings for the session
  * @param {SessionDataFrame} sdata
