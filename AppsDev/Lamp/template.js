@@ -164,18 +164,16 @@ class LampWindow extends SvgPlus {
 
     async load(){
         LampPages = await (await fetch(relURL("./lamp_pages.json", import.meta))).json();
-        this.page = 1;
-
         SquidlyAPI.firebaseOnValue("value1", value => {
             if (this.text.innerHTML !== value) {
                 this.text.innerHTML = value;
             }
         })
         SquidlyAPI.firebaseOnValue("value2", value => {
-            this.page = value;
+            this.page = value || 1;
         })
         SquidlyAPI.firebaseOnValue("value3", value => {
-            this.typeMode = value;
+            this.typeMode = value || "";
         });
     }
    
