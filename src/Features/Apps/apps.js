@@ -254,15 +254,25 @@ export default class Apps extends Features {
       return;
     }
 
-    // Get only this app's data to check key count
-    this.sdata.get(`appdata/${appName}`).then((appData) => {
-      // Check if this app has too many keys (limit per app, not global)
-      const appKeys = appData ? Object.keys(appData) : [];
-      if (appKeys.length > 100) {
-        console.log(
-          `Firebase set failed: Too many keys in app "${appName}" (${appKeys.length}/100)`,
-        );
-        return;
+    const registryPath = `appmeta/${appName}/registry`;
+
+    // Check registry to enforce key limit
+    this.sdata.get(registryPath).then((registry) => {
+      const usedKeys = new Set(registry || []);
+
+      // If this is a new key (not in registry)
+      if (!usedKeys.has(path)) {
+        // Check limit
+        if (usedKeys.size >= 100) {
+          console.log(
+            `Firebase set failed: Too many keys in app "${appName}" (${usedKeys.size}/100)`,
+          );
+          return;
+        }
+
+        // Add to registry and save
+        usedKeys.add(path);
+        this.sdata.set(registryPath, Array.from(usedKeys));
       }
 
       // Block mutable types (Objects and Arrays) to prevent database bloat
