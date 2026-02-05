@@ -189,6 +189,13 @@
             return key;
         },
 
+        setGridSize: function (rows, cols) {
+            window.parent.postMessage({
+                mode: "setGridSize",
+                size: [rows, cols]
+            }, "*");
+        },
+
         removeIcon: function (key) {
             if (key in SET_ICON_CALLBACKS) {
                 delete SET_ICON_CALLBACKS[key];

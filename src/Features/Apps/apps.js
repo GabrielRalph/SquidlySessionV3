@@ -63,46 +63,56 @@ class AppsFrame extends OccupiableWindow {
       },
     });
 
-    this.grid = this.createChild(
-      GridLayout,
-      {
-        style: {
-          position: "absolute",
-          top: "var(--gap)",
-          left: "var(--gap)",
-          right: "var(--gap)",
-          bottom: "var(--gap)",
-        },
-      },
-      4,
-      5,
-    );
+    this.setGridSize(4, 5);
+    
     this.search = this.createChild(QuizSearch, {
       style: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
     });
 
-    let closeIcon = new GridIcon(
-      {
-        symbol: "close",
-        displayValue: "Exit",
-        type: "action",
-        events: {
-          "access-click": async (e) => {
-            await this.feature.close();
-            // Release toolbar after closing
-            this.feature.session.openWindow("default");
-          },
+    
+  }
+
+  setGridSize(rows, cols) {
+    rows = Math.max(1, Math.min(20, rows||1));
+    cols = Math.max(1, Math.min(20, cols||1));
+
+    this.nRows = rows;
+    this.nCols = cols;
+    
+    let grid = new GridLayout(rows, cols);
+    grid.styles = {
+      position: "absolute",
+      top: "var(--gap)",
+      left: "var(--gap)",
+      right: "var(--gap)",
+      bottom: "var(--gap)",
+    }
+    let closeIcon = grid.add(new GridIcon({
+      symbol: "close",
+      displayValue: "Exit",
+      type: "action",
+      events: {
+        "access-click": async (e) => {
+          await this.feature.close();
+          // Release toolbar after closing
+          this.feature.session.openWindow("default");
         },
       },
-      "apps",
-    );
-    closeIcon.styles = {
+    }, "apps"), 0, 0)
+
+    closeIcon.styles = { 
       "--shadow-color": "transparent",
       "pointer-events": "all",
     };
-
-    this.grid.add(closeIcon, 0, 0);
+    if (this.grid) {
+      this.grid.replaceWith(grid)
+    } else {
+      this.appendChild(grid);
+    }
+    this.grid = grid;
   }
+
+
 
   // Set iframe src or srcdoc
   async setSrc(src, srcdoc = false) {
@@ -311,24 +321,33 @@ export default class Apps extends Features {
   }
 
   _message_setIcon(e) {
-    let icon = new GridIcon(e.data.options);
-    icon.styles = {
-      "--shadow-color": "transparent",
-      "pointer-events": "all",
-      ...(e.data.options.styles || {}),
-    };
-    this.appFrame.grid.add(icon, e.data.x, e.data.y);
-    icon.events = {
-      "access-click": (event) => {
-        this.appFrame.sendMessage({
-          mode: "onIconClickCallback",
-          key: e.data.key,
-          value: { clickMode: event.clickMode },
-        });
-      },
-    };
-    // Track this icon so it can be cleared when switching apps or removed specifically
-    this._appIcons.set(e.data.key, icon);
+    const {x, y, options, key} = e.data;
+    const {nRows, nCols} = this.appFrame;
+    if (typeof x === "number" && x < nCols && typeof y === "number" && y < nRows && (x > 0 || y > 0)) {
+      let icon = new GridIcon(options);
+      icon.styles = {
+        "--shadow-color": "transparent",
+        "pointer-events": "all",
+        ...(options.styles || {}),
+      };
+      this.appFrame.grid.add(icon, x, y);
+      icon.events = {
+        "access-click": (event) => {
+          this.appFrame.sendMessage({
+            mode: "onIconClickCallback",
+            key: key,
+            value: { clickMode: event.clickMode },
+          });
+        },
+      };
+
+      // Track this icon so it can be cleared when switching apps or removed specifically
+      this._appIcons.set(key, icon);
+    }
+  }
+
+  _message_setGridSize(e) {
+    this.appFrame.setGridSize(e.data.size[0], e.data.size[1]);
   }
 
   _message_removeIcon(e) {

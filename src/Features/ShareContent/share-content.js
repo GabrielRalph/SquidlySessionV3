@@ -14,7 +14,9 @@ export default class ShareContent extends Features {
             transform: (e) => this.sdata.set("content-transform", e.transform),
             page: () => this.sdata.set("content-info/page", this.contentView.page),
             close: (e) => e.waitFor(this.close()),
-            upload: (e) => this.shareFile(),
+            upload: (e) => {
+                this.shareFile()
+            },
             screen: (e) => this.shareScreen()
         }
         this.session.toolBar.addMenuItems("share", [
@@ -26,7 +28,10 @@ export default class ShareContent extends Features {
             {
                 name: "file",
                 index: 90,
-                onSelect: e => e.waitFor(this.shareFile())
+                onSelect: e => {
+                    if (e.clickMode === "click")
+                        e.waitFor(this.shareFile())
+                }
             }
         ]);
     }
@@ -118,15 +123,16 @@ export default class ShareContent extends Features {
             type: "file",
             accept: "image/*,application/pdf",
         }
-        input.click();
-        
+
         await new Promise((r) => {
             input.addEventListener("input", r)
+            let res = input.click();
+            console.log(res);
         })
 
         if (input.files.length > 0) {
-            this.session.openWindow("shareContent")
             this.uploadFile(input.files[0])
+            await this.session.openWindow("shareContent")
         }        
     }
 

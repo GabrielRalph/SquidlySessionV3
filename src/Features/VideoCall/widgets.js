@@ -135,6 +135,7 @@ class VideoDisplay extends HideShowTransition {
     captureFrame(video) {
         const { videoWidth, videoHeight } = video;
         if (video.videoWidth > 0 && video.videoHeight > 0) {
+            this.waiting = false;
             this._aspect = videoWidth / videoHeight;
             this.styles = {
                 "--aspect": this.aspect

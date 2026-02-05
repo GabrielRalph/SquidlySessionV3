@@ -1,5 +1,5 @@
 /**
- * @typedef {("aac"|"copy"|"paste"|"zoomIn"|"zoomOut"|"1to9"|"access"|"add"|"apps"|"arrow"|"atoi"|"back"|"calibrate"|"cc"|"close"|"change"|"control"|"cursor"|"downArrow"|"download"|"downloadLatex"|"downloadPDF"|"draw"|"edit"|"emoji"|"end"|"eye"|"file"|"mask"|"game"|"home"|"jtor"|"key"|"leftArrow"|"minus"|"more"|"mouse"|"msg"|"mute"|"next"|"noeye"|"novideo"|"quiz"|"radioTick"|"refresh"|"rightArrow"|"save"|"screen"|"search"|"send"|"settings"|"share"|"slow"|"soundOff"|"soundOn"|"space"|"speaker"|"speedFast"|"speedMedium"|"speedSlow"|"sto0"|"switch"|"test"|"tick"|"tools-locked"|"tools-unlocked"|"trash"|"unmute"|"upArrow"|"upload-img"|"v-side"|"v-top"|"v-widget"|"video"|"user")} IconName
+ * @typedef {("aac"|"copy"|"paste"|"zoomIn"|"zoomOut"|"1to9"|"access"|"add"|"apps"|"arrow"|"atoi"|"back"|"calibrate"|"cc"|"close"|"change"|"control"|"cursor"|"downArrow"|"download"|"downloadLatex"|"downloadPDF"|"draw"|"edit"|"emoji"|"end"|"eye"|"file"|"mask"|"game"|"group"|"home"|"jtor"|"key"|"leftArrow"|"minus"|"more"|"mouse"|"msg"|"mute"|"next"|"noeye"|"novideo"|"person"|"quiz"|"radioTick"|"refresh"|"rightArrow"|"save"|"screen"|"search"|"send"|"settings"|"share"|"slow"|"soundOff"|"soundOn"|"space"|"speaker"|"speedFast"|"speedMedium"|"speedSlow"|"sto0"|"switch"|"test"|"tick"|"tools-locked"|"tools-unlocked"|"trash"|"unmute"|"upArrow"|"upload-img"|"v-side"|"v-top"|"v-widget"|"video"|"user")} IconName
  * IconName is a union type of all available icon names in the library.
  */
 
@@ -83,4 +83,4 @@ const IconSourceText = {
 	"user": `<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><path opacity="0.3" d="M24.77,256c0-69.4,46.22-125.66,103.23-125.66s103.23,56.26,103.23,125.66"/><ellipse opacity="0.3" cx="128" cy="62.64" rx="46.42" ry="45.2"/></svg>`
 };
 
-export { IconSourceText };
+export {IconSourceText};

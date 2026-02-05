@@ -253,7 +253,7 @@ export class SquidlySessionElement extends ShadowElement {
                 } else {
                     this.loaderText = "An unexpected error occurred while initialising the session. Please refresh and try again.";
                 }
-                console.log(e);
+                console.error(e);
             }
         } else {
 

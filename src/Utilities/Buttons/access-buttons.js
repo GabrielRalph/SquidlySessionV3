@@ -48,8 +48,17 @@ export class AccessEvent extends Event {
         return await promise;
     }
 
-    async waitAll(){
-        return await Promise.all(this.initialEvent.eventPromises);
+    async waitAll(timeout){
+        let res = null;
+        if (typeof timeout === "number") {
+            res = await Promise.race([
+                Promise.all(this.initialEvent.eventPromises),
+                new Promise(r => setTimeout(r, timeout))
+            ]);
+        } else {
+            res = await Promise.all(this.initialEvent.eventPromises);
+        }
+        return res;
     }
 }
 
@@ -108,6 +117,7 @@ class AccessButtonsLookupTable {
         }
         return newGroups;
     }
+
 }
 
 function checkClickable(root, element, center){
@@ -126,6 +136,23 @@ function checkClickable(root, element, center){
         clickable = false;
     }
     return clickable
+}
+
+function getElementFromPoint(x, y) {
+    let root = document.elementFromPoint(x, y);
+    while (root) {
+        if (root.shadowRoot instanceof ShadowRoot) {
+            root = root.shadowRoot.elementFromPoint(x, y);
+        } else if (root instanceof HTMLIFrameElement) {
+            let rect = root.getBoundingClientRect();
+            let frameX = x - rect.x;
+            let frameY = y - rect.y;
+            root = root.contentDocument.elementFromPoint(frameX, frameY);
+        } else {
+            break;
+        }
+    }
+    return root;
 }
 
 // Private variables
@@ -188,6 +215,7 @@ class AccessButtonRoot extends HTMLElement {
     /** @param {Element} element */
     set clickBoxElement(element) {
         if (element instanceof Element) {
+            Object.defineProperty(element, "linkedAccessButton", {get: () => this});
             $.get(this).clickBoxElement = element;
         }
     }
@@ -223,10 +251,10 @@ class AccessButtonRoot extends HTMLElement {
      * @param {?("click"|"dwell"|"switch")} mode
      * @param {Event} oldEvent
      * */
-    async accessClick(mode) {
+    async accessClick(mode, timeout) {
         const event = new AccessClickEvent(mode)
         this.dispatchEvent(event);
-        await Promise.all(event.eventPromises);
+        await event.waitAll(timeout);
     }
 
     /** 
@@ -327,6 +355,30 @@ export class AccessButton extends SvgPlus {
 
 export function getButtonGroups(){
    return ButtonsLookup.getVisibleGroups();
+}
+
+function isAccessButton(element) {
+    if (typeof element !== "object" || element === null) return null;
+    if (element instanceof AccessButtonRoot || (element?.tagName || "").toLowerCase() === "access-button") {
+        return element;
+    } else if (element.linkedAccessButton) {
+        return isAccessButton(element.linkedAccessButton);
+    }
+    return null;
+}
+export function getButtonAtPoint(x, y) {
+    let element = getElementFromPoint(x, y);
+    while (element) {
+        let accessButton = isAccessButton(element);
+        if (accessButton) {
+            element = accessButton;
+            break;
+        } else {
+            element = element.parentNode || element.host;
+        }
+    }
+    element = isAccessButton(element);
+    return element
 }
 
 

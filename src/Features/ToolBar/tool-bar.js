@@ -234,13 +234,10 @@ export default class ToolBarFeature extends Features {
     initialise() {
         // Events regarding bringing up the toolbar.
         this.session.eyeGaze.addEyeDataListener((v, bbox) => {
-            console.log(v, bbox);
             let eyeY = null;
-
             if (v instanceof Vector && v.y < 1) {
                 eyeY = v.y * bbox[1].y;
             }
-            console.log("eyeY", eyeY);
             this.eyeY = eyeY;
         })
 

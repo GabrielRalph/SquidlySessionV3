@@ -1,5 +1,5 @@
 import { SvgPlus, Vector } from "../../SvgPlus/4.js";
-import { AccessButton, getButtonGroups } from "../../Utilities/Buttons/access-buttons.js";
+import { AccessButton, getButtonAtPoint, getButtonGroups } from "../../Utilities/Buttons/access-buttons.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { delay, relURL, WaveStateVariable } from "../../Utilities/usefull-funcs.js";
 import { Features } from "../features-interface.js";
@@ -130,7 +130,6 @@ class ControlOverlay extends ShadowElement {
         if(sl.wsv.transValue == 1) {
             accessControl._dwellClick(b);
         }
-        
         b.highlight = false;
     }
 
@@ -385,7 +384,7 @@ export default class AccessControl extends Features {
                     // toolbar if that button was on the toolbar, otherwise show
                     // the toolbar.
                     if (selectedButton instanceof Element) {
-                        await selectedButton.accessClick("switch");
+                        await selectedButton.accessClick("switch", 10000);
                         if (!this.session.isOccupied && !this.session.toolBar.isRingShown) {
                             await this.session.togglePanel("toolBarArea", true);
                         }
@@ -428,22 +427,20 @@ export default class AccessControl extends Features {
 
     async _dwellClick(b) {
         this._clickingButton = true;
-        await b.accessClick("dwell");
+        await b.accessClick("dwell", 10000);
         this._clickingButton = false;
     }
 
     _onEyeData(v) {
         if (v instanceof Vector && !this._clickingButton) {
             let {overlay} = this;
-            let groups = getButtonGroups();
-            /** @type {AccessButton[]} */
-            let buttons = Object.values(groups).flat();
 
             v.x = v.x < 0 ? 0 : (v.x > 1 ? 1 : v.x);
             v.y = v.y < 0 ? 0 : (v.y > 1 ? 1 : v.y);
             v = v.mul(overlay.clientWidth, overlay.clientHeight);
             
-            let selected = buttons.filter(b => b.isPointInElement(v));
+            let selected = getButtonAtPoint(v.x, v.y);
+            selected = selected ? [selected] : [];
             overlay.updateDwellButtons(selected, this);
         } else {
             this.overlay.updateDwellButtons([], this);
