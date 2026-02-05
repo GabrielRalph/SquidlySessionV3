@@ -152,18 +152,27 @@
     // ============================================================================
     window.SquidlyAPI = {
         firebaseSet: function (path, value) {
+            // Auto-prepend appName to namespace all Firebase paths per app
+            const appName = window.session_info?.appName;
+            const fullPath = appName ? `${appName}/${path}` : path;
+            
             window.parent.postMessage({
                 mode: "firebaseSet",
-                path: path,
+                path: fullPath,
                 value: value
             }, "*");
         },
 
         firebaseOnValue: function (path, callback) {
-            FIREBASE_ON_VALUE_CALLBACKS[path] = callback;
+            // Auto-prepend appName to match firebaseSet namespacing
+            const appName = window.session_info?.appName;
+            const fullPath = appName ? `${appName}/${path}` : path;
+            
+            // Store callback under full path (parent sends back full path)
+            FIREBASE_ON_VALUE_CALLBACKS[fullPath] = callback;
             window.parent.postMessage({
                 mode: "firebaseOnValue",
-                path: path,
+                path: fullPath,
             }, "*");
         },
 
