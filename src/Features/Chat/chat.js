@@ -190,6 +190,14 @@ class ChatHistory extends SvgPlus {
         return chatMessage;
     }
 
+    /** Sort comparator: both parties' messages by time, one by one (oldest first). */
+    _messageOrder(a, b) {
+        const ta = Number(a.timestamp) || 0;
+        const tb = Number(b.timestamp) || 0;
+        if (ta !== tb) return ta - tb;
+        return (a.id || '').localeCompare(b.id || '');
+    }
+
     renderMessages() {
         if (!this.messageContainer) return;
 
@@ -202,10 +210,11 @@ class ChatHistory extends SvgPlus {
         // Guard clause: early return for invalid or duplicate messages
         if (!message?.id || this.loadedMessageIds.has(message.id)) return;
 
-        // Functional approach: update state and UI
         this.loadedMessageIds.add(message.id);
         this.messages.push(message);
-        this.messageContainer && (this.createMessageElement(message), this.scrollToBottom());
+        // Both parties sorted by time (one by one), then re-render
+        this.messages.sort((a, b) => this._messageOrder(a, b));
+        this.messageContainer && (this.renderMessages(), this.scrollToBottom());
     }
 
     loadMessages(messages) {
@@ -213,8 +222,8 @@ class ChatHistory extends SvgPlus {
         this.loadedMessageIds.clear();
         this.messages = [];
 
-        // Sort messages by ID (Firebase push keys are time-ordered)
-        const sorted = messages.sort((a, b) => a.id.localeCompare(b.id));
+        // Sort by timestamp so both parties are interleaved chronologically
+        const sorted = [...messages].sort((a, b) => this._messageOrder(a, b));
         sorted.forEach(msg => {
             this.loadedMessageIds.add(msg.id);
             this.messages.push(msg);
@@ -272,6 +281,21 @@ class ChatWindow extends OccupiableWindow {
         // Create keyboard panel as a child of ChatWindow (like Quiz's search/quizView)
         this.keyboardPanel = this.createChild(KeyboardPanel, {}, this.feature);
 
+        // Single source of truth: both inputBar and keyboard panel stay in sync
+        this.feature._inputDraft = '';
+        this.feature._onKeyboardInputChange = (value) => {
+            this.feature._inputDraft = value ?? '';
+            if (this.inputBar) this.inputBar.value = this.feature._inputDraft;
+        };
+        this.feature._syncDraftToKeyboardPanel = (v, force = false) => {
+            this.feature._inputDraft = v ?? '';
+            const k = this.keyboardPanel;
+            if ((force || k?.shown) && k?.chatInput) {
+                k.chatInput.value = this.feature._inputDraft;
+                k._updateWordSuggestions();
+            }
+        };
+
         // Create chat history (red rectangle area for messages)
         this.chatHistory = this.createChild(ChatHistory, {}, this.feature);
 
@@ -307,7 +331,8 @@ class ChatWindow extends OccupiableWindow {
             "keydown": (e) => {
                 const handler = keyHandlers[e.key];
                 handler && handler(e);
-            }
+            },
+            "input": () => this.feature._syncDraftToKeyboardPanel(this.inputBar?.value ?? '')
         };
 
         oldInput.remove();
@@ -335,12 +360,9 @@ class ChatWindow extends OccupiableWindow {
             type: "action",
             events: {
                 "access-click": async (e) => {
-                    const text = this.inputBar?.value?.trim();
-                    if (!text) return;
-
-                    // Clear input immediately for better UX
+                    const text = this.inputBar?.value ?? '';
                     this.inputBar.value = '';
-                    // Send message asynchronously (don't wait for result)
+                    this.feature._inputDraft = '';
                     this.feature._sendMessage(text).catch(error => {
                         console.error("[Chat] Error sending message:", error);
                     });
@@ -484,19 +506,10 @@ export default class ChatFeature extends Features {
     };
 
     async _handleKeyboardButton(e) {
-        console.log("[Chat] Keyboard button clicked");
         const keyboardPanel = this.chatWindow.keyboardPanel;
-
-        // Guard clause with early return
-        if (!keyboardPanel) {
-            console.error("[Chat] Keyboard panel not initialized!");
-            return;
-        }
-
-        // Strategy pattern: use handler map instead of if-else
-        const isShown = keyboardPanel.shown;
-        console.log("[Chat] Keyboard panel current state:", isShown);
-        const handler = this._keyboardHandlers[isShown];
+        if (!keyboardPanel) return;
+        if (!keyboardPanel.shown) this._syncDraftToKeyboardPanel(this._inputDraft ?? this.chatWindow.inputBar?.value ?? '', true);
+        const handler = this._keyboardHandlers[keyboardPanel.shown];
         handler && await handler(keyboardPanel);
     }
 
@@ -507,10 +520,13 @@ export default class ChatFeature extends Features {
     };
 
     async _sendMessage(text) {
+        const trimmed = text != null ? String(text).trim() : '';
+        if (!trimmed) return false;
+
         const messageData = {
             senderId: this.sdata.me,
             senderName: this._userNameMap[this.sdata.me] ?? "Participant",
-            text: text,
+            text: trimmed,
             timestamp: Date.now(),
             status: "sent",
             messageType: "text"
@@ -535,14 +551,12 @@ export default class ChatFeature extends Features {
             userName: this._userNameMap[this.sdata.me] ?? "Participant"
         });
 
-        // Load existing messages
+        // Load existing messages (order by time is applied in ChatHistory.loadMessages)
         try {
             const messages = await this.sdata.get("messages");
             messages && this.chatWindow.sendMessage({
                 mode: "loadMessages",
-                messages: Object.entries(messages)
-                    .map(([key, value]) => ({ id: key, ...value }))
-                    .sort((a, b) => a.id.localeCompare(b.id))
+                messages: Object.entries(messages).map(([key, value]) => ({ id: key, ...value }))
             });
         } catch (error) {
             console.error("[Chat] Error loading messages:", error);

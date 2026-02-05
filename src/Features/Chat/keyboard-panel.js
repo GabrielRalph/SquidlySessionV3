@@ -141,7 +141,7 @@ export class KeyboardPanel extends HideShowTransition {
         // ~~ Chat Input ~~
         this.chatInput = rootGrid.add(new ChatInput({
             "keydown": (e) => { if (e.key === "Escape") this.chatInput.input.blur() },
-            "input": () => this._updateWordSuggestions()
+            "input": () => this._syncInputAndSuggestions()
         }), 0, 2, 0, 3);
 
         // ~~ Send Button ~~
@@ -228,11 +228,8 @@ export class KeyboardPanel extends HideShowTransition {
             input.setSelectionRange(cursorPos + text.length, cursorPos + text.length);
         }
 
-        if (this._mode === "letters") {
-            await this.setMode("default");
-        }
-
-        this._updateWordSuggestions();
+        if (this._mode === "letters") await this.setMode("default");
+        this._syncInputAndSuggestions();
     }
 
     /**
@@ -255,13 +252,17 @@ export class KeyboardPanel extends HideShowTransition {
         }
     }
 
+    _syncInputAndSuggestions() {
+        this.feature._onKeyboardInputChange?.(this.chatInput.value);
+        this._updateWordSuggestions();
+    }
+
     /**
      * Update word suggestions based on current input.
      */
     _updateWordSuggestions() {
         const currentInput = this.chatInput.value || '';
-        const hasInput = currentInput.length > 0;
-        const suggestions = hasInput ? completeWordSync(currentInput, 4) : topFourWords;
+        const suggestions = currentInput.length > 0 ? completeWordSync(currentInput, 4) : topFourWords;
         this.wordSuggestions.suggestions = suggestions;
     }
 
@@ -304,13 +305,15 @@ export class KeyboardPanel extends HideShowTransition {
         input.focus();
         let newCursorPos = wordStartPos + word.length + spaceAfter.length;
         input.setSelectionRange(newCursorPos, newCursorPos);
-        this._updateWordSuggestions();
+        this._syncInputAndSuggestions();
     }
 
     async _send() {
-        this.feature._sendMessage(this.chatInput.value);
+        const text = (this.chatInput.value ?? '').trim();
+        if (!text) return;
+        if (!(await this.feature._sendMessage(text))) return;
         this.chatInput.value = "";
-        this._updateWordSuggestions();
+        this._syncInputAndSuggestions();
         await this.hide();
     }
 }
