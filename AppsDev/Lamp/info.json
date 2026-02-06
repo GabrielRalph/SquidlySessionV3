@@ -1,9 +1,9 @@
 {
-    "name": "LampAAC2",
-    "title": "Lamp AAC2",
+    "name": "LampAAC",
+    "title": "Lamp AAC",
     "subtitle": null,
     "version": "2.0",
-    "description": "Lamp Communication App for AAC2",
+    "description": "Lamp Communication App for AAC",
     "author": "Gabriel Ralph",
     "icon": "https://lampwflapp.com/assets/images/lwfl-icon-middle.svg"
 }
