@@ -201,9 +201,9 @@ export default class Apps extends Features {
 
     await this.appFrame.setSrc("about:blank");
     if (idx >= 0 && idx < this.appDescriptors.length) {
+      this.appFrame.setGridSize(4, 5);
       let app = this.appDescriptors[idx];
       await this.appFrame.setSrc(app.html, true);
-      this.appFrame.setGridSize(4, 5);
       this._sendSessionInfoUpdate();
     }
   }
