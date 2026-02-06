@@ -344,11 +344,14 @@ class ChatWindow extends OccupiableWindow {
             type: "action",
             events: {
                 "access-click": async (e) => {
-                    await this.feature.close();
-                    this.feature.session.openWindow("default");
+                    e.waitFor(Promise.all([
+                        this.feature.session.openWindow("default"),
+                        this.feature.close()
+                    ]))
                 }
             }
         }, "chat");
+
         closeIcon.styles = {
             "--shadow-color": "transparent",
             "pointer-events": "all",
@@ -471,9 +474,7 @@ export default class ChatFeature extends Features {
     }
 
     async close() {
-        await Promise.all([
-            this.chatWindow.root.hide()
-        ])
+        await this.chatWindow.root.hide()
     }
 
 
