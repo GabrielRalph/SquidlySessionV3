@@ -400,4 +400,44 @@
       RESPONSE_FUNCTIONS[event.data.mode](event.data);
     }
   });
+
+  // ============================================================================
+  // AUTO-SYNC DISPLAY SETTINGS
+  // ============================================================================
+  const startDisplaySync = () => {
+    const updateBody = (type, value) => {
+      if (type === "font") {
+        document.body.setAttribute("font", value || "inclusive");
+      } else if (type === "effect") {
+        if (!value || value === "none") document.body.removeAttribute("effect");
+        else document.body.setAttribute("effect", value);
+      }
+    };
+
+    window.SquidlyAPI.addSessionInfoListener((info) => {
+      if (info.user) {
+        // Initial fetch
+        window.SquidlyAPI.getSettings(`${info.user}/display/font`, (val) =>
+          updateBody("font", val),
+        );
+        window.SquidlyAPI.getSettings(`${info.user}/display/effect`, (val) =>
+          updateBody("effect", val),
+        );
+
+        // Subscription for updates
+        window.SquidlyAPI.addSettingsListener(
+          `${info.user}/display/font`,
+          (val) => updateBody("font", val),
+        );
+        window.SquidlyAPI.addSettingsListener(
+          `${info.user}/display/effect`,
+          (val) => updateBody("effect", val),
+        );
+      }
+    });
+  };
+
+  // Initialize display sync
+  if (document.body) startDisplaySync();
+  else document.addEventListener("DOMContentLoaded", startDisplaySync);
 })();
