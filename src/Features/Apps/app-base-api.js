@@ -1,3 +1,4 @@
+
 (function () {
   // Avoid re-declaring if injected multiple times
   if (window.SquidlyAPI) return;
@@ -291,6 +292,26 @@
       if (!callback) return;
       if (window.session_info) callback(window.session_info);
       window.addEventListener("sessionInfoUpdate", (e) => callback(e.detail));
+    },
+
+    loadUtterances: function (utterances) {
+      window.parent.postMessage(
+        {
+          mode: "loadUtterances",
+          utterances: utterances,
+        },
+        "*",
+      );
+    },
+
+    speak: function (utterance) {
+      window.parent.postMessage(
+        {
+          mode: "speak",
+          utterance: utterance,
+        },
+        "*",
+      );
     },
 
     registerAccessButton: registerAccessButton,

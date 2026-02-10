@@ -9,6 +9,7 @@ const AppsList = [
   "https://cursor-splash.squidly.com.au",
   "https://starfin-adventure.squidly.com.au",
   "https://v3.squidly.com.au/AppsDev/Lamp",
+  // "http://127.0.0.1:37374/AppsDev/Lamp", // Local development URL (served by VSCode Live Server)
   "http://127.0.0.1:5500",
   "http://127.0.0.1:5501",
 ];
@@ -461,6 +462,16 @@ export default class Apps extends Features {
 
     this._iframeSettingsListeners.set(path, handler);
     this.session.settings.addEventListener("change", handler);
+  }
+
+  _message_speak(e) {
+    const utterance = e.data.utterance;
+    this.session.text2speech.speak(utterance);
+  }
+
+  _message_loadUtterances(e) {
+    const utterances = e.data.utterances;
+    this.session.text2speech.loadUtterances(utterances);
   }
 
   _sendSessionInfoUpdate() {

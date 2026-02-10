@@ -71,6 +71,7 @@ export class LampAction extends AccessEvent {
         const action = lampButton.actions.split(" ")[0];
         super(action, originalEvent, {bubbles: true});
         this.b = lampButton
+        this.utterance = (lampButton.message || "").trim();
     }
 }
 
@@ -87,6 +88,7 @@ class LampIcon extends GridIcon {
                 }
             }
         }, "lamp-row-" + opts.position[1])
+
 
         
         let color = opts.style?.body_color || 0xFFFFFF;
@@ -142,11 +144,13 @@ class LampWindow extends SvgPlus {
             "C8": ({b}) => {
                 this.page = b.linked_page;
                 this.typeMode = this.page;
-                SquidlyAPI.firebaseSet("value3", this.page);
+                SquidlyAPI.firebaseSet("value2", this.page);
             },
-            "C10": ({b}) => {
+            "C10": ({b, utterance}) => {
+                SquidlyAPI.speak(utterance)
                 this.addText(b.message);
                 this.page = this.typeMode || 1;
+                SquidlyAPI.firebaseSet("value2", this.page);
             },
             "C42": ({b}) => this.addText(b.message),
             "C43": e => this.deleteWord(),
@@ -171,9 +175,10 @@ class LampWindow extends SvgPlus {
         })
         SquidlyAPI.firebaseOnValue("value2", value => {
             this.page = value || 1;
+            console.log("Page set to", this.page)
         })
         SquidlyAPI.firebaseOnValue("value3", value => {
-            this.typeMode = value || "";
+            this.typeMode = value || 1;
         });
     }
    
@@ -227,7 +232,6 @@ class LampWindow extends SvgPlus {
 
     set page(page) {
         if (this.page !== page && page in LampPages) {
-            SquidlyAPI.firebaseSet("value2", page);
             this._page = page;
             if (page == 1) {
                 if ((this.typeMode || 1) !== 1) 
@@ -238,9 +242,14 @@ class LampWindow extends SvgPlus {
             this.clear();
             let buttons = [...LampPages[page].buttons];
             buttons.sort((a, b) => a.position[1] - b.position[1] || a.position[0] - b.position[0]);
+
+            let utterances = [];
             for (let button of buttons) {
+                utterances.push((button.message || "").trim())
                 this.layout.add(new LampIcon(button), button.position[1], button.position[0]);
             }
+            utterances = utterances.filter(u => u);
+            SquidlyAPI.loadUtterances(utterances)
         } 
     }
 
