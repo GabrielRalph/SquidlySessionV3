@@ -165,13 +165,11 @@ export default class Apps extends Features {
     this.LISTENER_RATE_LIMIT = 10; // Max new listeners per second per app
     this.MAX_BYTES = 1024 * 5; // Max bytes per Firebase write (5KB)
     this.MAX_KEYS = 100; // Max unique keys per app
-    this.DEBOUNCE_DELAY = 200; // Ms to debounce rapid writes to same key
 
     this._activeFirebaseListeners = new Map(); // Track active firebase listeners to clear on close
     this._writeCount = 0;
     this._listenerCount = 0;
     this._lastRateReset = Date.now();
-    this._debouncedSets = new Map(); // For debouncing rapid writes to same key
   }
 
   async open() {
@@ -265,12 +263,6 @@ export default class Apps extends Features {
     }
     this._activeFirebaseListeners.clear();
 
-    // Clear debounce timers
-    for (const timer of this._debouncedSets.values()) {
-      clearTimeout(timer);
-    }
-    this._debouncedSets.clear();
-
     // Reset counters
     this._writeCount = 0;
     this._listenerCount = 0;
@@ -346,18 +338,7 @@ export default class Apps extends Features {
     // [Rate Limit] Check write frequency
     if (!this._checkRateLimit("write")) return;
 
-    // [Debounce] Throttle updates to the same key (500ms window)
-    if (this._debouncedSets.has(path)) {
-      clearTimeout(this._debouncedSets.get(path));
-    }
-
-    this._debouncedSets.set(
-      path,
-      setTimeout(() => {
-        this._debouncedSets.delete(path);
-        this._performFirebaseSet(path, value, appName);
-      }, this.DEBOUNCE_DELAY),
-    );
+    this._performFirebaseSet(path, value, appName);
   }
 
   _performFirebaseSet(path, value, appName) {
