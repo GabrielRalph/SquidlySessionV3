@@ -160,7 +160,7 @@ export default class Apps extends Features {
     this._appIcons = new Map();
 
     // RESOURCE LIMITS
-    this.MAX_LISTENERS = 50; // Max active listeners per app
+    this.MAX_LISTENERS = 100; // Max active listeners per app
     this.WRITE_RATE_LIMIT = 20; // Max writes per second
     this.LISTENER_RATE_LIMIT = 10; // Max new listeners per second per app
     this.MAX_BYTES = 1024 * 5; // Max bytes per Firebase write (5KB)
