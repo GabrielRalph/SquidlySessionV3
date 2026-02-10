@@ -163,6 +163,9 @@ export default class Apps extends Features {
     this.MAX_LISTENERS = 50; // Max active listeners per app
     this.WRITE_RATE_LIMIT = 20; // Max writes per second
     this.LISTENER_RATE_LIMIT = 10; // Max new listeners per second per app
+    this.MAX_BYTES = 1024 * 5; // Max bytes per Firebase write (5KB)
+    this.MAX_KEYS = 100; // Max unique keys per app
+    this.DEBOUNCE_DELAY = 200; // Ms to debounce rapid writes to same key
 
     this._activeFirebaseListeners = new Map(); // Track active firebase listeners to clear on close
     this._writeCount = 0;
@@ -353,7 +356,7 @@ export default class Apps extends Features {
       setTimeout(() => {
         this._debouncedSets.delete(path);
         this._performFirebaseSet(path, value, appName);
-      }, 200), // 200ms debounce
+      }, this.DEBOUNCE_DELAY),
     );
   }
 
@@ -367,9 +370,9 @@ export default class Apps extends Features {
       // If this is a new key (not in registry)
       if (!usedKeys.has(path)) {
         // Check limit
-        if (usedKeys.size >= 100) {
+        if (usedKeys.size >= this.MAX_KEYS) {
           console.log(
-            `Firebase set failed: Too many keys in app "${appName}" (${usedKeys.size}/100)`,
+            `Firebase set failed: Too many keys in app "${appName}" (${usedKeys.size}/${this.MAX_KEYS})`,
           );
           return;
         }
@@ -388,12 +391,10 @@ export default class Apps extends Features {
         return;
       }
 
-      const MAX_BYTES = 1024 * 5; // TODO: 5KB for now, evaluate before changing
-
       let serialized = JSON.stringify(value);
       const encoder = new TextEncoder();
       // Check if the serialized value exceeds the maximum size
-      if (encoder.encode(serialized).length > MAX_BYTES) {
+      if (encoder.encode(serialized).length > this.MAX_BYTES) {
         console.log("Firebase set failed: value is too large");
         return;
       }
