@@ -614,7 +614,9 @@ export class SquidlySessionElement extends ShadowElement {
 
   async initialiseKeyboardShortcuts() {
     window.addEventListener("keydown", (e) => {
-      let notInInput = document.activeElement === document.body;
+      let notInInput =
+        document.activeElement === document.body ||
+        document.activeElement?.tagName === "IFRAME";
       let validKey = e.key in this.keyboardShortcuts;
       let enabled = this.settings.get(
         `${this.sdata.me}/keyboardShortcuts/${e.key}`,
