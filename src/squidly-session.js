@@ -112,6 +112,14 @@ function setLoadState(str, state, message) {
   logState();
 }
 
+function getDeepActiveElement() {
+  let element = document.activeElement;
+  while (element && element.shadowRoot && element.shadowRoot.activeElement) {
+    element = element.shadowRoot.activeElement;
+  }
+  return element;
+}
+
 async function initialiseFirebaseUser() {
   setLoadState("firebase", 0, "Connecting to database");
   return new Promise((r) => {
@@ -614,9 +622,8 @@ export class SquidlySessionElement extends ShadowElement {
 
   async initialiseKeyboardShortcuts() {
     window.addEventListener("keydown", (e) => {
-      let notInInput =
-        document.activeElement === document.body ||
-        document.activeElement?.tagName === "IFRAME";
+      let active = getDeepActiveElement();
+      let notInInput = active === document.body || active?.tagName === "IFRAME";
       let validKey = e.key in this.keyboardShortcuts;
       let enabled = this.settings.get(
         `${this.sdata.me}/keyboardShortcuts/${e.key}`,
