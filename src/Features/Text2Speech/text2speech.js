@@ -240,8 +240,6 @@ export default class Text2Speech extends Features {
             throw "Invalid voice name";
         }
         await changeVoice(voiceName);
-        console.log("voice changed to " + voiceName);
-        
     }
 
     /**
@@ -323,7 +321,7 @@ export default class Text2Speech extends Features {
             // If the setting change petains to this user
             if (user == this.sdata.me){
                 let isSettingsInLanguage = this.session.currentOpenFeature === "settings" && this.session.settings.openPath.endsWith("languages");
-                console.log("isSettingsInLanguage", isSettingsInLanguage);
+
                 // If the setting is in languages group
                 if (group == "languages") {
 
