@@ -2,6 +2,45 @@ function notString(value) {
     return typeof value !== "string" || value.trim() === "";
 }
 
+class EventTreeNode {
+    constructor(parent) {
+        this._parent = parent;
+        this._eventHandlers = {};
+    }
+
+    _callEvent(name, ...args) {
+        if (this.onUpdate instanceof Function) {
+            let fname = "on" + name[0].toUpperCase() + name.slice(1)
+            if (this[fname] instanceof Function) {
+                this[fname](...args);
+            }
+            for (let handler of this._eventHandlers[name] || []) {
+                handler(...args);
+            }
+        }
+        if (this._parent) {
+            this._parent._callEvent(name, ...args);
+        }
+    }
+
+    addEventListener(name, cb) {
+         if (cb instanceof Function) {
+            if (!(name in this._eventHandlers)) {
+                this._eventHandlers[name] = new Set();
+            }
+            this._eventHandlers[name].add(cb)
+        }
+    }
+    
+    removeEventListener(name, cb) {
+        if (cb instanceof Function && name in this._eventHandlers) {
+            this._eventHandlers[name].delete(cb);
+        }
+    }
+
+}
+
+
 
 /**
  * @typedef {Object} MenuItemOptions
@@ -16,19 +55,22 @@ function notString(value) {
  * @property {MenuItemOptions[]} subMenu
  */
 
-export class MenuItem {
+export class MenuItem extends EventTreeNode {
     constructor(options, menu) {
         if (typeof options !== "object" || options === null) {
             throw new Error("MenuItem options must be an object");
         }
-        this._callUpdate = () => {};
-
+        super(menu);
         this._menu = menu;
         for (let prop of MenuItem.iconProperties) {
             this[prop] = options[prop];
         }
 
         this._callUpdate = menu._callUpdate.bind(menu);
+    }
+
+    _callUpdate() {
+        this._callEvent("update", this);
     }
 
     remove() {
@@ -159,17 +201,17 @@ export class MenuItem {
     }
 }
 
-export class Menu {
-    constructor(items) {
+export class Menu extends EventTreeNode {
+    constructor(items, parent) {
+        super(parent);
         this._itemsByKey = {};
         this._itemsList = [];
         this.addItems(items || []);
+
     }
 
     _callUpdate() {
-        if (this.onUpdate instanceof Function) {
-            this.onUpdate(this);
-        }
+        this._callEvent("update", this);
     }
 
     _addItem(options) {
