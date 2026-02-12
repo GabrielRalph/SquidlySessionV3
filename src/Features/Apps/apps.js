@@ -8,6 +8,8 @@ import { AccessButton } from "../../Utilities/Buttons/access-buttons.js";
 const AppsList = [
   "https://cursor-splash.squidly.com.au",
   "https://starfin-adventure.squidly.com.au",
+  "https://v3.squidly.com.au/AppsDev/Lamp",
+  // "http://127.0.0.1:37374/AppsDev/Lamp", // Local development URL (served by VSCode Live Server)
   "http://127.0.0.1:5500",
   "http://127.0.0.1:5501",
 ];
@@ -63,45 +65,58 @@ class AppsFrame extends OccupiableWindow {
       },
     });
 
-    this.grid = this.createChild(
-      GridLayout,
-      {
-        style: {
-          position: "absolute",
-          top: "var(--gap)",
-          left: "var(--gap)",
-          right: "var(--gap)",
-          bottom: "var(--gap)",
-        },
-      },
-      4,
-      5,
-    );
+    this.setGridSize(4, 5);
+
     this.search = this.createChild(QuizSearch, {
       style: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
     });
+  }
 
-    let closeIcon = new GridIcon(
-      {
-        symbol: "close",
-        displayValue: "Exit",
-        type: "action",
-        events: {
-          "access-click": async (e) => {
-            await this.feature.close();
-            // Release toolbar after closing
-            this.feature.session.openWindow("default");
+  setGridSize(rows, cols) {
+    rows = Math.max(1, Math.min(20, rows || 1));
+    cols = Math.max(1, Math.min(20, cols || 1));
+
+    this.nRows = rows;
+    this.nCols = cols;
+
+    let grid = new GridLayout(rows, cols);
+    grid.styles = {
+      position: "absolute",
+      top: "var(--gap)",
+      left: "var(--gap)",
+      right: "var(--gap)",
+      bottom: "var(--gap)",
+    };
+    let closeIcon = grid.add(
+      new GridIcon(
+        {
+          symbol: "close",
+          displayValue: "Exit",
+          type: "action",
+          events: {
+            "access-click": async (e) => {
+              await this.feature.close();
+              // Release toolbar after closing
+              this.feature.session.openWindow("default");
+            },
           },
         },
-      },
-      "apps",
+        "apps",
+      ),
+      0,
+      0,
     );
+
     closeIcon.styles = {
       "--shadow-color": "transparent",
       "pointer-events": "all",
     };
-
-    this.grid.add(closeIcon, 0, 0);
+    if (this.grid) {
+      this.grid.replaceWith(grid);
+    } else {
+      this.appendChild(grid);
+    }
+    this.grid = grid;
   }
 
   // Set iframe src or srcdoc
@@ -143,6 +158,18 @@ export default class Apps extends Features {
     this._iframeSettingsListeners = new Map();
     /** @type {Map<string, GridIcon>} */
     this._appIcons = new Map();
+
+    // RESOURCE LIMITS
+    this.MAX_LISTENERS = 100; // Max active listeners per app
+    this.WRITE_RATE_LIMIT = 20; // Max writes per second
+    this.LISTENER_RATE_LIMIT = 20; // Max listeners per second per app
+    this.MAX_BYTES = 1024 * 5; // Max bytes per Firebase write (5KB)
+    this.MAX_KEYS = 100; // Max unique keys per app
+
+    this._activeFirebaseListeners = new Map(); // Track active firebase listeners to clear on close
+    this._writeCount = 0;
+    this._listenerCount = 0;
+    this._lastRateReset = Date.now();
   }
 
   async open() {
@@ -172,6 +199,9 @@ export default class Apps extends Features {
     }
     this._iframeAccessButtons.clear();
 
+    // Clear all active firebase listeners
+    this._clearAppListeners();
+
     // Remove settings listeners registered by iframe
     for (const [path, handler] of this._iframeSettingsListeners) {
       this.session.settings.removeEventListener("change", handler);
@@ -190,10 +220,52 @@ export default class Apps extends Features {
 
     await this.appFrame.setSrc("about:blank");
     if (idx >= 0 && idx < this.appDescriptors.length) {
+      this.appFrame.setGridSize(4, 5);
       let app = this.appDescriptors[idx];
+      this._clearAppListeners(); // Ensure clean state before loading
       await this.appFrame.setSrc(app.html, true);
       this._sendSessionInfoUpdate();
     }
+  }
+
+  _checkRateLimit(type) {
+    const now = Date.now();
+    if (now - this._lastRateReset > 1000) {
+      this._writeCount = 0;
+      this._listenerCount = 0;
+      this._lastRateReset = now;
+    }
+
+    if (type === "write") {
+      this._writeCount++;
+      if (this._writeCount > this.WRITE_RATE_LIMIT) {
+        console.warn(
+          `[Rate Limit] Write limit exceeded (${this.WRITE_RATE_LIMIT}/sec). Request dropped.`,
+        );
+        return false;
+      }
+    } else if (type === "listener") {
+      this._listenerCount++;
+      if (this._listenerCount > this.LISTENER_RATE_LIMIT) {
+        console.warn(
+          `[Rate Limit] Listener creation limit exceeded (${this.LISTENER_RATE_LIMIT}/sec). Request dropped.`,
+        );
+        return false;
+      }
+    }
+    return true;
+  }
+
+  _clearAppListeners() {
+    // Unsubscribe from all tracked Firebase listeners
+    for (const [path, unsubscribe] of this._activeFirebaseListeners) {
+      if (typeof unsubscribe === "function") unsubscribe();
+    }
+    this._activeFirebaseListeners.clear();
+
+    // Reset counters
+    this._writeCount = 0;
+    this._listenerCount = 0;
   }
 
   /**
@@ -250,10 +322,26 @@ export default class Apps extends Features {
     // Extract app name from path (first segment, e.g., "Starfin Adventure/score" → "Starfin Adventure")
     const appName = path.split("/")[0];
     if (!appName) {
-      console.log("Firebase set failed: Invalid path (no app name)");
+      console.warn("Firebase set failed: Invalid path (no app name)");
       return;
     }
 
+    // [Security] Verify app name
+    const currentApp = this.appDescriptors?.[this.currentAppIndex];
+    if (currentApp && currentApp.name !== appName) {
+      console.warn(
+        `[Security] Blocked attempt to write to app "${appName}" from app "${currentApp.name}"`,
+      );
+      return;
+    }
+
+    // [Rate Limit] Check write frequency
+    if (!this._checkRateLimit("write")) return;
+
+    this._performFirebaseSet(path, value, appName);
+  }
+
+  _performFirebaseSet(path, value, appName) {
     const registryPath = `appmeta/${appName}/registry`;
 
     // Check registry to enforce key limit
@@ -263,9 +351,9 @@ export default class Apps extends Features {
       // If this is a new key (not in registry)
       if (!usedKeys.has(path)) {
         // Check limit
-        if (usedKeys.size >= 100) {
+        if (usedKeys.size >= this.MAX_KEYS) {
           console.log(
-            `Firebase set failed: Too many keys in app "${appName}" (${usedKeys.size}/100)`,
+            `Firebase set failed: Too many keys in app "${appName}" (${usedKeys.size}/${this.MAX_KEYS})`,
           );
           return;
         }
@@ -284,12 +372,10 @@ export default class Apps extends Features {
         return;
       }
 
-      const MAX_BYTES = 1024 * 5; // TODO: 5KB for now, evaluate before changing
-
       let serialized = JSON.stringify(value);
       const encoder = new TextEncoder();
       // Check if the serialized value exceeds the maximum size
-      if (encoder.encode(serialized).length > MAX_BYTES) {
+      if (encoder.encode(serialized).length > this.MAX_BYTES) {
         console.log("Firebase set failed: value is too large");
         return;
       }
@@ -301,34 +387,67 @@ export default class Apps extends Features {
   _message_firebaseOnValue(e) {
     let path = "appdata/" + e.data.path;
 
-    this.sdata.onValue(path, (value) => {
+    // [Resource Limit] Check max listeners
+    if (this._activeFirebaseListeners.size >= this.MAX_LISTENERS) {
+      console.warn(
+        `[Resource Limit] Max listeners reached (${this.MAX_LISTENERS}). Request ignored.`,
+      );
+      return;
+    }
+
+    // [Rate Limit] Check creation frequency
+    if (!this._checkRateLimit("listener")) return;
+
+    // Remove existing listener for this path if any (avoid dupes)
+    if (this._activeFirebaseListeners.has(path)) {
+      this._activeFirebaseListeners.get(path)(); // Unsubscribe
+    }
+
+    const unsubscribe = this.sdata.onValue(path, (value) => {
       this.appFrame.sendMessage({
         mode: "firebaseOnValueCallback",
         path: e.data.path,
         value: value,
       });
     });
+
+    this._activeFirebaseListeners.set(path, unsubscribe);
   }
 
   _message_setIcon(e) {
-    let icon = new GridIcon(e.data.options);
-    icon.styles = {
-      "--shadow-color": "transparent",
-      "pointer-events": "all",
-      ...(e.data.options.styles || {}),
-    };
-    this.appFrame.grid.add(icon, e.data.x, e.data.y);
-    icon.events = {
-      "access-click": (event) => {
-        this.appFrame.sendMessage({
-          mode: "onIconClickCallback",
-          key: e.data.key,
-          value: { clickMode: event.clickMode },
-        });
-      },
-    };
-    // Track this icon so it can be cleared when switching apps or removed specifically
-    this._appIcons.set(e.data.key, icon);
+    const { x, y, options, key } = e.data;
+    const { nRows, nCols } = this.appFrame;
+    if (
+      typeof x === "number" &&
+      x < nCols &&
+      typeof y === "number" &&
+      y < nRows &&
+      (x > 0 || y > 0)
+    ) {
+      let icon = new GridIcon(options);
+      icon.styles = {
+        "--shadow-color": "transparent",
+        "pointer-events": "all",
+        ...(options.styles || {}),
+      };
+      this.appFrame.grid.add(icon, x, y);
+      icon.events = {
+        "access-click": (event) => {
+          this.appFrame.sendMessage({
+            mode: "onIconClickCallback",
+            key: key,
+            value: { clickMode: event.clickMode },
+          });
+        },
+      };
+
+      // Track this icon so it can be cleared when switching apps or removed specifically
+      this._appIcons.set(key, icon);
+    }
+  }
+
+  _message_setGridSize(e) {
+    this.appFrame.setGridSize(e.data.size[0], e.data.size[1]);
   }
 
   _message_removeIcon(e) {
@@ -374,7 +493,14 @@ export default class Apps extends Features {
     });
   }
   _message_setSettings(e) {
-    this.session.settings.setValue(e.data.path, e.data.value);
+    const { path, value } = e.data;
+    if (typeof path === "string" && path.startsWith(this.sdata.me + "/")) {
+      this.session.settings.setValue(path, value);
+    } else {
+      console.warn(
+        `[Security] Blocked attempt to set setting outside of user scope: ${path}`,
+      );
+    }
   }
 
   _message_debugLog(e) {
@@ -393,31 +519,58 @@ export default class Apps extends Features {
   }
 
   _message_getSettings(e) {
+    const { path, key } = e.data;
     console.log(
-      "Received getSettings request for path: " +
-        e.data.path +
-        ", key: " +
-        e.data.key,
+      "Received getSettings request for path: " + path + ", key: " + key,
     );
-    const value = this.session.settings.get(e.data.path);
+
+    // Enforce scope
+    if (typeof path !== "string" || !path.startsWith(this.sdata.me + "/")) {
+      console.warn(
+        `[Security] Blocked attempt to get setting outside of user scope: ${path}`,
+      );
+      // Optionally reply with null or error, or just ignore.
+      // Ignoring might hang the caller if they await, but replying null is safer.
+      e.source.postMessage(
+        {
+          mode: "getSettingsResponse",
+          key: key,
+          path: path,
+          value: null,
+          error: "Access Denied",
+        },
+        "*",
+      );
+      return;
+    }
+
+    const value = this.session.settings.get(path);
     console.log(
-      "Retrieved value: " + JSON.stringify(value) + " for path: " + e.data.path,
+      "Retrieved value: " + JSON.stringify(value) + " for path: " + path,
     );
     // Send the value back to the iframe
     e.source.postMessage(
       {
         mode: "getSettingsResponse",
-        key: e.data.key,
-        path: e.data.path,
+        key: key,
+        path: path,
         value: value,
       },
       "*",
     );
-    console.log("Sent response back to iframe with key: " + e.data.key);
+    console.log("Sent response back to iframe with key: " + key);
   }
 
   _message_addSettingsListener(e) {
     const path = e.data.path;
+
+    // Enforce scope
+    if (typeof path !== "string" || !path.startsWith(this.sdata.me + "/")) {
+      console.warn(
+        `[Security] Blocked attempt to listen to setting outside of user scope: ${path}`,
+      );
+      return;
+    }
 
     // Remove existing listener if found (cleanup for reloads)
     if (this._iframeSettingsListeners.has(path)) {
@@ -440,6 +593,16 @@ export default class Apps extends Features {
 
     this._iframeSettingsListeners.set(path, handler);
     this.session.settings.addEventListener("change", handler);
+  }
+
+  _message_speak(e) {
+    const utterance = e.data.utterance;
+    this.session.text2speech.speak(utterance);
+  }
+
+  _message_loadUtterances(e) {
+    const utterances = e.data.utterances;
+    this.session.text2speech.loadUtterances(utterances);
   }
 
   _sendSessionInfoUpdate() {

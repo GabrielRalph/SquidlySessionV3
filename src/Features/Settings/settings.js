@@ -518,7 +518,6 @@ export default class SettingsFeature extends Features {
         return devices;
     }
 
-
     async gotoPath(path) {
         if (typeof path === "string") {
             path = path.split("/");
@@ -533,6 +532,24 @@ export default class SettingsFeature extends Features {
         }
     }
 
+    chooseProfile(profileID) {
+        if (this.sdata.me === "host") {
+            this.sdata.set("profileID", profileID);
+        }
+    }
+
+    async createProfile(name) {
+        let id = null;
+        if (this.sdata.me === "host") {
+            id = await Settings.createProfile(this.sdata.hostUID, name);
+        }
+        return id;
+    }
+
+    get profiles() {
+        let profiles = Settings.getProfiles();
+        return profiles;
+    }
     
     get openPath() {
         return this._openPath.join("/");
@@ -554,7 +571,9 @@ export default class SettingsFeature extends Features {
         this.settingsWindow.settings = settingsLayout;
 
         if (this.sdata.me === "host") {
-            Settings.watchProfiles(hostUID, ()=>{});
+            Settings.watchProfiles(hostUID, (profiles) => {
+                this.dispatchEvent( new Event("profiles-change"))
+            });
         }
 
         // Listen to path changes

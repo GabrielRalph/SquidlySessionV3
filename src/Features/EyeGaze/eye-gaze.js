@@ -202,16 +202,7 @@ export default class EyeGazeFeature extends Features {
             "close": (e) => e.waitFor(this._showTestScreen(null)),
         }
         
-
-        // this.restButton.button.addEventListener("access-click", (e) => {
-        //     let bool = !this.eyeDataDisabled;
-        //     this.hideEyeData(bool, e);
-        // });
-
-        // this.restWatcher = new TransitionVariable(0, 1, (v) => {
-        //     this.session.toggleRestBar(v==1);
-        // });
-
+  
         // Update cursor positions
         this.addEyeDataListener((eyeP, bbox, hidden) => {
             let key = this.sdata.me + "-eyes";
@@ -255,11 +246,6 @@ export default class EyeGazeFeature extends Features {
     }
     get eyeGazeOn() { return this._eyeGazeOn; }
 
-    // disableEyeGaze(user, bool) {
-    //     if (user == "host" || user == "participant") {
-    //         this.sdata.set(`disabled/${user}`, !!bool);
-    //     }
-    // }
 
     addEyeDataListener(cb) {
         if (cb instanceof Function) {
