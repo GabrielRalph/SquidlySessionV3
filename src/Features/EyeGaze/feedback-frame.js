@@ -202,9 +202,10 @@ export class FeedbackFrame extends SvgPlus {
      * @param {Number} error
      * @param {FaceLandmarks} points
      */
-    renderFaceAll(w, h, error, points) {
+    renderFaceAll(w, h, error, points, id) {
+        const irisSize = 1.2;
         let html = "";
-        let fill = `"hsl(${96*error}deg 90% 25%)"`;
+        let fill = `"hsl(${96*error}deg 90% 56% / 50%)"`;
         let stroke = `"hsl(${96*error}deg 90% 56%)"`;
 
         let eyeLeft= getEyePath(points, w, h, "eyes.left.outline", 1.4);
@@ -215,9 +216,15 @@ export class FeedbackFrame extends SvgPlus {
         let sizeL = points.get2D("eyes.left.top", w, h).dist(points.get2D("eyes.left.bottom", w, h)) * 1.4;
         let sizeR = points.get2D("eyes.right.top", w, h).dist(points.get2D("eyes.right.bottom", w, h)) * 1.4;
         
+        html += `<defs>
+            <clipPath id="cut-out-eyes-${id}">
+                <path d= "${eyeLeft + eyeRight}"></path>
+            </clipPath>
+        </defs>`
+
         for (let [size, v] of [[sizeL, points.get2D("eyes.left.pupil", w, h)], [sizeR, points.get2D("eyes.right.pupil", w, h)]]) {
             html += `<path fill=${stroke} transform = "translate(${v.x}, ${v.y}) scale(${0.5 * size/100})" d="M35.2-5.778C17.886-5.778,3.85-19.292,3.85-35.962c0-2.576.343-5.072.982-7.455.871-3.251-1.393-6.576-4.759-6.582-.024,0-.049,0-.073,0-29.49,0-53.017,25.53-49.685,55.694,2.53,22.902,21.091,41.462,43.993,43.991C24.471,53.016,50,29.489,50,0c0-.703-.017-1.402-.049-2.097-.153-3.312-3.293-5.611-6.496-4.759-2.628.699-5.394,1.077-8.254,1.077Z"/>`
-            html += `<circle stroke=${stroke} fill = "none" cx = "${v.x}" cy = "${v.y}" r = "${1.3*size/2}"></circle>`
+            html += `<circle stroke=${stroke} clip-path = "url(#cut-out-eyes-${id})" fill = "none" cx = "${v.x}" cy = "${v.y}" r = "${irisSize*size/2}"></circle>`
         }
         html += `<path fill =${fill} stroke-linejoin="round" stroke-width="1" stroke = ${stroke} d= "${face + eyeLeft + eyeRight + mouth}"></path>`
         
@@ -230,9 +237,8 @@ export class FeedbackFrame extends SvgPlus {
      * @param {Number} error
      * @param {FaceLandmarks} points
      */
-    renderFaceEyes(w, h, error, points) {
-        let html = "";
-        let fill = `"hsl(${96*error}deg 90% 25%)"`;
+    renderFaceEyes(w, h, error, points, id) {
+        let fill = `"hsl(${96*error}deg 90% 56% / 50%)"`;
         let stroke = `"hsl(${96*error}deg 90% 56%)"`;
 
         let eyeLeft = getEyePath(points, w, h, "eyes.left.outline", 1.4);
@@ -241,19 +247,31 @@ export class FeedbackFrame extends SvgPlus {
         let sizeL = points.get2D("eyes.left.top", w, h).dist(points.get2D("eyes.left.bottom", w, h)) * 1.4;
         let sizeR = points.get2D("eyes.right.top", w, h).dist(points.get2D("eyes.right.bottom", w, h)) * 1.4;
         
-        html += `<path fill =${fill} stroke-linejoin="round" d="${eyeLeft + eyeRight}"></path>
-        <defs>
-            <clipPath id="cut-out-eyes">
-                <path d= "${eyeLeft + eyeRight}"></path>
-            </clipPath>
-        </defs>`
+        // Add eyes fill with iris mask
+        let html = `<path mask="url(#remove-iris-mask-${id})" fill=${fill}  d="${eyeLeft + eyeRight}"></path>`
 
+        let irises = "";
         for (let [size, v] of [[sizeL, points.get2D("eyes.left.pupil", w, h)], [sizeR, points.get2D("eyes.right.pupil", w, h)]]) {
-            html += `<circle fill = "black" clip-path = "url(#cut-out-eyes)" stroke=${stroke} fill = "none" cx = "${v.x}" cy = "${v.y}" r = "${1.3*size/2}"></circle>`
+            irises += `<circle fill = "black" cx = "${v.x}" cy = "${v.y}" r = "${1.3*size/2}"></circle>`
+            html += `<circle clip-path = "url(#cut-out-eyes-${id})" stroke=${stroke} fill = "none" cx = "${v.x}" cy = "${v.y}" r = "${1.3*size/2}"></circle>`
             html += `<path fill=${stroke} transform = "translate(${v.x}, ${v.y}) scale(${0.5 * size/100})" d="M35.2-5.778C17.886-5.778,3.85-19.292,3.85-35.962c0-2.576.343-5.072.982-7.455.871-3.251-1.393-6.576-4.759-6.582-.024,0-.049,0-.073,0-29.49,0-53.017,25.53-49.685,55.694,2.53,22.902,21.091,41.462,43.993,43.991C24.471,53.016,50,29.489,50,0c0-.703-.017-1.402-.049-2.097-.153-3.312-3.293-5.611-6.496-4.759-2.628.699-5.394,1.077-8.254,1.077Z"/>`
         }
-        html += `<path fill = "none" stroke =${stroke} stroke-linejoin="round" stroke-width="1" d="${eyeLeft + eyeRight}"></path>`
 
+        // // Add eyes outline
+        html += ``
+
+        html = `
+        <defs>
+            <clipPath id="cut-out-eyes-${id}">
+                <path d= "${eyeLeft + eyeRight}"></path>
+            </clipPath>
+            <mask id="remove-iris-mask-${id}">
+                <rect x='0' y='0' width='${w}' height='${h}' fill='white'></rect>
+                ${irises}
+            </mask>
+        </defs>
+        ${html}
+        <path fill = "none" stroke =${stroke} stroke-linejoin="round" stroke-width="1" d="${eyeLeft + eyeRight}"></path>`;
         
         return html;
     }
@@ -302,12 +320,12 @@ export class FeedbackFrame extends SvgPlus {
                 if (this.avg) {
                     op = this.avg.averageDistance(points) * 40;
                     op =(1 - (op > 1 ? 1 : op)) ** 0.5;
-                    html += this.renderFace(width, height, 1, this.avg);
+                    html += this.renderFace(width, height, 1, this.avg, 2);
                 }
 
                 html += this.renderThermometer(width - (bh-mx)/2, (bh), height - (bh), op, bh/3);
 
-                html += this.renderFace(width, height, op, points)
+                html += this.renderFace(width, height, op, points, 1)
                 
                 svgRenders.innerHTML = html;
                 if (this.parentElement) {
