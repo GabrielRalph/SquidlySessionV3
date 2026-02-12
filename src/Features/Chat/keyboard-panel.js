@@ -3,7 +3,7 @@ import { GridCard, GridIcon, GridLayout } from "../../Utilities/Buttons/grid-ico
 import { AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
 import { Rotater } from "../../Utilities/rotater.js";
 import { HideShowTransition } from "../../Utilities/hide-show.js";
-import { completeWord, completeWordSync, topFourWords } from "./algorithm/index.js";
+import { completeWord, completeWordSync, predictNextWordSync, topFourWords } from "./Algorithm/index.js";
 // import { LetterIcon, LettersIcon, LetterLayout } from "./letter-selector.js";
 import { LetterIcon, LettersIcon } from "../../Utilities/search.js";
 
@@ -51,7 +51,7 @@ class WordSuggestionIcon extends GridIcon {
             type: "adjective",
             events: {
                 "access-click": (e) => {
-                    const event = new AccessEvent("word-suggestion", e, {bubbles: true});
+                    const event = new AccessEvent("word-suggestion", e, { bubbles: true });
                     event.detail = { word };
                     this.dispatchEvent(event);
                 }
@@ -61,7 +61,7 @@ class WordSuggestionIcon extends GridIcon {
         this.word = word;
         this.index = index;
         this.styles = {
-            
+
         };
     }
 }
@@ -73,7 +73,7 @@ class WordSuggestions extends GridLayout {
     }
 
     set suggestions(words) {
-         if (!Array.isArray(words) || words.length === 0) {
+        if (!Array.isArray(words) || words.length === 0) {
             words = topFourWords;
         }
         this.innerHTML = "";
@@ -87,16 +87,18 @@ export class ChatInput extends GridCard {
     constructor(events) {
         super("search-bar", "normal");
 
-        this.input = this.content.createChild("textarea", {events: {
-            "focusin": (e) => {
-                this.toggleAttribute("hover", true)
-            },
-            "focusout": (e) => {
-                this.toggleAttribute("hover", false)
+        this.input = this.content.createChild("textarea", {
+            events: {
+                "focusin": (e) => {
+                    this.toggleAttribute("hover", true)
+                },
+                "focusout": (e) => {
+                    this.toggleAttribute("hover", false)
 
-            },
-            ...events
-        }})
+                },
+                ...events
+            }
+        })
         this.input.setAttribute("placeholder", "Type...");
 
     }
@@ -117,8 +119,8 @@ export class KeyboardPanel extends HideShowTransition {
         this.feature = feature;
 
         // ~~~~~~~ Build Element ~~~~~~~
-        const rootGrid = this.createChild(GridLayout, {class: "keyboard-panel-grid"}, 3, 5); 
-        
+        const rootGrid = this.createChild(GridLayout, { class: "keyboard-panel-grid" }, 3, 5);
+
         // ~~~~~ Build top panel ~~~~~
         // ~~ Back Button ~~
         this.backButton = rootGrid.add(new GridIcon({
@@ -133,8 +135,8 @@ export class KeyboardPanel extends HideShowTransition {
             symbol: "space",
             displayValue: "Space",
             type: "action",
-            events: { 
-                "access-click": (e) => this.dispatchEvent(new LetterEvent("space", e)) 
+            events: {
+                "access-click": (e) => this.dispatchEvent(new LetterEvent("space", e))
             }
         }, "chat"), 0, 1)
 
@@ -156,8 +158,8 @@ export class KeyboardPanel extends HideShowTransition {
         this.rotater = rootGrid.add(new Rotater(), 1, 0, 2, 4);
 
         // ~~~~ Build default layout ~~~~
-        let defaultLayout = new GridLayout(2, 5); 
-        
+        let defaultLayout = new GridLayout(2, 5);
+
         // ~~ Letters Icons ~~
         defaultLayout.add(new LettersIcon("atoi", "chat"), 0, 0);
         defaultLayout.add(new LettersIcon("jtor", "chat"), 1, 0);
@@ -211,10 +213,10 @@ export class KeyboardPanel extends HideShowTransition {
      */
     async insertText(text) {
 
-         const {input} = this.chatInput;
+        const { input } = this.chatInput;
 
         const currentValue = input.value || '';
-       
+
         input.focus();
         const cursorPos = input.selectionStart ?? currentValue.length;
         const beforeCursor = currentValue.substring(0, cursorPos);
@@ -238,7 +240,7 @@ export class KeyboardPanel extends HideShowTransition {
      * @param {boolean} [immediate=false] - If true, set the content immediately without transition.
      */
     async setMode(mode, immediate = false) {
-        if (mode == "default" || typeof mode !== "string") { 
+        if (mode == "default" || typeof mode !== "string") {
             await this.rotater.setContent(this.defaultLayout, immediate);
             this.backButton.displayValue = "Keyboard";
             this.backButton.symbol = "downArrow";
@@ -259,10 +261,17 @@ export class KeyboardPanel extends HideShowTransition {
 
     /**
      * Update word suggestions based on current input.
+     * After space (next-word context): use predictNextWordSync. Otherwise: completeWordSync (partial word).
      */
     _updateWordSuggestions() {
         const currentInput = this.chatInput.value || '';
-        const suggestions = currentInput.length > 0 ? completeWordSync(currentInput, 4) : topFourWords;
+        let suggestions;
+        if (currentInput.length === 0 || currentInput.endsWith(' ')) {
+            suggestions = predictNextWordSync(currentInput, 4);
+        } else {
+            suggestions = completeWordSync(currentInput, 4);
+        }
+        if (!suggestions?.length) suggestions = topFourWords;
         this.wordSuggestions.suggestions = suggestions;
     }
 
@@ -270,21 +279,21 @@ export class KeyboardPanel extends HideShowTransition {
      * Handle back button click based on current mode.
      */
     async _onBackButton() {
-       if (this._mode === "default") {
+        if (this._mode === "default") {
             await this.hide();
-       } else {
+        } else {
             await this.setMode("default");
-       }
+        }
     }
 
-     /**
-     * Handle word suggestion click
-     * Replace the current incomplete word with the selected suggestion
-     * @param {string} word - The selected word
-     * @param {Event} e - The click event
-     */
+    /**
+    * Handle word suggestion click
+    * Replace the current incomplete word with the selected suggestion
+    * @param {string} word - The selected word
+    * @param {Event} e - The click event
+    */
     _addSuggestion(word) {
-        const {input} = this.chatInput;
+        const { input } = this.chatInput;
 
         const currentValue = input.value || '';
         const cursorPos = input.selectionStart ?? currentValue.length;

@@ -7,13 +7,12 @@
  * Algorithm implementation based on word frequency data.
  */
 
-import { words } from './words.js';
+import { words } from './Corpus/words.js';
 
 // Filter words with length > 2 (as per algorithm team's logic)
 // Cache the filtered words to avoid re-filtering on every call
 const wordsFiltered = words.filter(word => word.Word.length > 2);
 
-export const topFourWords = wordsFiltered.slice(0, 4).map(word => word.Word);
 /**
  * Completes a partially typed word
  * 
@@ -45,15 +44,9 @@ export function completeWordSync(partialWord, maxSuggestions = 6) {
     const usedLastWord = inputWords.pop();
     const lastWord = usedLastWord.toLowerCase();
 
-    // If no partial word, return empty array
+    // No partial word (e.g. input ends with space): next-word prediction is handled by word-prediction.js; return empty.
     if (!lastWord || lastWord.length === 0) {
-        if (inputWords.length > 0) {
-            const previousWord = inputWords.pop().toLowerCase();
-            const topFiveWords = wordsFiltered.slice(0, maxSuggestions + 1).map(word => word.Word).filter(word => word !== previousWord);
-            return topFiveWords.slice(0, maxSuggestions);
-
-        }
-        return wordsFiltered.slice(0, maxSuggestions).map(word => word.Word);
+        return [];
     }
 
     // Filter words that start with the partial word and are not the same word
