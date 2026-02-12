@@ -31,6 +31,17 @@ let sessionConnection = null;
 /** @type {SessionView} */
 let SessionView;
 
+/** @typedef {(string | number | boolean)} PrimitiveValue*/
+/** 
+ * @typedef {Object} LogOptions
+ * @property {PrimitiveValue} [value] - The new value associated with the log entry.
+ * @property {PrimitiveValue} [oldValue] - The old value associated with the log entry. 
+ *                                         This is optional but can be useful for tracking changes.
+ * @property {string} [note] - An optional note providing additional context about the log entry. 
+ *                             This can be used to store any extra information that might be relevant 
+ *                             for understanding the change being logged.
+*/
+
 const $$ = new WeakMap();
 
 const LoadBar = new SvgPlus("div");
@@ -157,6 +168,54 @@ export class SessionDataFrame extends FirebaseFrame {
       throw "Session not connected";
     }
     return sessionConnection.isActive(key);
+  }
+
+
+  /**
+   * Logs a change to the session logs in firebase. This will be used to display session history
+   * in the client profiles page.
+   * @param {string} key - The key for the log entry. This should be in the format "featureName.action"
+   * @param {LogOptions} options - Additional options for the log entry.
+   */
+  logChange(key, options = {}) {
+    if (typeof options !== "object" || options === null) options = {};
+    let {value, oldValue, note} = options;
+    [key, value, oldValue, note] = [key, value, oldValue, note].map(item => {
+      if (typeof item === "string" && item.length > 255) {
+        throw "Log values must be less than 255 characters";
+      } else if (typeof item === "object") {
+        throw "Log values must be strings or primitive values";
+      } else if (typeof item === "string" && item.length === 0) {
+        return null;
+      } else if (item === undefined) {
+        return null;
+      }
+      return item;
+    });
+
+
+    try{
+      throw new Error("Test");
+    } catch (e) {
+      let stack = e.stack.split("\n").slice(1).map(line => line.indexOf("firebase-frame.js") !== -1).filter(a => a);
+      if (stack.length > 0) {
+        throw "Log entries cannot be made from within a firebase callback. Please make log entries in response to a user event.";
+      }
+    }
+
+    if (key !== null) {
+      let logf = new FirebaseFrame(`session-data/${sessionConnection.sid}/logs`);
+      let data = {
+        time: Date.now(),
+        isHost: this.isHost,
+        key,
+        value,
+        oldValue,
+        note,
+      };
+      logf.pushSet(null, data);
+    }
+  
   }
 
   /** Get session data frame referenced at a child path
@@ -301,9 +360,10 @@ export class SquidlySessionElement extends ShadowElement {
 
   async openWindow(name) {
     if (name != this.occupier) {
-      let nextOccupier =
-        name in this.occupiables ? this.occupiables[name] : null;
+      let nextOccupier = name in this.occupiables ? this.occupiables[name] : null;
       name = name in this.occupiables ? name : null;
+
+      
 
       let proms = [
         this.currentOccupier instanceof Element
@@ -586,6 +646,7 @@ export class SquidlySessionElement extends ShadowElement {
     updateSidePanel(this.settings.get(`${this.sdata.me}/display/layout`));
 
     return new Promise((r) => {
+
       this.sdata.onValue("occupier", async (name) => {
         await this.openWindow(name);
         r();
@@ -598,7 +659,9 @@ export class SquidlySessionElement extends ShadowElement {
     if (wasSwitching) {
       await this.accessControl.endSwitching();
     }
+    this.sdata.logChange("window.open", {value: this.occupier === window ? "default" : window, note: "key"});
     await this.openWindow(this.occupier === window ? "default" : window);
+    
     if (wasSwitching) this.accessControl.startSwitching();
   }
 
@@ -790,6 +853,7 @@ export class SquidlySession extends SquildyFeatureProxy {
   }
 
   async openWindow(name) {
+    $$.get(this).sdata.logChange("window.open", {value: name});
     await $$.get(this).openWindow(name);
   }
 

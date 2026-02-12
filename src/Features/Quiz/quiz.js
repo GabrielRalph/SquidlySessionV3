@@ -489,17 +489,20 @@ class QuizWindow extends OccupiableWindow {
                 if (e.value == null) {
                     e.waitFor(feature.session.openWindow("default"));
                     
-                // Otherwise, if the search value is a quiz, start the quiz
+                    // Otherwise, if the search value is a quiz, start the quiz
                 } else {
+                    const {quiz} = e.value;
+                    console.log("Selected quiz", quiz);
                     let state = {
                         state: {
-                        quiz: e.value.quiz,
-                        quizID: e.value.quiz.qid,
+                        quiz: quiz,
+                        quizID: quiz.qid,
                         index: -1,
                         locked: false,
                         actions: null,
                     } };
                     sdata.set(null, state);
+                    sdata.logChange("quiz.start", {value: quiz.qid, note: quiz.name});
                     this.quizView.state = state.state;
                     e.waitFor(this.search.hide(500));
                 }

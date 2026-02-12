@@ -1,9 +1,9 @@
 
 feedback-window {
-    display: flex;
-    gap: 1em;
-    flex-direction: column;
-    padding: 1em;
+    /* display: flex; */
+    /* gap: 1em; */
+    /* flex-direction: column; */
+    /* padding: 1em; */
     position: absolute;
     top: 0;
     left: 0;
@@ -12,8 +12,18 @@ feedback-window {
     background: var(--panel-color);
     pointer-events: all;
 }
+feedback-window .grid-icon {
+    --shadow-color: transparent;
+}
+feedback-window grid-layout {
+    position: absolute;
+    top: var(--gap);
+    left: var(--gap);
+    right: var(--gap);
+    bottom: var(--gap);
+}
 
-.header {
+/* .header {
     color: white;
     text-align: center;
     display: flex;
@@ -21,10 +31,11 @@ feedback-window {
     height: 20%;
     justify-content: space-evenly;
     align-items: center;
-}
+} */
 .header h1 {
     font-size: 2em;
     margin: 0;
+    line-height: 1.2;
 }
 .header .grid-icon {
     width: 20%;
@@ -89,9 +100,10 @@ feedback-widget[invalid] access-button {
 } */
 
 feedback-frame {
-    width: 100%;
-    height: 66.666%;
+    /* width: 100%; */
+    /* height: 66.666%; */
     background:#156082;
+    border: 3px solid #079ddb;
     border-radius:2em;
     overflow: hidden;
     display: flex;
@@ -111,13 +123,63 @@ feedback-frame svg {
 
 }
 
-feedback-frame .border {
-    fill: #156082;
+.border-norm {
+    stop-color: #156082;
+}
+.border-norm.end {
+    stop-opacity: 0;
 }
 
+.border-hit {
+    stop-color: rgb(188, 13, 13);
+}
+.border-hit.end {
+    stop-opacity: 0;
+}
+
+
+feedback-frame:not([disabled]) .f-overlay {
+    display: none;
+}
+
+.f-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    background: #201e1e;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.f-overlay h1 {
+    font-size: 1.25em;
+    max-width: 85%;
+    text-align: center;
+    padding: 0.5em 0.5em 1em 0.5em;
+    background: #201e1e;
+}
+
+.f-overlay::before {
+    content: " ";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 100%;
+    background: white;
+    transform: translate(-50%, -50%) rotate(330deg);
+    z-index: -1;
+}
+
+
+/* 
 feedback-frame .border[hit] {
     fill: rgb(188, 13, 13)
-}
+} */
 
 
 test-screen {

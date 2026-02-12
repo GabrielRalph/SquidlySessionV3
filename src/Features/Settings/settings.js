@@ -254,7 +254,7 @@ class SettingsWindow extends OccupiableWindow {
             this.searchWindow = this.createChild(ProfileSearchWindow, {events: {
                 "value": (e) => {
                     if (e.value) {
-                        settings._selectProfile(e.value.id);
+                        settings.chooseProfile(e.value.id);
                     }
                     e.waitFor(this.searchWindow.hide());
                 }
@@ -270,18 +270,18 @@ class SettingsWindow extends OccupiableWindow {
             let {icon} = e;
             let path = icon.path.join("/") + "/" + (icon.settingKey || icon.setting);
             let direction = icon.direction;
-            Settings.incrementValue(path, direction);
+            this.settingsFeature.incrementValue(path, direction);
         },
         "set-setting": (e) => {
             let {icon} = e;
             let path = icon.path.join("/") + "/" + (icon.settingKey || icon.setting);
             let value = icon.value;
-            Settings.setValue(path, value);
+            this.settingsFeature.setValue(path, value);
         },
         "toggle-setting": (e) => {
             let {icon} = e;
             let path = icon.path.join("/") + "/" + (icon.settingKey || icon.setting);
-            Settings.toggleValue(path);
+            this.settingsFeature.toggleValue(path);
         },
         "change-device": (e) => {
             let {icon} = e;
@@ -495,8 +495,16 @@ export default class SettingsFeature extends Features {
         return Settings.getValue(name);
     }
 
+    incrementValue(name, direction) {
+        this._applySettingsUpdate("incrementValue", name, direction);
+    }
+
     setValue(name, value) {
-        return Settings.setValue(name, value);
+        this._applySettingsUpdate("setValue", name, value);
+    }
+
+    toggleValue(name) {
+        this._applySettingsUpdate("toggleValue", name);
     }
 
     changeDevice(user, kind, deviceId) {
@@ -535,6 +543,7 @@ export default class SettingsFeature extends Features {
     chooseProfile(profileID) {
         if (this.sdata.me === "host") {
             this.sdata.set("profileID", profileID);
+            this.sdata.logChange("settings.profile", {value: profileID});
         }
     }
 
@@ -559,14 +568,24 @@ export default class SettingsFeature extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     
-    _selectProfile(profileID) {
-        this.sdata.set("profileID", profileID);
+    _applySettingsUpdate(method, path, ...args) {
+        if (method in Settings) {
+            let oldValue = Settings.getValue(path);
+            Settings[method](path, ...args);
+            let value = Settings.getValue(path);
+            if (oldValue !== value) {
+                let ops = {note: path, value, oldValue};
+                this.sdata.logChange("settings.value", ops);
+            }
+        }
     }
 
     async initialise() {
         let hostUID = this.sdata.hostUID;
-        Settings.initialise(hostUID);
-        await SettingsWindow.loadStyleSheets();
+        await Promise.all([
+            Settings.initialise(hostUID),
+            SettingsWindow.loadStyleSheets()
+        ]);
         let settingsLayout = await (await fetch(relURL("./settings-layout.json", import.meta))).json();
         this.settingsWindow.settings = settingsLayout;
 

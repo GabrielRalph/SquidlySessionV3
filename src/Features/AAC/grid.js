@@ -526,6 +526,7 @@ class AACGridBoard extends OccupiableWindow {
         if (item.type !== "topic" && item.type !== "action") {
             speakUtterance(item);
             this.output.addItem(item);
+            this.aacGrid.sdata.logChange("aac.word", {value: item.displayValue, note: event.clickMode});
         }
         if (Topics.isTopicItem(item.type)) {
             await this.setTopic(item.topicUID);

@@ -353,7 +353,6 @@ export function getQuiz(qid){
         quiz.ownerName = quiz_master.ownerName;
         quiz.qid = qid;
     }
-    console.log("getQuiz", qid, quiz);
     return quiz;
 }
 
@@ -401,7 +400,6 @@ export async function watchQuizes(callback) {
             let alreadyAdded = QID in QUIZES
             QUIZES[QID] = snapshot.val();
             if (!alreadyAdded) {
-                console.log(type, "add", QID, snapshot.val().name);
                 callUpdates();
             }
         }));
@@ -409,7 +407,6 @@ export async function watchQuizes(callback) {
         DATABASE_WATCHERS.push(onChildChanged(query, (snapshot) => {
             let QID = snapshot.key;
             QUIZES[QID] = snapshot.val();
-            console.log(type, "change", QID, snapshot.val().name);
             callUpdates();
         }));
 
@@ -417,7 +414,6 @@ export async function watchQuizes(callback) {
             let QID = snapshot.key;
             if (QID in QUIZES) {
                 delete QUIZES[QID]
-                console.log(type, "delete", QID, snapshot.val().name);
                 callUpdates();
             }
         }));

@@ -56,11 +56,8 @@ class QuizIcon extends GridIcon {
         this.toggleAttribute("emphasize", icon.correct === true)
         this.toggleAttribute("action", icon.isAction === true)
 
-        console.log("quiz icon", icon);
         if (speakOnClick) {
             this.utterance = icon.utterance || icon.title;
-            console.log("adding speak");
-            
             this.addEventListener("access-click", this.speak.bind(this));
         }
     }
@@ -94,7 +91,6 @@ export class Answers extends SvgPlus {
 
     /** @param {Answer[]} answers*/
     constructor(answers){
-        console.log("Answers", answers);
         super("div");
         this.class = "answers";
 

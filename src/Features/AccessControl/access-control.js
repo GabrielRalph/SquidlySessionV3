@@ -240,6 +240,13 @@ export default class AccessControl extends Features {
     constructor(sesh, sdata) {
         super(sesh, sdata);
         this.overlay = new ControlOverlay();
+
+        this.overlay.addEventListener("sv-mousedown", (e) => {
+            if (this.isSwitching) {
+                this.endSwitching();
+            }
+        })
+
         this.session.toolBar.addMenuItem("access", {
             name: "switch",
             index: 180,
@@ -253,14 +260,13 @@ export default class AccessControl extends Features {
             }
         })
       
-        window.onkeydown =  (e) => {
+        window.addEventListener("keydown", (e) => {
             if (e.key == " ") {
                 this.overlay.selectSwitch();
             } else if (e.key == "Backspace") {
                 this.overlay.cancelSwitch();
             }
-        }
-
+        });
     }
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -291,10 +297,12 @@ export default class AccessControl extends Features {
         // If switching is already in process return
         if (this._isSwitching) return;
 
+        this.sdata.logChange("access.switch", {value: "start"});
+
         // Fix the toolbar, hide the mouse cursor 
         // and bring up the toolbar.
         this._isSwitching = true;
-        this.overlay.hideMouse = true;
+        // this.overlay.hideMouse = true;
         this.session.toolBar.fixToolbar(true);
         if (!this.session.isOccupied && !this.session.toolBar.isRingShown) {
             await this.session.togglePanel("toolBarArea", true);
@@ -311,7 +319,7 @@ export default class AccessControl extends Features {
                 /** @type {AccessButton[]} */
                 let selectedGroup = null;
                 /** @type {string} */
-                let selectedGroupName = null;
+                let selectedGroupName;
 
                 // Get the clickable access button groups
                 let groups = getSwitchButtonGroups();

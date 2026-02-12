@@ -238,10 +238,13 @@ export default class EyeGazeFeature extends Features {
 
 
     set eyeGazeOn(bool) {
+        bool = !!bool;
         if (bool !== this._eyeGazeOn) {
-            this._eyeGazeOn = !!bool;
+            this._eyeGazeOn = bool;
             this._updateProcessingState();
-            this.sdata.set("on", this._eyeGazeOn);
+            this.session.toolBar.setMenuItemProperty("access/eye/symbol", bool ? "eye" : "noeye");
+            this.sdata.logChange("eye-gaze.toggle", {value: bool ? "on" : "off"})
+            this.sdata.set("on", bool);
         }
     }
     get eyeGazeOn() { return this._eyeGazeOn; }
@@ -364,7 +367,9 @@ export default class EyeGazeFeature extends Features {
             await this.calibrationFrame.hide();
             if (mse) {  
                 let onion = validation.sampleStats.avg;
-                this.session.notifications.notify(`Calibration completed with score of ${Math.round((1 - 2 * mse) * 100)}%`, "success");
+                let acc = Math.round((1 - 2 * mse) * 100);
+                this.sdata.logChange("calibration.results", {value: acc})
+                this.session.notifications.notify(`Calibration completed with score of ${acc}%`, "success");
                 this.feedbackWindow.setOnion(onion);
             }
 
@@ -392,7 +397,6 @@ export default class EyeGazeFeature extends Features {
                 index: 45,
                 onSelect: () => {
                     this.eyeGazeOn = !this.eyeGazeOn
-                    this.session.toolBar.setMenuItemProperty("access/eye/symbol", this.eyeGazeOn ? "eye" : "noeye");
                 }
             }
         ])
@@ -402,6 +406,7 @@ export default class EyeGazeFeature extends Features {
             class: "blob",
             text: "host"
         });
+
         this.session.cursors.updateCursorProperties("participant-eyes", {
             size: 50,
             class: "blob",
@@ -423,6 +428,7 @@ export default class EyeGazeFeature extends Features {
         this.calibrationFrame.size = this.session.settings.get(`${this.sdata.me}/calibration/size`);
         this.calibrationFrame.speed = this.session.settings.get(`${this.sdata.me}/calibration/speed`);
         this._eyeGazeDisabled = !this.session.settings.get(`${this.sdata.me}/eye-gaze-enabled`);
+        this.sdata.logChange("eye-gaze.disabled", {value: this._eyeGazeDisabled})
 
         addProcessListener(this._onEyeData.bind(this));
 
@@ -442,7 +448,6 @@ export default class EyeGazeFeature extends Features {
         this.sdata.onValue(`hidden/${me}`, (val) => {
             if (val !== null) this._eyeDataHidden = !!val;   
         });
-
         
         // Set calibrating state to null
         await this.sdata.set(`calibrating/${me}`, null);

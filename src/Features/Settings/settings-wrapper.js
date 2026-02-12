@@ -1,5 +1,24 @@
 import { FirebaseFrame } from "../../Firebase/firebase-frame.js";
 import { SettingOptions as _settingOptions, SettingsFrame } from "./settings-base.js";
+import { get, ref } from "../../Firebase/firebase.js";
+
+const keys = [
+    ["hostAudio", "host-audio"],
+    ["participantAudio", "participant-audio"],
+    ["hostVideo", "host-video"],
+    ["participantVideo", "participant-video"],
+    ["pronouns", "pronouns"],
+    ["displayName", "name"],
+    ["displayPhoto", "image"],
+]
+export async function getHostPresets(hostUID) {
+    let presets = {};
+    await Promise.all(keys.map(async ([k1, k2]) => {
+        let val = (await get(ref(`users/${hostUID}/info/${k1}`))).val();
+        presets[k2] = val;
+    }));
+    return presets;
+}
 
 const SettingOptions = _settingOptions.map(options => {
     let op = {...options};
@@ -11,7 +30,7 @@ const ParticipantSettingOptions = [...SettingOptions,
     {
         key: ["profileSettings", "name"],
         type: "string",
-        default: "participant",
+        default: "Participant",
     },
     {
         key: ["profileSettings", "image"],
@@ -29,6 +48,7 @@ let HostUID = null;
 const profiles = {};
 const profileListeners = {};
 const settingChangeListeners = [];
+let hostPresets = null;
 
 
 export function chooseProfile(profileID) {
@@ -114,9 +134,10 @@ export async function createProfile(hostUID, name) {
 /** Initialises the settings for the session
  * @param {SessionDataFrame} sdata
  */
-export function initialise(hostUID, profileID = null) {
+export async function initialise(hostUID, profileID = null) {
     let hostSettingsPath = `users/${hostUID}/settings/host`
     HostUID = hostUID;
+    hostPresets = await getHostPresets(hostUID);
     HostSettings = new SettingsFrame(new FirebaseFrame(hostSettingsPath), SettingOptions);
     HostSettings.addChangeListener((path,value) => {
         for (let listener of settingChangeListeners) {
@@ -152,10 +173,15 @@ export function getSettingsAsObject() {
  * @param {string} name - The name of the setting
  */
 export function getValue(name) {
-    let setting = getSetting(name);
     let value = null;
-    if (setting) {
-        value = setting.value;
+    if (name.startsWith("host/profileSettings")) {
+        let key = name.split("/")[2];
+        value = hostPresets ? (hostPresets[key] || null) : null;
+    } else {
+        let setting = getSetting(name);
+        if (setting) {
+            value = setting.value;
+        }
     }
     return value;
 }
