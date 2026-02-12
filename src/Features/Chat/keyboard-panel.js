@@ -3,7 +3,7 @@ import { GridCard, GridIcon, GridLayout } from "../../Utilities/Buttons/grid-ico
 import { AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
 import { Rotater } from "../../Utilities/rotater.js";
 import { HideShowTransition } from "../../Utilities/hide-show.js";
-import { completeWord, completeWordSync, predictNextWordSync, topFourWords } from "./Algorithm/index.js";
+import { completeWord, completeWordSync, predictNextWordSync, topFourWords } from "./algorithm/index.js";
 // import { LetterIcon, LettersIcon, LetterLayout } from "./letter-selector.js";
 import { LetterIcon, LettersIcon } from "../../Utilities/search.js";
 
