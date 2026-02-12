@@ -141,6 +141,9 @@ feedback-frame svg {
 feedback-frame:not([disabled]) .f-overlay {
     display: none;
 }
+feedback-frame[disabled]  {
+    border: 3px solid rgb(208, 16, 9);
+}
 
 .f-overlay {
     position: absolute;
@@ -173,6 +176,7 @@ feedback-frame:not([disabled]) .f-overlay {
     background: white;
     transform: translate(-50%, -50%) rotate(330deg);
     z-index: -1;
+    border-radius: 5px;
 }
 
 
