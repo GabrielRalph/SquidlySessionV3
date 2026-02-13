@@ -1,4 +1,3 @@
-
 (function () {
   // Avoid re-declaring if injected multiple times
   if (window.SquidlyAPI) return;
@@ -50,6 +49,12 @@
 
   ["keydown", "keyup"].forEach((type) => {
     document.addEventListener(type, (e) => {
+      // Prevent Space/Backspace from triggering native button clicks inside
+      // the iframe — these keys are reserved for switch control in the parent.
+      if (e.key === " " || e.key === "Backspace") {
+        e.preventDefault();
+      }
+
       window.parent.postMessage(
         {
           mode: "event",
