@@ -298,6 +298,13 @@ export default class Apps extends Features {
         });
         break;
       case "key":
+        // Don't forward switch-control keys back if switching is active
+        if (
+          this.session?.accessControl?.isSwitching &&
+          (data.key === " " || data.key === "Backspace")
+        ) {
+          return;
+        }
         event = new KeyboardEvent(data.type, {
           key: data.key,
           code: data.code,
@@ -852,7 +859,7 @@ export default class Apps extends Features {
             timestamp: Date.now(),
           });
           // We are going to LOG the selected app to the logs which will be saved.
-          this.sdata.logChange("app.selected", {value: e.value.app.name});
+          this.sdata.logChange("app.selected", { value: e.value.app.name });
 
           this._setApp(e.value.app.index);
           this.appFrame.search.hide();
@@ -884,8 +891,7 @@ export default class Apps extends Features {
       }
 
       if (selectedApp) {
-
-        /** Gabriel: 
+        /** Gabriel:
          * The window probably does not have to be open, as it should be open in the first place
          */
 
@@ -910,13 +916,13 @@ export default class Apps extends Features {
         // App was closed by other party
         this.currentAppIndex = null;
         this.appFrame.setSrc("about:blank");
-        
-        /** Gabriel: 
-         * By setting window to default when no app is selected causes the session 
-         * to go to the default window every time a user joins i.e. it pulls them out 
-         * of the feature they are in when a user joins. I think its probably best 
+
+        /** Gabriel:
+         * By setting window to default when no app is selected causes the session
+         * to go to the default window every time a user joins i.e. it pulls them out
+         * of the feature they are in when a user joins. I think its probably best
          * to insead just bring up the search menu again.
-        */
+         */
 
         // this.appFrame.hide();
         // If we are currently on the apps screen, go back to default
