@@ -288,7 +288,6 @@ export default class Apps extends Features {
     // Don't forward mouse/key events from iframe when switch control is active
     // — forwarded mouse events can trigger duplicate clicks on proxy buttons,
     //   and forwarded Space/Backspace re-triggers switch selection.
-    if (this.session?.accessControl?.isSwitching) return;
 
     let event = null;
     switch (data.emode) {
