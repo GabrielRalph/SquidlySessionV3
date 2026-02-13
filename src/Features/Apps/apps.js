@@ -299,12 +299,6 @@ export default class Apps extends Features {
         break;
       case "key":
         // Don't forward switch-control keys back if switching is active
-        if (
-          this.session?.accessControl?.isSwitching &&
-          (data.key === " " || data.key === "Backspace")
-        ) {
-          return;
-        }
         event = new KeyboardEvent(data.type, {
           key: data.key,
           code: data.code,
