@@ -285,9 +285,11 @@ export default class Apps extends Features {
 
     if (!data?.type || !data?.emode) return;
 
-    // Don't forward mouse/key events from iframe when switch control is active
-    // — forwarded mouse events can trigger duplicate clicks on proxy buttons,
-    //   and forwarded Space/Backspace re-triggers switch selection.
+    console.log(
+      `[APP_EVENT_FWD] ${data.emode}:${data.type}`,
+      data.key || "",
+      `switching=${this.session?.accessControl?.isSwitching}`,
+    );
 
     let event = null;
     switch (data.emode) {
@@ -753,6 +755,10 @@ export default class Apps extends Features {
 
     // Handle access-click by delegating to iframe element
     proxy.addEventListener("access-click", (event) => {
+      console.log(
+        `[PROXY_ACCESS_CLICK] id=${id} clickMode=${event.clickMode}`,
+        new Error().stack,
+      );
       const element = this._getIframeElement(id);
       if (element && typeof element.accessClick === "function") {
         element.accessClick(event.clickMode || "click");
