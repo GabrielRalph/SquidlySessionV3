@@ -285,12 +285,6 @@ export default class Apps extends Features {
 
     if (!data?.type || !data?.emode) return;
 
-    console.log(
-      `[APP_EVENT_FWD] ${data.emode}:${data.type}`,
-      data.key || "",
-      `switching=${this.session?.accessControl?.isSwitching}`,
-    );
-
     let event = null;
     switch (data.emode) {
       case "mouse":
@@ -772,10 +766,6 @@ export default class Apps extends Features {
 
     // Handle access-click by delegating to iframe element
     proxy.addEventListener("access-click", (event) => {
-      console.log(
-        `[PROXY_ACCESS_CLICK] id=${id} clickMode=${event.clickMode}`,
-        new Error().stack,
-      );
       const el = this._getIframeElement(id);
       if (el && typeof el.accessClick === "function") {
         el.accessClick(event.clickMode || "click");
