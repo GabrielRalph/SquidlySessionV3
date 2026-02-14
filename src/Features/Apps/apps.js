@@ -703,6 +703,26 @@ export default class Apps extends Features {
       this._iframeAccessButtons.delete(id);
     }
 
+    // Override the iframe element's coordinate methods so that both the
+    // proxy AND direct hits from getButtonAtPoint / dwell detection
+    // return parent-viewport coordinates instead of iframe-local ones.
+    const element = this._getIframeElement(id);
+    if (element) {
+      const origGetCenter = element.getCenter.bind(element);
+      const origIsPointInElement = element.isPointInElement.bind(element);
+
+      element.getCenter = () => {
+        const center = origGetCenter();
+        return this._toParentCoords(center);
+      };
+
+      element.isPointInElement = (p) => {
+        if (!this._isPointInIframe(p)) return false;
+        const pIframe = this._toIframeCoords(p);
+        return origIsPointInElement(pIframe);
+      };
+    }
+
     // Create proxy AccessButton element
     const proxy = new AccessButton(group);
     proxy.order = order;
@@ -714,43 +734,40 @@ export default class Apps extends Features {
       height: "0",
     };
 
-    // All proxy methods delegate directly to iframe element via contentDocument
+    // Proxy methods delegate to the (now-overridden) iframe element methods.
+    // No additional coordinate conversion is needed here since the iframe
+    // element already returns parent-viewport coordinates after the override.
 
     proxy.getCenter = () => {
-      const element = this._getIframeElement(id);
-      if (element && typeof element.getCenter === "function") {
-        const center = element.getCenter();
-        return this._toParentCoords(center);
+      const el = this._getIframeElement(id);
+      if (el && typeof el.getCenter === "function") {
+        return el.getCenter();
       }
       return new Vector(0, 0);
     };
 
     proxy.getIsVisible = () => {
-      const element = this._getIframeElement(id);
-      if (element && typeof element.getIsVisible === "function") {
-        return element.getIsVisible();
+      const el = this._getIframeElement(id);
+      if (el && typeof el.getIsVisible === "function") {
+        return el.getIsVisible();
       }
     };
 
     proxy.setHighlight = (isHighlighted) => {
       proxy.toggleAttribute("hover", isHighlighted);
-      const element = this._getIframeElement(id);
-      if (element && typeof element.setHighlight === "function") {
-        element.setHighlight(isHighlighted);
+      const el = this._getIframeElement(id);
+      if (el && typeof el.setHighlight === "function") {
+        el.setHighlight(isHighlighted);
       }
     };
 
     proxy.isPointInElement = (p) => {
-      if (!this._isPointInIframe(p)) return false;
-
-      const element = this._getIframeElement(id);
-      if (!element) return false;
-
-      const pIframe = this._toIframeCoords(p);
-
-      if (typeof element.isPointInElement === "function") {
-        return element.isPointInElement(pIframe);
+      const el = this._getIframeElement(id);
+      if (!el) return false;
+      if (typeof el.isPointInElement === "function") {
+        return el.isPointInElement(p);
       }
+      return false;
     };
 
     // Handle access-click by delegating to iframe element
@@ -759,9 +776,9 @@ export default class Apps extends Features {
         `[PROXY_ACCESS_CLICK] id=${id} clickMode=${event.clickMode}`,
         new Error().stack,
       );
-      const element = this._getIframeElement(id);
-      if (element && typeof element.accessClick === "function") {
-        element.accessClick(event.clickMode || "click");
+      const el = this._getIframeElement(id);
+      if (el && typeof el.accessClick === "function") {
+        el.accessClick(event.clickMode || "click");
       }
     });
 
