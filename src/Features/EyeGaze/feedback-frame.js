@@ -90,6 +90,9 @@ export class FeedbackFrame extends SvgPlus {
     /** @type {FaceLandmarks} */
     avg
 
+    valid = false;
+
+
     constructor() {
         super("feedback-frame");
         this.styles = {
@@ -182,8 +185,10 @@ export class FeedbackFrame extends SvgPlus {
     renderBorder(w, h, bh, points, mx, my) {
         let html = "";
         let bpaths = makeBorderPath(w, h, bh, points, mx, my);
+        let hittingBorder = false;
         for (let [path, isHit, name] of bpaths) {
             html += `<path style = "fill: url('#border-gradient-${name}${isHit ? "-hit" : ""}')"  class = "border" d = "${path}"></path>`;
+            hittingBorder = hittingBorder || isHit;
         }
         return html;
     }
@@ -334,9 +339,6 @@ export class FeedbackFrame extends SvgPlus {
                 html += this.renderFace(width, height, op, points, 1)
                 
                 svgRenders.innerHTML = html;
-                if (this.parentElement) {
-                    this.parentElement.style.setProperty("--valid", op);
-                }
             }
         }
     }
@@ -347,12 +349,14 @@ export class FeedbackFrame extends SvgPlus {
      * @param {(boolean|"nodata"|"disabled"|"inactive")} value whether feedback is disabled or not.
      */
     set disabled(value) {
-        if (value in this.messages) {
-            this.overlay.innerHTML = this.messages[value];
-        } else {
-            this.overlay.innerHTML = this.messages["nodata"];
+        if (value !== "invalid") {
+            if (value in this.messages) {
+                this.overlay.innerHTML = this.messages[value];
+            } else {
+                this.overlay.innerHTML = this.messages["nodata"];
+            }
+            this.toggleAttribute("disabled", !!value);
         }
-        this.toggleAttribute("disabled", !!value);
     }
 
     /**
@@ -692,11 +696,11 @@ export class FeedbackWindow extends OccupiableWindow {
     set disabled(bool) {
         this.feedback.disabled = bool;
         this._disabled = bool;
-        bool =!!bool;
-        this.renderModeButton.disabled = bool;
+        this.renderModeButton.disabled = bool && bool !== "invalid";
+
         this.calibrateButton.disabled = bool;
         this.testButton.disabled = bool;
-        this.enableEyeGazeButton.symbol = bool ? "noeye" : "eye";
+        this.enableEyeGazeButton.symbol = bool == "disabled" ? "noeye" : "eye";
 
         if (!bool) {
             clearTimeout(this._noDataTimeout);
@@ -802,19 +806,23 @@ export class FeedbackWindow extends OccupiableWindow {
             }
 
             // Check if face points are valid
-            const invalid = !(facePoints instanceof FaceLandmarks) || facePoints.width == 0 || facePoints.isOutside;
+            const invalid = !(facePoints instanceof FaceLandmarks) || facePoints.width == 0;
             if (invalid) {
                 // If invalid, show feedback as disabled and stop rendering
                 this.feedback.stop();
                 this._updateUsersStatus();
-                this.disabled = this.disabled || "nodata";
+                this.disabled = this.disabled || "nondata";
             } else {
                 // If not invalid, show feedback and render face points
                 this.feedback.start();
                 this.feedback.facePoints = facePoints.width == 0 ? null : facePoints; 
-                if (this.disabled == "nodata") {
+                 
+                if (facePoints.isOutside) {
+                    this.disabled = "invalid";
+                } else if (this.disabled !== "disabled") {
                     this.disabled = false;
                 }
+
 
                 clearTimeout(this._noDataTimeout);
                 this._noDataTimeout = setTimeout(() => {

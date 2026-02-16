@@ -500,18 +500,20 @@ export class GridLayout extends SvgPlus {
         if (Array.isArray(items)) {
             let valid = false;
             let items2 = items;
-            if (items.every(i => SvgPlus.is(i, SvgPlus))) {
+            if (items.every(i => SvgPlus.is(i, SvgPlus) || i == null)) {
                 items2 = [items];
                 valid = true;
             } else {
-                valid = items2.every(row => Array.isArray(row) && row.every(i => SvgPlus.is(i, SvgPlus)))
+                valid = items2.every(row => Array.isArray(row) && row.every(i => SvgPlus.is(i, SvgPlus) || i == null));
             }
 
             if (valid) {
                 let [rowStart, colStart] = parseCellPosition(...posArgs);
                 items2.forEach((row, r) => {
                     row.forEach((item, c) => {
-                        this.add(item, rowStart + r, colStart + c);
+                        if (item) {
+                            this.add(item, rowStart + r, colStart + c);
+                        }
                     });
                 });
             }
@@ -530,7 +532,14 @@ export class GridLayout extends SvgPlus {
      * @param {number} [colEnd] - The ending column index (0-based, inclusive).
      */
     addItemInstances(classDef, items, ...posArgs) {
-        let instances = items.map(item => Array.isArray(item) ? item.map(i => new classDef(i)) : new classDef(item));
+        let instances = items.map((item, r) => {
+            if (item == null) return null;
+            else if (Array.isArray(item)) {
+                return item.map(i => i == null ? i : new classDef(i, "item-"+r));
+            } else {
+                return new classDef(item);
+            }
+        });
         this.addItems(instances, ...posArgs);
         return instances;
     }
