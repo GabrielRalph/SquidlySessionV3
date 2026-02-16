@@ -202,6 +202,10 @@ export function getStringValue(name) {
    return value;
 }
 
+/** Returns the selection options for the given setting name
+ * @param {string} name - The name of the setting
+ * @returns {[string]} - The selection options for the setting
+ */
 export function getSelection(name) {
     let setting = getSetting(name);
     let options = null;
@@ -211,7 +215,10 @@ export function getSelection(name) {
     return options;
 }
 
-
+/**
+ * Returns the name of the setting for the given name
+ * @param {string} name - The name of the setting
+ */
 export function getName(name) {
     let setting = getSetting(name);
     let sname = null;

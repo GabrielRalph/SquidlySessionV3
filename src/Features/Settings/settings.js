@@ -2,17 +2,25 @@ import { SvgPlus } from "../../SvgPlus/4.js";
 import { AccessEvent } from "../../Utilities/Buttons/access-buttons.js";
 import { addDeviceChangeCallback, getDevices } from "../../Utilities/device-manager.js";
 import { GridIcon } from "../../Utilities/Buttons/grid-icon.js";
-import { Icon } from "../../Utilities/Icons/icons.js";
 import { Rotater } from "../../Utilities/rotater.js";
 import { relURL } from "../../Utilities/usefull-funcs.js";
 import { changeDevice } from "../../Utilities/webcam.js";
 import { filterAndSort, SearchWindow } from "../../Utilities/search.js";
-
 import { Features, OccupiableWindow } from "../features-interface.js";
-
 import { SettingsDescriptor } from "./settings-base.js";
 import * as Settings from "./settings-wrapper.js";
+import { SettingsGridLayout } from "./settings-grid-layouts.js";
 
+/**
+ * @typedef {import("./settings-grid-layouts.js").SettingsIconOptions} SettingsIconOptions
+ */
+
+class InteractionEvent extends AccessEvent {
+    constructor(e, icon) {
+        super("interaction", e, {cancelable: true});
+        this.icon = icon;
+    }
+}
 
 class ProfileSearchWindow extends SearchWindow {
     constructor(){
@@ -21,8 +29,6 @@ class ProfileSearchWindow extends SearchWindow {
 
     async getSearchResults(searchPhrase){
         let profiles = Settings.getProfiles();
-
-        console.log("SEARCHING PROFILES", profiles);
 
         /** @type {Answer[]} */
         let items = profiles.map(({name, image, profileID}) => {
@@ -48,109 +54,28 @@ class ProfileSearchWindow extends SearchWindow {
     }
 }
 
-class SettingsIcon extends GridIcon {
-    constructor(icon, type) {
-        if (typeof icon.accessGroup === "string") {
-            type = icon.accessGroup;
-        }
-        super(icon, type);
-        this.sideDotsElement = this.createChild("div", {class: "side-dots"})
-        this.activeIcon = this.createChild(Icon, {class: "icon active"}, "radioTick");
-        this.active = icon.active || false;
-
-        if (Array.isArray(icon.path) && icon.setting) {
-            this.setting = icon.path.join("/") + "/" + icon.setting
-            this.setAttribute("setting", this.setting);
-            this.updateDynamicTemplate();
-        }
-    }
-
-
-    set active(value) {
-        this.activeIcon.toggleAttribute("show", value);
-    }
-
-    updateDynamicTemplate(){
-        let icon = Settings.getIcon(this.setting);
-        
-        for (let key in icon) {
-            this[key] = icon[key];
-        }
-    }
-
-
-    /** @param {boolean[]} value */
-    set sideDots(value) {
-        if (this.sideDotsElement){
-            this.sideDotsElement.innerHTML = "";
-            for (let bool of value) {
-                this.sideDotsElement.createChild("div", {
-                    class: "dot",
-                }).toggleAttribute("on", bool);
-            }
-        }        
-    }
-}
-
-class IconGrid extends SvgPlus{
-    /**
-     * @param {IconGrid[][]} grid
-     */
-    constructor(grid) {
-        super("icon-grid");
-        this.grid = grid;
-    }
-
-    /**
-     * @param {IconGrid[][]} grid
-     */
-    set grid(grid) {
-        this.innerHTML = "";
-
-        let rows = grid.length;
-        let cols = Math.max(...grid.map(row => row.length));
-
-        this.styles = {
-            "display": "grid",
-            "grid-template-columns": `repeat(calc((100% - ${cols-1} * var(--gap)) / ${cols}), 1fr)`,
-            "grid-template-rows": `repeat(calc((100% - ${rows-1} * var(--gap)) / ${rows}), 1fr)`,
-            "gap": "var(--gap)",    
-        }
-
-        grid.forEach((row, i) => {
-            row.forEach((icon, j) => {
-                let iconElement = new SettingsIcon(icon, "settings-" + i);
-                iconElement.styles = {
-                    "grid-row": `${i+1}`,
-                    "grid-column": `${j+1}`,
-                }
-                iconElement.events = {
-                    "access-click": (e) => {
-                        let event = new AccessEvent("settings-click", e, {bubbles: true});
-                        event.icon = icon;
-                        event.iconElement = iconElement;
-                        this.dispatchEvent(event);
-                    }
-                }
-                this.appendChild(iconElement);
-            });
-        });
-    }
-}
-
+/**
+ * The settings panel shows a grid of icons for a specific settings page as 
+ * well as a navigation icons to navigate between settings pages. It is used
+ * inside the settings window.
+ * 
+ * @fires AccessEvent#settings-click when a settings icon is clicked, with the icon data in event.icon
+ * @property {SettingsIconOptions[][]} grid - The 2D array of GridIcons representing the settings options
+ */
 class SettingsPanel extends SvgPlus {
     constructor(grid, path, settingsFeature = null) {
         super("settings-panel");
         let isHost = settingsFeature ? settingsFeature.sdata.me === "host" : false;
         let isHome = path.length === 1;
-        this.createChild(IconGrid, {}, [
+       
+        // Create the settings navigation icons
+        this.createChild(SettingsGridLayout, {}, [
             [{
                 type: "action",
                 displayValue: "Exit",
                 symbol: "close",
                 action: "exit",
                 accessGroup: "settings-navigation"
-                
             }],
             [{
                 type: "action",
@@ -176,12 +101,8 @@ class SettingsPanel extends SvgPlus {
             }],
         ]);
         this.path = [...path];
-
-        grid.forEach(row => row.forEach(icon => {
-            icon.path = path.slice(1);
-        }));
-        
-        this.gridElement = this.createChild(IconGrid, {}, grid);
+        this._gridElement = this.createChild(SettingsGridLayout);
+        this.grid = grid;
     }
 
      /**
@@ -191,9 +112,8 @@ class SettingsPanel extends SvgPlus {
         grid.forEach(row => row.forEach(icon => {
             icon.path = this.path.slice(1);
         }));
-        this.gridElement.grid = grid;
+        this._gridElement.grid = grid;
     }
-
 }
 
 const name2kind = {
@@ -243,13 +163,16 @@ class SettingsWindow extends OccupiableWindow {
         super("settings-window");
         
         this.settingsFeature = settings;
+
         this.root.events = {
-            "settings-click": (e) => e.waitFor(this.onSettingsClick(e)),
+            "settings-click": (e) => e.waitFor(this._onSettingsClick(e)),
         };
         
         this.settingsPath = this.createChild("div", {class: "settings-path", content: "Settings"});
+
         this.rotater = this.createChild(Rotater);
 
+        // Create profile search window if host
         if (this.settingsFeature.sdata.me === "host") {
             this.searchWindow = this.createChild(ProfileSearchWindow, {events: {
                 "value": (e) => {
@@ -262,26 +185,74 @@ class SettingsWindow extends OccupiableWindow {
         }
     }
 
-    actions = {
-        home: this.gotoHome.bind(this),
-        back: this.gotoBack.bind(this),
-        search: this.openProfileSearch.bind(this),
+    /**
+     * Gets the grid layout for a specific settings page. 
+     * @param {string} page - The name of the settings page to get the grid layout for
+     * @returns {SettingsIconOptions[][]} The grid layout for the settings page, or null if no layout is found
+     */
+    _getSettingsPageLayout(page) {
+        let grid = null;
+        if (page in this.settingsLayout) {
+            // Find the grid layout for the page, resolving any references to other settings
+            let value = this.settingsLayout[page];
+            while (typeof value === "string" && value in this.settingsLayout) {
+                value = this.settingsLayout[value];
+            }
+            grid = value;
+        }
+        return grid;
+    }
+
+    /**
+     * This method is called when a settings icon is clicked. 
+     * @param {AccessEvent} e - The event object containing information about the click event
+     */
+    async _onSettingsClick(e) {
+       let {icon} = e;
+
+       const newEvent = new InteractionEvent(e, icon);
+       this.dispatchEvent(newEvent);
+
+
+        if (newEvent.defaultPrevented === false) {
+           let lastPath = this.history.join("/");
+        
+            // Check if the icon has a link to another page, if so navigate to that page
+            if (icon.link in this._dynamicPages || this._getSettingsPageLayout(icon.link) !== null) {
+                await this.gotoPath([...this.history, icon.link], e);
+            
+            // Otherwise, if the icon has an action, perform that action
+            } else if (icon?.action in this._actions) {
+                await this._actions[icon.action](e);
+            }
+
+            // After handling the click, check if the path has changed and log it if it has
+            let newPath = this.history.join("/");
+            if (lastPath !== newPath) {
+                this.dispatchEvent(new Event("path-change"));
+            }
+        }
+    }
+
+    /**
+     * Actions details a list of action methods that may be executed when settings icons are clicked. 
+     * The action to execute is determined by the "action" property of the clicked icon. 
+     */
+    _actions = {
+        home: e => e.waitFor(this.gotoPath(["home"], e)),
+        back: e => e.waitFor(this.gotoPath(this.history.slice(0, -1), e)),
+        search: e => e.waitFor(this.openProfileSearch()),
         "increment-setting": (e) => {
-            let {icon} = e;
-            let path = icon.path.join("/") + "/" + (icon.settingKey || icon.setting);
-            let direction = icon.direction;
-            this.settingsFeature.incrementValue(path, direction);
+            let {icon: {settingName, direction}} = e;
+            this.settingsFeature.incrementValue(settingName, direction);
         },
         "set-setting": (e) => {
-            let {icon} = e;
-            let path = icon.path.join("/") + "/" + (icon.settingKey || icon.setting);
-            let value = icon.value;
-            this.settingsFeature.setValue(path, value);
+            let {icon: {settingName, value}} = e;
+            this.settingsFeature.setValue(settingName, value);
         },
         "toggle-setting": (e) => {
-            let {icon} = e;
-            let path = icon.path.join("/") + "/" + (icon.settingKey || icon.setting);
-            this.settingsFeature.toggleValue(path);
+            let {icon: settingName} = e;
+            this.settingsFeature.toggleValue(settingName);
         },
         "change-device": (e) => {
             let {icon} = e;
@@ -290,13 +261,13 @@ class SettingsWindow extends OccupiableWindow {
         }
     }
 
-    dynamicPages = {
-        "video": () => this.makeDevices("videoinput"),
-        "microphone": () => this.makeDevices("audioinput"),
-        "speaker": () => this.makeDevices("audiooutput"),
-    }
 
-    async makeDevices(kind){
+    /**
+     * Generates the grid layout for the devices settings page for a specific device type (video, microphone, speaker).
+     * @param {("video"|"microphone"|"speaker")} kind - The type of device to generate the grid for ("video", "microphone", or "speaker")
+     * @returns {SettingsIconOptions[][]} The grid layout for the devices settings page for the specified device type
+     */
+    async _makeDevicesSettingGrid(kind){
         let user = this.history[1];
         let devices = await this.settingsFeature.getDevices(user);
         devices = Object.values(devices[kind] || {});
@@ -304,105 +275,97 @@ class SettingsWindow extends OccupiableWindow {
         return grid;
     }
 
-    async onSettingsClick(e) {
-       let {icon} = e;
-       if (icon.action === "exit") return ;
-       let res = await this.gotoLink(icon.link, e);
-       if (!res) {
-             if (icon?.action in this.actions) {
-                await this.actions[icon.action](e);
-            } else {
-                const event = new AccessEvent("settings-click", e);
-                event.icon = icon;
-                event.iconElement = e.iconElement;
-                this.dispatchEvent(event);
-            }
-        }
+    /**
+     * @type {Object.<string, async () => SettingsIconOptions[][]>} _dynamicPages - An object mapping page names to functions that generate the grid layout for those pages.
+     */
+    _dynamicPages = {
+        "video": () => this._makeDevicesSettingGrid("videoinput"),
+        "microphone": () => this._makeDevicesSettingGrid("audioinput"),
+        "speaker": () => this._makeDevicesSettingGrid("audiooutput"),
     }
 
-    async gotoHome(e) {
-        this.history = ["home"];
-        await this.rotater.setContent(new SettingsPanel(this.settings.home, this.history, this.settingsFeature), false);
-        this.dispatchEvent(new AccessEvent("navigation", e));
-    }
-
-    async setPath(path) {
-        let pathStr = path.join("/");
-        let historyStr = this.history.join("/");
-        this.settingsPath.textContent = path.join(" > ");
-        
-        if (historyStr !== pathStr) {
-            this.history = [...path];
-            let link = this.history.pop();
-            await this.gotoLink(link);
-        }
-    }
-
-    async gotoLink(link, e) {
-        let grid = null;
-        if (link in this.settings) {
-            let value = this.settings[link];
-            while (typeof value === "string" && value in this.settings) {
-                value = this.settings[value];
-            }
-            grid = value;
-        } else if (link in this.dynamicPages) {
-            grid = await this.dynamicPages[link]();
-        }
-        
-        if (grid !== null) {
-            this.history.push(link);
-            this.currentPage = new SettingsPanel(grid, this.history, this.settingsFeature);
-            await this.rotater.setContent(this.currentPage, false);
-            this.dispatchEvent(new AccessEvent("navigation", e));
-        }
-
-        return grid !== null;
-    }
 
     /**
-     * @param {AccessEvent} e
-     * @return {Promise<void>}
+     * Goes to a specific path in the settings, navigating to the corresponding page.
+     * @param {string[]} path - An array of strings representing the path to navigate to in the settings
+     * @param {AccessEvent} [event] - The event initiating the navigation.
      */
-    async gotoBack(e) {
-        if (this.history.length > 1) {
-            
-            this.history.pop();
-            let link = this.history.pop();
-            await this.gotoLink(link);
+    async gotoPath(path, event) {
+        // Provided the path is different from the current path
+        if (this.currentPath !== path.join("/")) {
+            console.log("Going to path:", path, "event:", event);
 
-            this.dispatchEvent(new AccessEvent("navigation", e));
+            // Get the last part of the path to find the grid layout for the page
+            let pageName = path[path.length - 1];
+
+            let grid = null;
+            
+            // If the page is a dynamic page, generate the grid for the page
+            if (pageName in this._dynamicPages) {
+                grid = await this._dynamicPages[pageName]();
+
+            // Otherwise, get the grid layout for the page from the settings layout
+            } else {
+                grid = this._getSettingsPageLayout(pageName);
+            }
+
+            // If a grid was found for the page, navigate to the page
+            if (grid !== null) {
+                this.history = [...path];
+                this.currentPage = new SettingsPanel(grid, this.history, this.settingsFeature);
+                this.settingsPath.innerHTML = this.history.join(" > ");
+
+                // If the event is passed as null then the transition will be instant
+                await this.rotater.setContent(this.currentPage, event === false);
+            }
         }
     }
 
+   
+    /**
+     * Updates the device grids in the settings window for a specific user when their devices change. 
+     */
+    updateDevices(user, devices) { 
+        if (this.history.length > 1) {
+            let pathUser = this.history[1];
+            let settingType = this.history[this.history.length - 1];
+            if (pathUser === user && settingType in this._dynamicPages) {
+                const kind = name2kind[settingType];
+                devices = Object.values(devices[kind] || {});
+                this.currentPage.grid = devices2grid(devices);
+            }
+        }
+    }
+
+
+    /**
+     * Updates the settings icons on the current page, for example after a setting value has changed. 
+     */
     updateSettings() {
         let icons = this.root.querySelectorAll(".grid-icon[setting]");
         icons.forEach(icon => {
             icon.updateDynamicTemplate();
         })
     }
+    
 
-    updateDevices(user, devices) { 
-        let pathUser = this.history[1];
-        let settingType = this.history[this.history.length - 1];
-        if (pathUser === user && settingType in this.dynamicPages) {
-            const kind = name2kind[settingType];
-            devices = Object.values(devices[kind] || {});
-            this.currentPage.grid = devices2grid(devices);
-        }
-    }
-
+    /**
+     * Opens the profile search window, allowing the user to search for and select a profile.
+     */
     async openProfileSearch() {
         await this.searchWindow.resetSearchItems(true);
         await this.searchWindow.show();
     }
 
-    set settings(settings) {
+    get currentPath() {
+        return this.history.join("/");
+    }
+   
+    set settingsLayout(settings) {
         this._settings = settings;
-        this.gotoHome();
     }
 
-    get settings() {
+    get settingsLayout() {
         return this._settings;
     }
 
@@ -411,7 +374,6 @@ class SettingsWindow extends OccupiableWindow {
     }
 
     async close(){
-        this.dispatchEvent(new Event("exit"));
         await this.hide(400)
     }
 
@@ -422,34 +384,41 @@ class SettingsWindow extends OccupiableWindow {
     static get fixToolBarWhenOpen(){return true; }
 }
 
+
+
+
 export default class SettingsFeature extends Features {
     constructor(session, sdata) {
         super(session, sdata);
         this.settingsWindow = new SettingsWindow(this);
 
+        // Add toolbar icon
         this.session.toolBar.addMenuItem([], {
             name: "settings",
             index: 35,
-            onSelect: e => e.waitFor(this.session.openWindow("settings"))
+            onSelect: async e => e.waitFor(this._openSettingsAtHome()),
         })
-     
-        this.settingsWindow.root.addEventListener("settings-click", (e) => { 
-            if (e?.icon?.action === "exit") {
-                this.sdata.set("path", null);
-                e.waitFor(this.session.openWindow("default"));
-            }
-        })
+ 
 
+        // Listen to settings icon clicks in the settings window and handle navigation and actions
         this.settingsWindow.events = {
-            navigation: (e) => {
-                let path = this.settingsWindow.history;
-                sdata.set("path", path);
+            interaction: async (e) => {
+                if (e.icon?.action === "exit") {
+                    e.preventDefault();
+                    await e.waitFor(this.session.openWindow("default"));
+                } else if (e.icon?.action === "back" && this._openPageOnBack) {
+                    e.preventDefault();
+                    await e.waitFor(session.openWindow(this._openPageOnBack));
+                }
+                this._openPageOnBack = null;
+                this.sdata.set("openPageOnBack", null); 
             },
-            exit: () => {
-                this.dispatchEvent(new Event("exit"));
+            "path-change": () => {
+                this.sdata.set("path", this.settingsWindow.history);
             }
         }
 
+        // Listen to changes in settings values and update the settings window accordingly
         Settings.addChangeListener((name, value) => {
             this.settingsWindow.updateSettings();
             const event = new Event("change", {bubbles: true});
@@ -526,15 +495,15 @@ export default class SettingsFeature extends Features {
         return devices;
     }
 
-    async gotoPath(path) {
+    async gotoPath(path, event) {
         if (typeof path === "string") {
             path = path.split("/");
         }
-
         let valid = this.isValidPath(path);
         if (valid) {
+            let prom = this.settingsWindow.gotoPath(path, event);
             this.sdata.set("path", path);
-            await this.settingsWindow.setPath(path);
+            await prom;
         } else {
             console.warn("Invalid settings path:", path.join("/"));
         }
@@ -555,6 +524,16 @@ export default class SettingsFeature extends Features {
         return id;
     }
 
+    /**
+     * Sets a page to open when the user tries to go back from the current page. 
+     * This is used if features want to open settings but allow users to easily 
+     * go back to the feature that sent them to settings.
+     * @param {string} page - The page to open when the user goes back.
+     */
+    openPageOnBack(page) {
+        this.sdata.set("openPageOnBack", page);
+    }
+
     get profiles() {
         let profiles = Settings.getProfiles();
         return profiles;
@@ -567,6 +546,11 @@ export default class SettingsFeature extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    async _openSettingsAtHome() {
+        await this.sdata.set("path", ["home"]);
+        await this.session.openWindow("settings");
+    }
     
     _applySettingsUpdate(method, path, ...args) {
         if (method in Settings) {
@@ -582,13 +566,12 @@ export default class SettingsFeature extends Features {
 
     async initialise() {
         let hostUID = this.sdata.hostUID;
-        await Promise.all([
-            Settings.initialise(hostUID),
-            SettingsWindow.loadStyleSheets()
-        ]);
-        let settingsLayout = await (await fetch(relURL("./settings-layout.json", import.meta))).json();
-        this.settingsWindow.settings = settingsLayout;
+        await Settings.initialise(hostUID),
 
+        
+        this.settingsWindow.settingsLayout = SettingsFeature.SettingsLayout;
+
+        // Whatch profiles if host.
         if (this.sdata.me === "host") {
             Settings.watchProfiles(hostUID, (profiles) => {
                 this.dispatchEvent( new Event("profiles-change"))
@@ -600,8 +583,13 @@ export default class SettingsFeature extends Features {
             if (path === null) {
                 path = ["home"];
             }
-            this.settingsWindow.setPath(path);
+
+            this.settingsWindow.gotoPath(path, this.session.currentOpenFeature == SettingsFeature.name);
             this._openPath = path;
+        });
+
+        this.sdata.onValue("openPageOnBack", (page) => {
+            this._openPageOnBack = page;
         });
 
         // Listen to profile changes
@@ -646,9 +634,21 @@ export default class SettingsFeature extends Features {
         });
     }
 
+
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    static async loadLayout() {
+        this.SettingsLayout = await (await fetch(relURL("./settings-layout.json", import.meta))).json();
+    }
+
+    static async loadResources() {
+        await Promise.all([
+            await SettingsWindow.loadStyleSheets(),
+            this.loadLayout(),
+        ]);
+    }
 
     static get layers() {
         return {

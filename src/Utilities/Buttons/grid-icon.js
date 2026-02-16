@@ -254,7 +254,7 @@ export class GridIcon extends GridCard {
             console.error("Error creating GridIcon with type:", item);
             throw e;
         }
-        this.group = accessGroup || "default";
+        this.group = accessGroup || item.accessGroup || "default";
         this.item = item;
     
         // Toggle attribute 'i-hidden' if icon is hidden.
@@ -396,6 +396,26 @@ export class GridIcon extends GridCard {
     }
 }
 
+
+function parseCellPosition(rowStart, colStart, rowEnd = rowStart, colEnd = colStart) {
+    if (Array.isArray(rowStart) && rowStart.length === 2) {
+        [rowStart, rowEnd] = rowStart;
+    }
+
+    if (Array.isArray(colStart) && colStart.length === 2) {
+        [colStart, colEnd] = colStart;
+    }
+
+    if (typeof rowStart === "number" && typeof colStart === "number") {
+        rowEnd = typeof rowEnd === "number" ? rowEnd+1 : rowStart;
+        colEnd = typeof colEnd === "number" ? colEnd+1 : colStart;
+
+        return [rowStart, colStart, rowEnd, colEnd];
+    } else {
+        return [null, null, null, null];
+    }
+}
+
 /**
  * A GridLayout represents a grid of GridIcons.
  * It allows adding GridIcons to specific rows and columns.
@@ -408,16 +428,24 @@ export class GridLayout extends SvgPlus {
      */
     constructor(rows, cols) {
         super("grid-layout");
+        this.size = [rows, cols];
+    }
+
+    /**
+     * Sets the size of the grid and updates the CSS grid template accordingly.
+     * @param {[number, number]} size - An array containing the number of rows and columns, respectively.
+     */
+    set size([rows, cols]) {
         if (typeof rows === "number" && typeof cols === "number") {
-            this.elements = new Array(rows).fill(0).map(() => new Array(cols).fill(null));
             this.styles = {
                 "grid-template-rows": `repeat(${rows}, 1fr)`,
                 "grid-template-columns": `repeat(${cols}, 1fr)`,
                 "--rows": rows,
                 "--cols": cols
             }
-        }
+        } 
     }
+
 
     /**
      * Adds an item to the grid at the specified row and column.
@@ -429,25 +457,94 @@ export class GridLayout extends SvgPlus {
      * 
      * @returns {GridIcon|SvgPlus} The added item.
      */
-    add(item, row, col, rowEnd = row, colEnd = col) {
-        if (SvgPlus.is(item, SvgPlus) && typeof row === "number" && typeof col === "number") {
-            rowEnd = typeof rowEnd === "number" ? rowEnd+1 : row;
-            colEnd = typeof colEnd === "number" ? colEnd+1 : col;
+    add(item, ...posArgs) {
+        let [row, col, rowEnd, colEnd] = parseCellPosition(...posArgs);
+
+        if (SvgPlus.is(item, SvgPlus) && row !== null) {
             item.styles = {
                 "grid-row-start": row + 1,
                 "grid-column-start": col + 1,
                 "grid-row-end": rowEnd + 1,
                 "grid-column-end": colEnd + 1
             }
-
-            
-            // for (let r = row; r < rowEnd; r++) {
-            //     for (let c = col; c < colEnd; c++) {
-            //         this.elements[r][c] = item;
-            //     }
-            // }
             this.appendChild(item);
         }
+
         return item;
+    }
+
+    /**
+     * Adds a GridIcon to the grid at the specified row and column.
+     * @param {GridIconOptions} item - The options for the GridIcon to add.
+     * @param {number} row - The starting row index (0-based).
+     * @param {number} col - The starting column index (0-based).
+     * @param {number} [rowEnd] - The ending row index (0-based, inclusive).
+     * @param {number} [colEnd] - The ending column index (0-based, inclusive).
+     */
+    addGridIcon(item, ...posArgs) {
+        const gridIcon = new GridIcon(item);
+        return this.add(gridIcon, ...posArgs);
+    }
+
+
+    /**
+     * Adds multiple items to the grid at the specified starting row and column.
+     * The items can be provided as a 2D array, where each sub-array represents a row of items.
+     * @param {SvgPlus[][]|SvgPlus[]} items - A 2D array of GridIcon options or a flat array of GridIcon options.
+     * @param {number} rowStart - The starting row index (0-based).
+     * @param {number} colStart - The starting column index (0-based).
+     * @param {number} [rowEnd] - The ending row index (0-based, inclusive).
+     * @param {number} [colEnd] - The ending column index (0-based, inclusive).
+     */
+    addItems(items, ...posArgs) {
+        if (Array.isArray(items)) {
+            let valid = false;
+            let items2 = items;
+            if (items.every(i => SvgPlus.is(i, SvgPlus))) {
+                items2 = [items];
+                valid = true;
+            } else {
+                valid = items2.every(row => Array.isArray(row) && row.every(i => SvgPlus.is(i, SvgPlus)))
+            }
+
+            if (valid) {
+                let [rowStart, colStart] = parseCellPosition(...posArgs);
+                items2.forEach((row, r) => {
+                    row.forEach((item, c) => {
+                        this.add(item, rowStart + r, colStart + c);
+                    });
+                });
+            }
+        }
+        return items;
+    }
+
+    /**
+     * Adds multiple GridIcons to the grid at the specified starting row and column.
+     * The items can be provided as a 2D array, where each sub-array represents a row of items.
+     * @param { import("../../SvgPlus/4.js").SvgPlusClass } classDef - The class definition to use for creating the items (e.g., GridIcon).
+     * @param {any[][]|any[]} items - A 2D array of GridIcon options or a flat array of GridIcon options.
+     * @param {number} rowStart - The starting row index (0-based).
+     * @param {number} colStart - The starting column index (0-based).
+     * @param {number} [rowEnd] - The ending row index (0-based, inclusive).
+     * @param {number} [colEnd] - The ending column index (0-based, inclusive).
+     */
+    addItemInstances(classDef, items, ...posArgs) {
+        let instances = items.map(item => Array.isArray(item) ? item.map(i => new classDef(i)) : new classDef(item));
+        this.addItems(instances, ...posArgs);
+        return instances;
+    }
+
+    /**
+     * Adds multiple GridIcons to the grid at the specified starting row and column.
+     * The items can be provided as a 2D array, where each sub-array represents a row of items.
+     * @param {GridIconOptions[][]|GridIconOptions[]} items - A 2D array of GridIcon options or a flat array of GridIcon options.
+     * @param {number} rowStart - The starting row index (0-based).
+     * @param {number} colStart - The starting column index (0-based).
+     * @param {number} [rowEnd] - The ending row index (0-based, inclusive).
+     * @param {number} [colEnd] - The ending column index (0-based, inclusive).
+     */
+    addGridIcons(items, ...posArgs) {
+        return this.addItemInstances(GridIcon, items, ...posArgs);
     }
 }

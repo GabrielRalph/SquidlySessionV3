@@ -8,7 +8,7 @@ import { getHostPresets } from "../VideoCall/presets.js";
 import { FaceLandmarks } from "./Algorithm/Utils/face-mesh.js";
 
 const used_points = [...new Set([152,10,389,162,473,468,33, 246, 161, 160, 159, 158, 157, 173, 133, 155, 154,153,145,144,163,7,362, 398, 384, 385, 386, 387, 388, 263, 249, 390,373, 374, 380, 381, 382,61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291, 375, 321, 405, 314, 17, 84, 181, 91, 146,10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109])]
-const MaxTimeTillFade = 4000;
+const MaxTimeTillFade = 3000;
 
 function getMinMax(points) {
     let min = new Vector(Infinity, Infinity);
@@ -84,36 +84,18 @@ export class FeedbackFrame extends SvgPlus {
     /** @type {FaceLandmarks} */
     points = [];
 
-    /** @type {HTMLVideoElement} */
-    video = null;
-
     /** @type {SVGSVGElement & SvgPlus} */
     svg = null;
 
     /** @type {FaceLandmarks} */
     avg
 
-    _renderEyesOnly = false;
-
     constructor() {
         super("feedback-frame");
         this.styles = {
             position: "relative",
         }
-        this.video = this.createChild("video", {
-            muted: true,
-            playsinline: true,
-            autoplay: true,
-            styles: {
-                "position": "absolute",
-                top: 0,
-                left: 0,
-                bottom: 0,
-                right: 0,
-                "z-index": -1,
-                width: "100%"
-            }
-        });
+
         this.header = this.createChild("div", {
             class: "f-header",
             styles: {
@@ -128,6 +110,7 @@ export class FeedbackFrame extends SvgPlus {
         })
 
         this.svg = this.createChild("svg");
+        
         this.svg.createChild("defs", {content:
             `<defs>
                 <linearGradient id="border-gradient-top" x1="0" x2="0" y1="0" y2="1">
@@ -165,6 +148,7 @@ export class FeedbackFrame extends SvgPlus {
                 </linearGradient>
             </defs>`
         })
+
         this.svgStyle = this.svg.createChild("style", {content: `
             .border-norm {
                 stop-color: #156082;
@@ -184,9 +168,17 @@ export class FeedbackFrame extends SvgPlus {
         this.svgRenders = this.svg.createChild("g", {class: "renders"});
         
         this.aspect = 1;
-       
     }
 
+    /**
+     * Renders the border indicating the valid head area.
+     * @param {Number} w the width of the feedback display
+     * @param {Number} h the height of the feedback display
+     * @param {Number} bh the thickness of the border
+     * @param {FaceLandmarks} points the current face points to determine where the user is looking
+     * @param {Number} mx the horizontal margin to account for when rendering the border
+     * @param {Number} my the vertical margin to account for when rendering the border
+     */
     renderBorder(w, h, bh, points, mx, my) {
         let html = "";
         let bpaths = makeBorderPath(w, h, bh, points, mx, my);
@@ -196,7 +188,7 @@ export class FeedbackFrame extends SvgPlus {
         return html;
     }
 
-    /**
+    /** Renders the face with all details (eyes, mouth, outline)
      * @param {Number} w
      * @param {Number} h
      * @param {Number} error
@@ -231,7 +223,7 @@ export class FeedbackFrame extends SvgPlus {
         return html;
     }
 
-    /**
+    /** Renders the face with only the eyes details (no mouth or outline)
      * @param {Number} w
      * @param {Number} h
      * @param {Number} error
@@ -276,6 +268,16 @@ export class FeedbackFrame extends SvgPlus {
         return html;
     }
 
+    /**
+     * Renders a thermometer on the side of the feedback display to indicate 
+     * the error level of the face points (i.e. how well the face points are detected).
+     * The thermometer empties and turns more red as the error level increases.
+     * @param {Number} xPos - The x position of the center of the thermometer
+     * @param {Number} startY - The y position of the top of the thermometer
+     * @param {Number} endY - The y position of the bottom of the thermometer
+     * @param {Number} error - The error level between 0 and 1, where 0 is no error and 1 is maximum error
+     * @param {Number} tw - The width of the thermometer
+     */
     renderThermometer(xPos, startY, endY, error, tw) {
         let fill = `"hsl(${96*error}deg 90% 56% / 50%)"`;
         let stroke = `"hsl(${96*error}deg 90% 56%)"`;
@@ -287,6 +289,9 @@ export class FeedbackFrame extends SvgPlus {
         `;
     }
 
+    /**
+     * Renders the feedback display, including the face and the border indicating where the user is looking.
+     */
     render(){
         let {points, svg, svgRenders, width, height, aspect, clientWidth, clientHeight} = this;
         if (clientWidth > 1 && clientHeight > 1)  {
@@ -317,10 +322,11 @@ export class FeedbackFrame extends SvgPlus {
                 
                 let op = points.faceFrameQualityMetric;
                 
-                if (this.avg) {
-                    op = this.avg.averageDistance(points) * 40;
+                const {onion} = this;
+                if (onion) {
+                    op = onion.averageDistance(points) * 40;
                     op =(1 - (op > 1 ? 1 : op)) ** 0.5;
-                    html += this.renderFace(width, height, 1, this.avg, 2);
+                    html += this.renderFace(width, height, 1, onion, 2);
                 }
 
                 html += this.renderThermometer(width - (bh-mx)/2, (bh), height - (bh), op, bh/3);
@@ -335,13 +341,28 @@ export class FeedbackFrame extends SvgPlus {
         }
     }
 
-    set disabled(bool) {
-        this.toggleAttribute("disabled", !!bool);
-        
+    /**
+     * Sets whether the feedback is disabled (e.g. because eye gaze isn't enabled or because
+     * face points are invalid) and updates the display accordingly.
+     * @param {(boolean|"nodata"|"disabled"|"inactive")} value whether feedback is disabled or not.
+     */
+    set disabled(value) {
+        if (value in this.messages) {
+            this.overlay.innerHTML = this.messages[value];
+        } else {
+            this.overlay.innerHTML = this.messages["nodata"];
+        }
+        this.toggleAttribute("disabled", !!value);
     }
 
+    /**
+     * Stops the feedback rendering loop. 
+     */
     stop(){}
 
+    /**
+     * Starts the feedback rendering loop.
+     */
     async start() {
         if (this._started) return;
         this._started = true;
@@ -355,10 +376,10 @@ export class FeedbackFrame extends SvgPlus {
     }
 
 
-    set headerText(text) {
-        this.header.textContent = text;
-    }
-
+    /**
+     * Sets the name of the user whose feedback is being shown and updates the messages accordingly.
+     * @param {String} name the name of the user whose feedback is being shown (e.g. "host" or "participant")
+     */
     set userName(name) {
         let nameLow = name.toLowerCase();
         let mName = name;
@@ -367,29 +388,32 @@ export class FeedbackFrame extends SvgPlus {
         } else if (nameLow === "participant") {
             mName = "The participant"
         }
-        this.headerText = name;
-        this.overlay.innerHTML = `<h1>${mName} doesn't<br/>currently have<br/>eye gaze enabled!</h1>`;
+        this.header.textContent = name;
+        this.messages = {
+            "disabled": `<h1>${mName} doesn't<br/>currently have<br/>eye gaze enabled!</h1>`,
+            "inactive": `<h1>${mName} isn't currently<br/>active in the session!</h1>`,
+            "nodata": `<h1>We can't detect ${mName}'s face right now!</h1>`,
+        }
     }
 
-
+    /**
+     * Gets the width of the feedback display.
+     * @return {Number} the width of the feedback display
+     */
     get width(){
         return this.size;
     }
+
+    /**
+     * Gets the height of the feedback display.
+     * @return {Number} the height of the feedback display
+     */
     get height(){
         return this.size / this.aspect;
     }
 
-
-
-    /** @param {MediaStream} stream */
-    set stream(stream){
-        // this.video.srcObject = stream;
-        // window.requestAnimationFrame(() => {
-        //     this.aspect = this.video.videoWidth / this.video.videoHeight
-        // })
-    }
-
     /** 
+     * Sets the aspect ratio of the feedback display (width/height) and updates the display accordingly.
      * @param {Number} aspect
      */
     set aspect(aspect){
@@ -402,14 +426,28 @@ export class FeedbackFrame extends SvgPlus {
         return this._aspect
     }
 
-    /** @param {FaceLandmarks} facePoints */
+    /** 
+     * Sets the onion (i.e. the average face points over calibration) for the feedback display and updates the display accordingly.
+     * @param {FaceLandmarks} facePoints 
+     * */
     set onion(facePoints) {
         if (facePoints instanceof FaceLandmarks) {
-            this.avg = facePoints;
+            this._onion = facePoints;
         }
     }
 
-    /** @param {FaceLandmarks} facePoints */
+    /**
+     * Gets the onion (i.e. the average face points over calibration) for the feedback display.
+     * @return {FaceLandmarks}
+     */
+    get onion() {
+        return this._onion;
+    }
+
+    /** 
+     * Sets the current face points for the feedback display and updates the display accordingly.
+     * @param {FaceLandmarks} facePoints 
+     * */
     set facePoints(facePoints) {
         if (facePoints instanceof FaceLandmarks) {
             this.points = facePoints;
@@ -417,60 +455,28 @@ export class FeedbackFrame extends SvgPlus {
         }
     }
 
+    /**
+     * Toggles whether to render only the eyes or the whole face in the feedback display and updates the display accordingly.
+     * @param {boolean} bool whether to render only the eyes or the whole face
+     */
     set renderEyesOnly(bool) {
         this._renderEyesOnly = !!bool;
     }
 
+    /**
+     * Gets whether only the eyes or the whole face is rendered in the feedback display.
+     * @return {boolean} whether only the eyes or the whole face is rendered in the feedback display
+     */
     get renderEyesOnly() {
         return this._renderEyesOnly;
     }
 
+    /**
+     * Gets the appropriate face rendering function based on whether only the eyes or the whole face should be rendered.
+     * @return {function} the appropriate face rendering function
+     */
     get renderFace() {
         return this._renderEyesOnly ? this.renderFaceEyes : this.renderFaceAll;
-    }
-}
-
-class FeedbackWidget extends SvgPlus {
-    constructor(user){
-        super("feedback-widget");
-
-        this.fb = this.createChild(FeedbackFrame);
-        let row = this.createChild("div");
-        row.createChild(GridIcon, {}, {
-            type: "starter",
-            symbol: "calibrate",
-            displayValue: "Calibrate",
-            events: {
-                "access-click": (e) => {
-                   this.dispatchEvent(new AccessEvent("calibrate", e))
-                }   
-           }
-        }, user + "-calibrate-button");
-
-        row.createChild(GridIcon, {}, {
-            type: "emphasis",
-            symbol: "test",
-            displayValue: "Test",
-            events: {
-                "access-click": (e) => {
-                   this.dispatchEvent(new AccessEvent("test", e))
-                }   
-           }
-        }, user + "-test-button");
-  
-    }
-
-    start(){this.fb.start()}
-    stop() {this.fb.stop()}
-
-    /** @param {FaceLandmarks} d */
-    set facePoints(d) {this.fb.facePoints = d}
-
-    /** @param {FaceLandmarks} d */
-    set onion(d) {this.fb.onion = d}
-
-    set headerText(text) {
-        this.fb.headerText = text;
     }
 }
 
@@ -495,105 +501,106 @@ export class FeedbackWindow extends OccupiableWindow {
         this.sdata = sdata;
         this.session = session;
 
+        /** @type {GridLayout} */
         let grid = this.createChild(GridLayout, {}, 3, 4);
 
-        grid.add(new GridIcon({
-            type: "action",
-            symbol: "close",
-            displayValue: "Exit",
-            events: {
-                "access-click": (e) => this.dispatchEvent(new AccessEvent("exit", e))
-            }
-        }), 0, 0);
-
-        this.enableEyeGazeButton = grid.add(new GridIcon({
-            type: "adjective",
-            symbol: "eye",
-            displayValue: "Enable eye gaze",
-            events: {
-                "access-click": (e) => {
-                    this.session.settings.toggleValue(`${this.shownUser}/eye-gaze-enabled`);
+        [[this.closeButton, this.enableEyeGazeButton],
+        [this.showUserButton, this.renderModeButton]] = grid.addGridIcons([
+            [
+                {
+                    type: "action",
+                    symbol: "close",
+                    displayValue: "Exit",
+                    events: {
+                        "access-click": (e) => this.dispatchEvent(new AccessEvent("exit", e))
+                    }
+                }, 
+                {
+                    type: "adjective",
+                    symbol: "eye",
+                    displayValue: "Enable eye gaze",
+                    events: {
+                        "access-click": (e) => {
+                            this.session.settings.toggleValue(`${this.shownUser}/eye-gaze-enabled`);
+                        }
+                    }
                 }
-            }
-        }), 0, 1);
-
-        
-        this.showUserButton = grid.add(new GridIcon({
-            type: "adjective",
-            symbol: "switch-user",
-            displayValue: "Host",
-            events: {
-                "access-click": (e) => {
-                    this.shownUser = this.shownUser === this.sdata.me ? this.sdata.them : this.sdata.me;
-                    sdata.set("shown-feedback-user", this.shownUser);
+            ],
+            [
+                {
+                    type: "adjective",
+                    symbol: "switch-user",
+                    displayValue: "Host",
+                    events: {
+                        "access-click": (e) => {
+                            this.shownUser = this.shownUser === this.sdata.me ? this.sdata.them : this.sdata.me;
+                            sdata.set("shown-feedback-user", this.shownUser);
+                        }
+                    }
+                },
+                {
+                    type: "adjective",
+                    symbol: "show-eyes",
+                    displayValue: "Show eyes",
+                    events: {
+                        "access-click": (e) => {
+                            this.toggleRenderMode();
+                            sdata.set("feedback-show-eyes-only", this.feedback.renderEyesOnly);
+                        }
+                    }
                 }
-            }
-        }), 1, 0);
-
-        this.renderModeButton = grid.add(new GridIcon({
-            type: "adjective",
-            symbol: "show-eyes",
-            displayValue: "Show eyes",
-            events: {
-                "access-click": (e) => {
-                    this.toggleRenderMode();
-                    sdata.set("feedback-show-eyes-only", this.feedback.renderEyesOnly);
+            ],
+            [
+                {
+                    type: "topic-starter",
+                    symbol: "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FvFWZT7iOGfm7aQkONjT7?alt=media&token=9c011d4c-fce7-4018-a7c9-8e19747a0555",
+                    displayValue: "Calibration settings",
+                    events: {
+                        "access-click": (e) => {
+                            session.settings.gotoPath(`home/${this.shownUser}/calibration`, false)
+                            session.settings.openPageOnBack("eyeGaze");
+                            e.waitFor(session.openWindow("settings"));
+                        }
+                    }
+                },
+                {
+                    type: "topic-starter",
+                    symbol: "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FVKtlw1GP6XQq0518M3C1?alt=media&token=1d403d43-ee1b-429f-8292-8aa8b9460be6",
+                    displayValue: "Access settings",
+                    events: {
+                        "access-click": (e) => {
+                            session.settings.gotoPath(`home/${this.shownUser}/access`, false)
+                            session.settings.openPageOnBack("eyeGaze");
+                            e.waitFor(session.openWindow("settings"));
+                        }
+                    }
                 }
-            }
-        }), 1, 1);
-
-
-        grid.add(new GridIcon({
-            type: "topic-starter",
-            symbol: "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FvFWZT7iOGfm7aQkONjT7?alt=media&token=9c011d4c-fce7-4018-a7c9-8e19747a0555",
-            displayValue: "Calibration settings",
-            events: {
-                "access-click": (e) => {
-                    session.settings.gotoPath("home/host/calibration")
-                    session.openWindow("settings");
-                }
-            }
-        }), 2, 0);
-
-        grid.add(new GridIcon({
-            type: "topic-starter",
-            symbol: "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/icons%2Fall%2FVKtlw1GP6XQq0518M3C1?alt=media&token=1d403d43-ee1b-429f-8292-8aa8b9460be6",
-            displayValue: "Access settings",
-            events: {
-                "access-click": (e) => {
-                    session.settings.gotoPath("home/host/access")
-                    session.openWindow("settings");
-                }
-            }
-        }), 2, 1);
-        
+            ]
+        ], 0, 0)
        
-        this.feedback = grid.add(new FeedbackFrame(), 0, 2, 1, 3);
+        this.feedback = grid.add(new FeedbackFrame(), [0,1], [2,3]);
 
-        this.calibrateButton = grid.add(new GridIcon({
-            type: "noun",
-            symbol: "calibrate",
-            displayValue: "Calibrate",
-            events: {
-                "access-click": (e) => {
-                    this.dispatchEvent(new AccessEvent("calibrate-"+this.shownUser, e))
-                }   
-        }
-        }, "calibrate-button"), 2, 2);
-
-        this.testButton = grid.add(new GridIcon({
+        [this.calibrateButton, this.testButton] = grid.addGridIcons([
+            {
+                type: "noun",
+                symbol: "calibrate",
+                displayValue: "Calibrate",
+                events: {
+                    "access-click": (e) =>this.dispatchEvent(new AccessEvent("calibrate-"+this.shownUser, e))
+                } 
+            },
+            {
                 type: "emphasis",
                 symbol: "test",
                 displayValue: "Test",
                 events: {
-                    "access-click": (e) => {
-                    this.dispatchEvent(new AccessEvent("test-"+this.shownUser, e))
-                    }   
+                    "access-click": (e) => this.dispatchEvent(new AccessEvent("test-"+this.shownUser, e))
+                }   
             }
-        }, "calibrate-button"), 2, 3);
-
-        
+        ], 2, 2)
     }
+        
+    
 
     toggleRenderMode(bool) {
         if (typeof bool !== "boolean") {
@@ -604,117 +611,12 @@ export class FeedbackWindow extends OccupiableWindow {
         this.renderModeButton.displayValue = bool ? "Show face" : "Show eyes";
     }
 
-    async updateHostName() {
-        let presets = await getHostPresets(this.sdata.hostUID);
-        this.host.headerText = presets.name || "Host";
-    }
-
-
-    async initialise(){
-        const {sdata, session} = this
-
-        addProcessListener(this._onProcess.bind(this));
-        
-        let hideTimeOut = null;
-        session.videoCall.addEventListener("facepoints", (e) => {
-            if (this.shownUser === sdata.them) {
-                let {data} = e;
-                let points = FaceLandmarks.deserialise(data, used_points);
-                this._setFacePoints(points);
-                clearTimeout(hideTimeOut);
-                hideTimeOut = setTimeout(() => {
-                    this._setFacePoints(null);
-                }, MaxTimeTillFade)
-            }
-        });
-
-        this.hostName = session.settings.get("host/profileSettings/name") || "Host";
-        this.participantName = session.settings.get("participant/profileSettings/name") || "Participant";
-
-        
-        session.settings.addEventListener("change", (e) => {
-            if (e.path.endsWith("eye-gaze-enabled")) {
-                if (e.path.startsWith(this.shownUser)) {
-                    this.disabled = !e.value;
-                }
-            } else if (e.path.endsWith("profileSettings/name")) {
-                console.log("Feedback: User name changed for", e.path.split("/")[0], "new name:", e.value);
-                let user = e.path.split("/")[0];
-                this[user + "Name"] = e.value || (user === "host" ? "Host" : "Participant");
-                if (this.shownUser === user) {
-                    this.feedback.name = this[user + "Name"];
-                }
-            }
-        })
-
-        sdata.onValue(`onion/${sdata.them}`, (str) => {
-            let onion = FaceLandmarks.deserialise(str, used_points);
-            this[sdata.them + "Onion"] = onion;
-            if (this.shownUser === sdata.them) {
-                this.feedback.onion = onion;
-            }
-        })
-
-        sdata.onValue(`onion/${sdata.me}`, (str) => {
-            let onion = FaceLandmarks.deserialise(str, used_points);
-            this[sdata.me + "Onion"] = onion;
-            if (this.shownUser === sdata.me) {
-                this.feedback.onion = onion;
-            }
-        })
-
-        sdata.onValue("feedback-show-eyes-only", (val) => {
-            this.toggleRenderMode(!!val);
-        });
-
-        sdata.onValue("shown-feedback-user", (user) => {
-            this.shownUser = user;
-        })
-    }
-
-
-    /** Sets which user's feedback to show
-     * @param {"host"|"participant"} user
-     */
-    set shownUser(user) {
-        let shownUser = user === "host" ? "host" : "participant";
-        this._shownUser = shownUser;
-        this.feedback.onion = this[shownUser + "Onion"] || null;
-        this.feedback.userName = this[shownUser + "Name"]
-        this.disabled = !this.session.settings.get(shownUser + "/eye-gaze-enabled");
-        this.showUserButton.displayValue = this[shownUser + "Name"];
-    }
-
-
-    set disabled(bool) {
-        bool = !!bool;
-        this.feedback.disabled = bool;
-        this.renderModeButton.disabled = bool;
-        this.calibrateButton.disabled = bool;
-        this.testButton.disabled = bool;
-        this.enableEyeGazeButton.symbol = bool ? "noeye" : "eye";
-        this._disabled = bool;
-    }
-    get disabled() {
-        return this._disabled;
-    }
-    
-    /**
-     * @return {"host"|"participant"} user which feedback is currently shown
-     */
-    get shownUser() {
-        return this._shownUser;
-    }   
-
     /** Sets the onion for the current user and sends it to the other peer
      * @param {FaceLandmarks} onion 
      * */
     setOnion(onion) {
         const {sdata} = this
         this[sdata.me + "Onion"] = onion;
-        if (this.shownUser === sdata.me) {
-            this.feedback.onion = onion;
-        }
         let str = onion.serialise(used_points);
         sdata.set(`onion/${sdata.me}`, str);
     }
@@ -727,40 +629,198 @@ export class FeedbackWindow extends OccupiableWindow {
 
     async close(){
         this.isOpen = false;
-        this._setFacePoints(null, this.sdata.me);
-        this._setFacePoints(null, this.sdata.them);
+        
         this.dispatchEvent(new Event("close"));
         await this.hide(400);
+
+        // set face points to null so that feedback disappears
+        this._setUsersFacePoints(null, this.shownUser);
+    }
+
+   
+    async initialise(){
+        const {sdata, session} = this
+
+        addProcessListener(this._onProcess.bind(this));
+        
+        session.videoCall.addEventListener("facepoints", ({data}) => this._setUsersFacePoints(sdata.them, data));
+ 
+        this.hostName = session.settings.get("host/profileSettings/name") || "Host";
+        this.participantName = session.settings.get("participant/profileSettings/name") || "Participant";
+        
+        session.settings.addEventListener("change", (e) => {
+            if (e.path.endsWith("eye-gaze-enabled")) {
+                this._updateUsersStatus(e.path.split("/")[0]);
+            } else if (e.path.endsWith("profileSettings/name")) {
+                let user = e.path.split("/")[0];
+                this._updateUsersName(user, e.value || (user === "host" ? "Host" : "Participant"));
+            }
+        })
+
+
+        sdata.onUser("joined", this._updateUsersStatus.bind(this))
+        sdata.onUser("left",  this._updateUsersStatus.bind(this))
+
+
+        sdata.onValue(`onion/${sdata.them}`, str => this._updateUsersOnion(sdata.them, str))
+        sdata.onValue(`onion/${sdata.me}`, str => this._updateUsersOnion(sdata.me, str))
+        sdata.onValue("feedback-show-eyes-only", val => this.toggleRenderMode(!!val));
+        sdata.onValue("shown-feedback-user", user => this.shownUser = user)
     }
 
 
+    /** Sets which user's feedback to show
+     * @param {"host"|"participant"} user
+     */
+    set shownUser(user) {
+        let shownUser = user === "host" ? "host" : "participant";
+        this._shownUser = shownUser;
+        
+        this._updateUsersName();
+        this._updateUsersOnion();
+        this._updateUsersStatus();
+        this._setUsersFacePoints(shownUser, null);
+    }
+
+   
+    /**
+     * Sets whether the feedback is disabled (e.g. because eye gaze isn't enabled or because
+     * face points are invalid) and updates the display and buttons accordingly
+     * @param {(boolean|"nodata"|"disabled"|"inactive")} bool if boolean, whether feedback is disabled or not. 
+     * 
+     */
+    set disabled(bool) {
+        this.feedback.disabled = bool;
+        this._disabled = bool;
+        bool =!!bool;
+        this.renderModeButton.disabled = bool;
+        this.calibrateButton.disabled = bool;
+        this.testButton.disabled = bool;
+        this.enableEyeGazeButton.symbol = bool ? "noeye" : "eye";
+
+        if (!bool) {
+            clearTimeout(this._noDataTimeout);
+            this._noDataTimeout = setTimeout(() => {
+                this._setUsersFacePoints(this.shownUser, null);
+            }, MaxTimeTillFade);
+        }
+    }
+
+    get disabled() {
+        return this._disabled;
+    }
+    
+    /**
+     * @return {"host"|"participant"} user which feedback is currently shown
+     */
+    get shownUser() {
+        return this._shownUser;
+    }   
+
+    
+    /**
+     * Updates the onion for a user and updates the feedback display if the shown user's onion has changed
+     * @param {"host"|"participant"} user
+     * @param {FaceLandmarks|string|null} onion
+     */
+     _updateUsersOnion(user, onion) {
+        if (typeof user === "string") {
+            if (typeof onion === "string") {
+                onion = FaceLandmarks.deserialise(str, used_points);
+            }
+            this[user + "Onion"] = onion;
+        }
+
+        if (typeof user !== "string" || user === this.shownUser) {
+            this.feedback.onion = this[this.shownUser + "Onion"] || null;
+        }
+    }
+
+    /**
+     * Updates the status of a user (whether they have eye gaze enabled and whether they
+     * are active in the session) and updates the feedback display accordingly
+     * @param {"host"|"participant"} user
+     */
+    _updateUsersStatus(user) {
+        if (typeof user !== "string" || user === this.shownUser) {
+            if (!this.session.settings.get(this.shownUser + "/eye-gaze-enabled")) {
+                this.disabled = "disabled";
+            } else if (!this.sdata.isUserActive(this.shownUser)) {
+                this.disabled = "inactive";
+            } else {
+                this.disabled = false;
+            }
+        }
+    }
+     
+    /**
+     * Updates the displayed name for a user and updates the display if the shown user's name has changed
+      * @param {"host"|"participant"} user
+      * @param {String} value the new name to set for the user
+     */
+    _updateUsersName(user, value) {
+        if (typeof user === "string" && typeof str === "string") {
+            this[user + "Name"] = value;
+        }
+        
+        if (typeof user !== "string" || user === this.shownUser) {
+            this.feedback.userName = this[this.shownUser + "Name"];
+            this.showUserButton.displayValue = this[this.shownUser + "Name"];
+        }
+    }
+
+  
     /** @param {{points: FaceLandmarks?}} data*/
     _onProcess(data) {
         const {sdata} = this;
         if (this.isOpen && this.shownUser === sdata.me) {
-            
             let points = null;
-            let str = null;
-            if ("points" in data && data.points instanceof FaceLandmarks) {
+
+            // If data contains face points, serialise them and send to other peer
+            if (data.points instanceof FaceLandmarks) {
                 points = data.points;
-                str = points.serialise(used_points);
+                const str = points.serialise(used_points);
+                this.session.videoCall.sendData("facepoints", str);
             }
 
-            this._setFacePoints(points);
-            this.session.videoCall.sendData("facepoints", str);
+            // Set face points for current user
+            this._setUsersFacePoints(sdata.me, points);
         }
     }
 
-    _setFacePoints(facePoints) {
-        if (!(facePoints instanceof FaceLandmarks)) {
-            this.feedback.toggleAttribute("hide", true);
-            this.feedback.stop();
-        } else {
-            this.feedback.start();
-            this.feedback.toggleAttribute("hide", false);
-            let invalid = facePoints.width == 0 || facePoints.isOutside;
-            this.feedback.toggleAttribute("invalid", invalid)
-            this.feedback.facePoints = facePoints.width == 0 ? null : facePoints; 
+    /**
+     * Sets the face points for a user and updates the feedback display accordingly
+     * @param {"host"|"participant"} user
+     * @param {FaceLandmarks|string|null} facePoints
+     */
+    _setUsersFacePoints(user, facePoints) {
+        if (user === this.shownUser) {
+
+            // Deserialise if facePoints is a string
+            if (typeof facePoints === "string") {
+                facePoints = FaceLandmarks.deserialise(facePoints, used_points);
+            }
+
+            // Check if face points are valid
+            const invalid = !(facePoints instanceof FaceLandmarks) || facePoints.width == 0 || facePoints.isOutside;
+            if (invalid) {
+                // If invalid, show feedback as disabled and stop rendering
+                this.feedback.stop();
+                this._updateUsersStatus();
+                this.disabled = this.disabled || "nodata";
+            } else {
+                // If not invalid, show feedback and render face points
+                this.feedback.start();
+                this.feedback.facePoints = facePoints.width == 0 ? null : facePoints; 
+                if (this.disabled == "nodata") {
+                    this.disabled = false;
+                }
+
+                clearTimeout(this._noDataTimeout);
+                this._noDataTimeout = setTimeout(() => {
+                    this._setUsersFacePoints(this.shownUser, null);
+                }, MaxTimeTillFade);
+            }
         }
     }
    

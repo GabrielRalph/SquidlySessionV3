@@ -36,14 +36,7 @@ settings-panel > *:last-child {
     padding: 0.1em 1em;
 }
 
-icon-grid {
-    display: grid;
-    /* margin: var(--gap); */
-    gap: var(--gap);
-}
-
-
-icon-grid .grid-icon .card-icon {
+grid-layout .grid-icon .card-icon {
     filter: drop-shadow(2px 2px 4px #252525c5);
 }
 

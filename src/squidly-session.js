@@ -156,6 +156,13 @@ export class SessionDataFrame extends FirebaseFrame {
     this.getFirebaseName = () => firebaseName;
   }
 
+
+  /**
+   * Adds a listener for changes in user activity. 
+   * @param {("left" | "joined")} key - Listen to if the user has joined or left the session.
+   * @param {function(isActive: boolean)} callback - A callback function that is called when the user's activity status changes. 
+   *                                               - is passed the user ("host" or "participant").
+   */
   onUser(key, callback) {
     if (sessionConnection == null || !sessionConnection.hasJoined) {
       throw "Session not connected";
@@ -840,10 +847,16 @@ export class SquidlySession extends SquildyFeatureProxy {
     return sessionConnection.isHost;
   }
 
+  /**
+   * @return {boolean} True if a feature window is currently open, false otherwise.
+   */
   get isOccupied() {
     return $$.get(this).occupier !== null;
   }
 
+  /**
+   * @return {string} The name of the currently open feature, or null if no feature is currently open.
+   */
   get currentOpenFeature() {
     return $$.get(this).occupier;
   }
