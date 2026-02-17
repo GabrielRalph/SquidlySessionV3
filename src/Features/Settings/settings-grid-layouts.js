@@ -32,7 +32,7 @@ class SettingsIconClickEvent extends AccessEvent {
      */
     constructor(event, icon, element) {
         super("settings-click", event, {bubbles: true});
-        this.icon = icon;
+        this.icon = {...icon};
         this.iconElement = element;
     }
 }

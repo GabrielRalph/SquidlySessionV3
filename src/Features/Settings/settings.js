@@ -213,17 +213,18 @@ class SettingsWindow extends OccupiableWindow {
        const newEvent = new InteractionEvent(e, icon);
        this.dispatchEvent(newEvent);
 
-
         if (newEvent.defaultPrevented === false) {
            let lastPath = this.history.join("/");
-        
+
             // Check if the icon has a link to another page, if so navigate to that page
             if (icon.link in this._dynamicPages || this._getSettingsPageLayout(icon.link) !== null) {
                 await this.gotoPath([...this.history, icon.link], e);
             
             // Otherwise, if the icon has an action, perform that action
             } else if (icon?.action in this._actions) {
-                await this._actions[icon.action](e);
+                console.log(icon)
+                const settingPath = (icon.path || []).join("/") + "/" + (icon.setting || icon.settingKey);
+                await this._actions[icon.action](e, settingPath);
             }
 
             // After handling the click, check if the path has changed and log it if it has
@@ -242,17 +243,16 @@ class SettingsWindow extends OccupiableWindow {
         home: e => e.waitFor(this.gotoPath(["home"], e)),
         back: e => e.waitFor(this.gotoPath(this.history.slice(0, -1), e)),
         search: e => e.waitFor(this.openProfileSearch()),
-        "increment-setting": (e) => {
-            let {icon: {settingName, direction}} = e;
-            this.settingsFeature.incrementValue(settingName, direction);
+        "increment-setting": (e, name) => {
+            let {icon: {direction}} = e;
+            this.settingsFeature.incrementValue(name, direction);
         },
-        "set-setting": (e) => {
-            let {icon: {settingName, value}} = e;
-            this.settingsFeature.setValue(settingName, value);
+        "set-setting": (e, name) => {
+            let {icon: {value}} = e;
+            this.settingsFeature.setValue(name, value);
         },
-        "toggle-setting": (e) => {
-            let {icon: settingName} = e;
-            this.settingsFeature.toggleValue(settingName);
+        "toggle-setting": (e, name) => {
+            this.settingsFeature.toggleValue(name);
         },
         "change-device": (e) => {
             let {icon} = e;
