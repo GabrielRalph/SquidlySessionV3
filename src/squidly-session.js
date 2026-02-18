@@ -693,16 +693,33 @@ export class SquidlySessionElement extends ShadowElement {
   async initialiseKeyboardShortcuts() {
     window.addEventListener("keydown", (e) => {
       let active = getDeepActiveElement();
-      let notInInput = active === document.body || active?.tagName === "IFRAME";
-      let validKey = e.key in this.keyboardShortcuts;
-      let enabled = this.settings.get(
-        `${this.sdata.me}/keyboardShortcuts/${e.key}`,
-      );
 
-      if (notInInput && validKey && enabled) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.keyboardShortcuts[e.key]();
+      // Provided the user is not currently focused on an input element
+      if (active === document.body || active?.tagName === "IFRAME") {
+
+        // Create a copy of the event that can be dispatched to the occupier
+        let json = {}
+        for (let key in e) json[key] = e[key];
+        json.cancelable = true;
+        json.bubbles = false;
+        const copyEvent = new KeyboardEvent("keydown", json);
+        if (this.currentOccupier instanceof Element) {
+          this.currentOccupier.dispatchEvent(copyEvent);
+        }
+        
+        // Check the occupier didn't prevent the default action for the key event
+        if (!copyEvent.defaultPrevented) {
+
+          // Given the key is a valid shortcut and the shortcut is enabled in 
+          // settings, trigger the corresponding action.
+          let validKey = e.key in this.keyboardShortcuts;
+          let enabled = this.settings.get(`${this.sdata.me}/keyboardShortcuts/${e.key}`);
+          if (validKey && enabled) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.keyboardShortcuts[e.key]();
+          }
+        }
       }
     });
   }

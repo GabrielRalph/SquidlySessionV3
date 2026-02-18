@@ -1,46 +1,17 @@
 import markdownIt from 'https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/+esm'
+import katex from "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.mjs";
 import { SvgPlus } from '../SvgPlus/4.js';
 
 const MD = new markdownIt();
-const JaxSetup = document.createElement("script");
-JaxSetup.innerHTML = `
-MathJax = {
-        loader: {load: ['[tex]/color', '[tex]/colortbl']},
-        tex: {
-            packages: {'[+]': ['color', 'colortbl']},
-            inlineMath: [['$$', '$$']],
-            displayMath: [],
-            macros: {
-            trans:"\\\\underset{heat}{\\\\overset{cool}{\\\\rightleftharpoons}}",
-            mat: ["\\\\left[ \\\\begin{matrix} #1 \\\\end{matrix}\\\\right]", 1],
-            abs: ["\\\\left| \\\\ #1 \\\\right|", 1],
-            dpar: ["\\\\cfrac{\\\\partial #1}{\\\\partial #2}", 2],
-            hl: ["{\\\\color{WildStrawberry} #1}", 1],
-            red: ["{\\\\color{BrickRed} {#1}}", 1],
-            blue: ["{\\\\color{RoyalBlue} {#1}}", 1],
-            mod: ["\\\\ (\\\\text{mod } {#1})", 1],
-            },
-            tags: "ams",
-        },
-        svg: {
-            fontCache: 'global'
-        }
-    };
-    `
-document.body.appendChild(JaxSetup);
-/** @type {HTMLScriptElement} */
-const JaxScript = document.createElement("script");
-JaxScript.setAttribute("type", "text/javascript")
-let loadingProm = new Promise((r) => {
-    JaxScript.addEventListener("load", () => {
-        setTimeout(() => {
-            r()
-        }, 100)        
-    })
-})
-// JaxScript.toggleAttribute("async");
-JaxScript.setAttribute("src", "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js");
-document.body.appendChild(JaxScript);
+
+ const macros = {
+    "\\trans": "\\underset{heat}{\\overset{cool}{\\rightleftharpoons}}",
+    "\\mat": "\\left[ \\begin{matrix} #1 \\end{matrix}\\right]",
+    "\\abs": "\\left| \\ #1 \\right|",
+    "\\dpar": "\\cfrac{\\partial #1}{\\partial #2}",
+    "\\mod": "\\ (\\text{mod } {#1})",
+};
+
 
 function markdown(text, multi){
     let html;
@@ -68,7 +39,7 @@ function tokeniseMath(text) {
             
             strs.push(text.slice(si, open));
             strs.push(token);
-            tokens.push([token, "$"+text.slice(open, close)+"$"])
+            tokens.push([token, text.slice(open + 2, close - 2)])
 
             si = close;
         }
@@ -82,7 +53,7 @@ function tokeniseMath(text) {
 
 function parseMode(mode) {
     let modeParsed = {
-        mathjax: false,
+        math: false,
         markdown: false,
         multi: false
     }
@@ -91,24 +62,22 @@ function parseMode(mode) {
            if (key in mode) modeParsed[key] = mode[key];
         }
     } else if (typeof mode === "string") {
-        if (mode === "mathjax") {
-            modeParsed.mathjax = true;
+        if (mode === "math") {
+            modeParsed.math = true;
         } else if (mode === "markdown") {
             modeParsed.markdown = true;
         } else if (mode === "both") {
-            modeParsed.mathjax = true;
+            modeParsed.math = true;
             modeParsed.markdown = true;
         } else if (mode === "both-multi") {
-            modeParsed.mathjax = true;
+            modeParsed.math = true;
             modeParsed.markdown = true;
             modeParsed.multi = true;
         } 
     } else if (mode === true) {
         modeParsed.markdown = true;
-        modeParsed.mathjax = true;
+        modeParsed.math = true;
     } 
-
-
     return modeParsed
 }
 
@@ -120,10 +89,12 @@ export class MarkdownElement extends SvgPlus {
 
     set markdownMode(mode) {
         this._markdownMode = parseMode(mode);
+        this.set(this.content);
     }
     get markdownMode() {
         return this._markdownMode;
     }
+
 
     /**
      * @param {string} content
@@ -132,56 +103,66 @@ export class MarkdownElement extends SvgPlus {
         this.set(content);
     }
 
-    adjustFS() {
-        window.requestAnimationFrame(() => {
-            let els = this.querySelectorAll("*")
-            let bboxes = [...els].map(el => el.getBoundingClientRect())
-            let maxWidth = Math.max(...bboxes.map(bbox => bbox.width));
-            let {width, height} = this.getBoundingClientRect();
-            
-            if (maxWidth > width) {
-                let ratio =  width / (maxWidth);
-                let aspect = ((height/width) - 1) * 0.1;
+    /**
+     * @return {string}
+     */
+    get content() {
+        return this._content;
+    }
 
-                // console.log(ratio, aspect);
-                ratio += aspect;
+    adjustFS() {
+        // window.requestAnimationFrame(() => {
+        //     let els = this.querySelectorAll("*")
+        //     let bboxes = [...els].map(el => el.getBoundingClientRect())
+        //     let maxWidth = Math.max(...bboxes.map(bbox => bbox.width));
+        //     let {width, height} = this.getBoundingClientRect();
+            
+        //     if (maxWidth > width) {
+        //         let ratio =  width / (maxWidth);
+        //         let aspect = ((height/width) - 1) * 0.1;
+
+        //         // console.log(ratio, aspect);
+        //         ratio += aspect;
                 
-                this.styles = {
-                    "font-size": `${ratio.toFixed(3)}em`
-                }
-            }
-        })
+        //         this.styles = {
+        //             "font-size": `${ratio.toFixed(3)}em`
+        //         }
+        //     }
+        // })
     }
 
     async set(content){
-        let math = false;
         if (typeof content === "string" && content.length > 0) {
-            if (this.markdownMode.mathjax && this.markdownMode.markdown) {
-                let [contentTokenised, tokens] = tokeniseMath(content);
-        
-                let html = markdown(contentTokenised, this.markdownMode.multi);
-        
-                for (let token of tokens) {
-                    html = html.replace(...token)
-                }
-                this.innerHTML =  html
-                math = true;
-                
-            } else if (this.markdownMode.markdown) {
-                this.innerHTML = markdown(content, this.markdownMode.multi);
-            } else if (this.markdownMode.mathjax) {
-                this.textContent = content;
-                math = true;
-            } else {
-                this.innerHTML = content;
-            }      
+            this._content = content;
+            let contentTokenised = content;
+            let tokens = [];
 
-            if (math) {
-                await loadingProm;        
-                if (MathJax) {
-                    await MathJax.typeset([this]) 
+            if (this.markdownMode.math) {
+                [contentTokenised, tokens] = tokeniseMath(content);
+            }
+
+            if (this.markdownMode.markdown) {
+                contentTokenised = markdown(contentTokenised, this.markdownMode.multi);
+            }
+
+            if (this.markdownMode.math) {
+                 for (let [id, math] of tokens) {
+                    let mathml = "";
+                    try {
+                        mathml = katex.renderToString(math, {
+                            throwOnError: false,
+                            output: "mathml",
+                            macros
+                        })
+                    } catch (e) {
+                        console.error("Error parsing math:",math, e);
+                    }
+                    contentTokenised = contentTokenised.replace(id, mathml);
                 }
             }
+
+            this.innerHTML = contentTokenised;
+           
         } else {
             this.innerHTML = "";
         }

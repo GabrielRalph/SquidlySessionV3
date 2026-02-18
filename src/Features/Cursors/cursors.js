@@ -107,6 +107,7 @@ export default class Cursors extends Features {
      * @param {Object} properties the properties of the cursor
     */
    updateCursorProperties(name, properties) {
+
        if (typeof properties !== "object") properties = null;
        this.sdata.set(`properties/${name}`, properties);
        this._updateProperties(properties, name)
@@ -182,7 +183,7 @@ export default class Cursors extends Features {
         let colour = this.session.settings.get(`${user}/cursors/cursorColour`);
         let style = this.session.settings.get(`${user}/cursors/cursorStyle`);
         let type = null;
-        if (size != "none") {
+        if (size != "none" && size != null) {
             size = size2num[size];
             colour = col2num[colour];
             style = style2Key[style] || "a";
@@ -192,6 +193,7 @@ export default class Cursors extends Features {
         }
         return {type, class: "cursor"}
     }
+
     _watchMouseCursorPosition() {
         let update = false;
 

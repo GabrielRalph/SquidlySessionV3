@@ -243,6 +243,7 @@ export class GridCard extends SvgPlus {
         this._type = type;
         this.classList.remove(this.type);
         this.classList.add(type);
+        this.onresize();
     }
 
     get type(){
@@ -251,6 +252,9 @@ export class GridCard extends SvgPlus {
 
      // Called when the size of the icon changes.
     onresize(e){
+        if (!e) {
+            e = [{contentRect: this.getBoundingClientRect()}];
+        }
         let bbox = e[0]?.contentRect;
         if (bbox) {
             let {width, height} = bbox;
@@ -262,6 +266,7 @@ export class GridCard extends SvgPlus {
                 }
             }
         }
+        return [bbox.width, bbox.height];
     }
 }
 
@@ -327,6 +332,23 @@ export class GridIcon extends GridCard {
             if (key in item) {
                 this[key] = item[key];
             }
+        }
+    }
+
+
+    /**
+     * Sets the markdown mode for the subtitle and display value elements, which determines how their content is rendered.
+     * @param {boolean|string|object} mode - The markdown mode to set. Can be a boolean, a string, or an object.
+     * If a boolean, true enables both math and markdown modes, while false disables both.
+     * If a string, it can be "math", "markdown", "both", or "both-multi" to specify the modes to enable.
+     * If an object, it can have boolean properties 'math', 'markdown', and 'multi' to specify the modes to enable.
+     */
+    set markdownMode(mode) {
+        if (this.subtitleElement) {
+            this.subtitleElement.markdownMode = mode;
+        }
+        if (this.displayValueElement) {
+            this.displayValueElement.markdownMode = mode;
         }
     }
     

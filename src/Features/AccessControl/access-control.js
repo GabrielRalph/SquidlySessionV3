@@ -117,9 +117,15 @@ class ControlOverlay extends ShadowElement {
      * @param {AccessButton} b 
      * @param {AccessControl} accessControl
      * */
-    async addDwellLoader(b, accessControl) {
+    async addDwellLoader(b, accessControl, options = {}) {
+        if (typeof options !== "object" || options == null) options = {};
+        let mode = options.mode || "dwell";
+
+
         b.highlight = true;
-        let sl = this.createChild(CircleLoader, {}, b, "dwell");
+        let sl = this.createChild(CircleLoader, {}, b, mode);
+        if (options.dwellTime) sl.dwellTime = options.dwellTime;
+        if (options.dwellRelease) sl.dwellRelease = options.dwellRelease;
         this.loaders.set(b, sl)
         b.ondisconnect = () => {
             sl.force()
@@ -279,8 +285,33 @@ export default class AccessControl extends Features {
 
     getButtonGroup(key){
         let groups = getButtonGroups();
-        console.log(groups);
         return groups[key] || [];
+    }
+
+    /**
+     * Adds a loader to a button. The loader will fill up and then 
+     * initiate a click on the button. If the button is disconnected 
+     * before the loader fills up then the loader will be removed and 
+     * no click will be initiated.
+     * 
+     * @param {AccessButton} button the button to add the loader to.
+     * @param {"dwell"|"switch"|number} loaderTime the time it takes for the loader to fill up in seconds, 
+     *                                             If "dwell" or "switch" is provided then the time will be 
+     *                                             taken from the corresponding setting for this user.
+     */
+    async addLoaderToButton(button, loaderTime) {
+        if (typeof button == "object" && button != null && button.getCenter instanceof Function) {
+            let options = {mode: "dwell"};
+            if (loaderTime == "dwell" || loaderTime == "switch") options.mode = loaderTime;
+            else if (typeof loaderTime == "number") {
+                options.dwellTime = dwellTime;
+                options.dwellRelease = dwellTime;
+            }
+           
+            await this.overlay.addDwellLoader(button, this, options);
+        } else {
+            throw new Error("Invalid button provided to addLoaderToButton");
+        }
     }
 
 

@@ -122,7 +122,6 @@ export function setCalibrationPositionGetter(posGetter) {
 Webcam.setProcess((input) => processFrame(input));
 
 async function load() {
-  console.log("Loading Eye Gaze");
   
   await Promise.all([
     FaceMesh.load(),

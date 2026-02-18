@@ -222,7 +222,6 @@ class SettingsWindow extends OccupiableWindow {
             
             // Otherwise, if the icon has an action, perform that action
             } else if (icon?.action in this._actions) {
-                console.log(icon)
                 const settingPath = (icon.path || []).join("/") + "/" + (icon.setting || icon.settingKey);
                 await this._actions[icon.action](e, settingPath);
             }
@@ -293,7 +292,6 @@ class SettingsWindow extends OccupiableWindow {
     async gotoPath(path, event) {
         // Provided the path is different from the current path
         if (this.currentPath !== path.join("/")) {
-            console.log("Going to path:", path, "event:", event);
 
             // Get the last part of the path to find the grid layout for the page
             let pageName = path[path.length - 1];

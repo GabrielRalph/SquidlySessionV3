@@ -250,6 +250,15 @@ export default class EyeGazeFeature extends Features {
     get eyeGazeOn() { return this._eyeGazeOn; }
 
 
+    /**
+     * Sets which user's feedback to show in the feedback window
+      * @param {"host"|"participant"} user
+     */
+    setFeebackShownUser(user) {
+        this.feedbackWindow.setShownUser(user);
+    }
+
+
     addEyeDataListener(cb) {
         if (cb instanceof Function) {
             this.eyeDataListeners.add(cb);

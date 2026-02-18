@@ -24,7 +24,7 @@ quiz-view {
     --button-text-color: black;
 }
 
-quiz-view[locked] .answers .grid-icon {
+quiz-view[locked] .answers .grid-icon:not([access-group="download"]) {
     pointer-events: none;
 }
 

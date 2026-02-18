@@ -1,7 +1,5 @@
 let Heatmaps = new Set();
 
-// console.log(html2canvas);
-
 
 function makeKernal(kernal) {
     let array = new Array(kernal).fill(0).map(() => new Array(kernal).fill(0));

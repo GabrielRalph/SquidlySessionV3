@@ -652,8 +652,6 @@ export class FeedbackWindow extends OccupiableWindow {
         this.hostName = session.settings.get("host/profileSettings/name") || "Host";
         this.participantName = session.settings.get("participant/profileSettings/name") || "Participant";
 
-        // console.log("Initialised feedback window with host name", this.hostName, "and participant name", this.participantName);
-        
         session.settings.addEventListener("change", (e) => {
             if (e.path.endsWith("eye-gaze-enabled")) {
                 this._updateUsersStatus(e.path.split("/")[0]);
@@ -674,6 +672,15 @@ export class FeedbackWindow extends OccupiableWindow {
         sdata.onValue("shown-feedback-user", user => this.shownUser = user)
     }
 
+    /**
+     * Sets which user's feedback to show and updates the display accordingly
+     * @param {"host"|"participant"} user
+     */
+    setShownUser(user) {
+        user = user === "host" ? "host" : "participant";
+        this.sdata.set("shown-feedback-user", user);
+    }
+
 
     /** Sets which user's feedback to show
      * @param {"host"|"participant"} user
@@ -687,6 +694,14 @@ export class FeedbackWindow extends OccupiableWindow {
         this._updateUsersStatus();
         this._setUsersFacePoints(shownUser, null);
     }
+
+    /**
+     * @return {"host"|"participant"} user which feedback is currently shown
+     */
+    get shownUser() {
+        return this._shownUser;
+    }   
+
 
    
     /**
@@ -716,13 +731,7 @@ export class FeedbackWindow extends OccupiableWindow {
         return this._disabled;
     }
     
-    /**
-     * @return {"host"|"participant"} user which feedback is currently shown
-     */
-    get shownUser() {
-        return this._shownUser;
-    }   
-
+   
     
     /**
      * Updates the onion for a user and updates the feedback display if the shown user's onion has changed
