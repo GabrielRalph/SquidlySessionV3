@@ -35,7 +35,6 @@
     cursor: pointer;
     color: var(--text);
 }
-
 .grid-icon[i-hidden] {
     opacity: 0;
     pointer-events: none;
@@ -47,7 +46,6 @@
 .grid-icon[i-display-only] {
     pointer-events: none;
 }
-
 .grid-icon .content {
     position: absolute;
     --b1: calc(var(--border) / 2);
@@ -66,7 +64,6 @@
     gap: 0.3em;
 
 }
-
 
 .grid-icon .content .symbol {
     width: 100%;
@@ -160,19 +157,19 @@
     transition: fill 0.15s ease-in-out
 }
 
-.grid-icon[hover],
-.grid-icon:hover {
+.grid-icon:not([i-disable-hover])[hover],
+.grid-icon:not([i-disable-hover]):hover {
     --tab-color: var(--tab-hover);
     --main-color: var(--main-hover);
     --outline-color: var(--outline);
 } 
 
-.grid-icon:hover .icon,
-.grid-icon[hover] .icon {
+.grid-icon:not([i-disable-hover]):hover .icon,
+.grid-icon:not([i-disable-hover])[hover] .icon {
     --icon-color: var(--icon-color-hover);
 }
 
-.grid-icon:active {
+.grid-icon:not([i-disable-active]):active {
     --tab-color: var(--tab-active);
     --main-color: var(--main-active);
     --outline-color: var(--outline-active, var(--outline));

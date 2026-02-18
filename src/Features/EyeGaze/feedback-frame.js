@@ -651,6 +651,8 @@ export class FeedbackWindow extends OccupiableWindow {
  
         this.hostName = session.settings.get("host/profileSettings/name") || "Host";
         this.participantName = session.settings.get("participant/profileSettings/name") || "Participant";
+
+        // console.log("Initialised feedback window with host name", this.hostName, "and participant name", this.participantName);
         
         session.settings.addEventListener("change", (e) => {
             if (e.path.endsWith("eye-gaze-enabled")) {
@@ -730,7 +732,7 @@ export class FeedbackWindow extends OccupiableWindow {
      _updateUsersOnion(user, onion) {
         if (typeof user === "string") {
             if (typeof onion === "string") {
-                onion = FaceLandmarks.deserialise(str, used_points);
+                onion = FaceLandmarks.deserialise(onion, used_points);
             }
             this[user + "Onion"] = onion;
         }

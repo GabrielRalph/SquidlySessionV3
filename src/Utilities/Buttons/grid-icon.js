@@ -186,16 +186,48 @@ export class GridCard extends SvgPlus {
         }
     }
 
-    /** @param {boolean} displayOnly */
+    /** 
+     * Disables pointer events and applies disabled styles to the icon.
+     * @param {boolean} displayOnly 
+     * */
     set displayOnly(displayOnly) {
         this.toggleAttribute("i-display-only", displayOnly);
     }
 
+    /** @return {boolean} */
     get displayOnly() {
         return this.hasAttribute("i-display-only");
     }
 
-    /** @param {boolean} disabled */
+    /** 
+     * Disables the active effect on the icon, which normally changes the icon's appearance when clicked.
+     * @param {boolean} type 
+     * */
+    set disableActiveEffect(disable) {
+        this.toggleAttribute("i-disable-active", disable);
+    }
+
+    /** @return {boolean} */
+    get disableActiveEffect() {
+        return this.hasAttribute("i-disable-active");
+    }
+    
+    /** 
+     * Disables the hover effect on the icon, which normally changes the icon's appearance when hovered over.
+     * @param {boolean} disable */
+    set disableHoverEffect(disable) {
+        this.toggleAttribute("i-disable-hover", disable);
+    }
+
+    /** @return {boolean} */
+    get disableHoverEffect() {
+        return this.hasAttribute("i-disable-hover");
+    }
+
+    /** 
+     * Disables the icon, making it non-interactive and applying disabled styles.
+     * I.e. slightly see through and no active effect.
+     * @param {boolean} disabled */
     set disabled(disabled) {
         this.toggleAttribute("i-disabled", disabled);
         this._disabled = disabled;
@@ -471,6 +503,11 @@ export class GridLayout extends SvgPlus {
         }
 
         return item;
+    }
+
+    addItemInstance(classDef, item, ...posArgs) {
+        let instance = new classDef(item);
+        return this.add(instance, ...posArgs);
     }
 
     /**
