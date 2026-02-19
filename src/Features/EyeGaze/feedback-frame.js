@@ -711,19 +711,22 @@ export class FeedbackWindow extends OccupiableWindow {
      * 
      */
     set disabled(bool) {
-        this.feedback.disabled = bool;
-        this._disabled = bool;
-        this.renderModeButton.disabled = bool && bool !== "invalid";
-
-        this.calibrateButton.disabled = bool;
-        this.testButton.disabled = bool;
-        this.enableEyeGazeButton.symbol = bool == "disabled" ? "noeye" : "eye";
-
-        if (!bool) {
-            clearTimeout(this._noDataTimeout);
-            this._noDataTimeout = setTimeout(() => {
-                this._setUsersFacePoints(this.shownUser, null);
-            }, MaxTimeTillFade);
+        if (bool !== this._disabled) {
+            this.feedback.disabled = bool;
+            this._disabled = bool;
+            this.renderModeButton.disabled = bool && bool !== "invalid";
+    
+            this.calibrateButton.disabled = bool;
+            this.testButton.disabled = bool;
+            this.enableEyeGazeButton.symbol = bool == "disabled" ? "noeye" : "eye";
+            this.enableEyeGazeButton.displayValue = bool == "disabled" ? "Eye-gaze Disabled" : "Eye-gaze Enabled";
+    
+            if (!bool) {
+                clearTimeout(this._noDataTimeout);
+                this._noDataTimeout = setTimeout(() => {
+                    this._setUsersFacePoints(this.shownUser, null);
+                }, MaxTimeTillFade);
+            }
         }
     }
 
