@@ -222,7 +222,15 @@ export class SessionDataFrame extends FirebaseFrame {
       };
       logf.pushSet(null, data);
     }
-  
+  }
+
+  async getLogs() {
+    if (sessionConnection == null || !sessionConnection.hasJoined) {
+      throw "Session not connected";
+    }
+    let logf = new FirebaseFrame(`session-data/${sessionConnection.sid}/logs`);
+    let logs = await logf.get();
+    return logs ? Object.values(logs) : {}
   }
 
   /** Get session data frame referenced at a child path
@@ -876,6 +884,21 @@ export class SquidlySession extends SquildyFeatureProxy {
    */
   get currentOpenFeature() {
     return $$.get(this).occupier;
+  }
+
+
+  async saveLogs() {
+    let logs = await $$.get(this).sdata.getLogs();
+    let dataStr =
+      "data:text/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(logs, null, 2));
+    let dlAnchor = document.createElement("a");
+    dlAnchor.setAttribute("href", dataStr);
+    dlAnchor.setAttribute("download", `session-${sessionConnection.sid}-logs.json`);
+    document.body.appendChild(dlAnchor);
+    dlAnchor.click();
+    dlAnchor.remove();
+
   }
 
   getFeature(name) {
