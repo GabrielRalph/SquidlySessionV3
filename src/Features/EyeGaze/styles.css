@@ -224,7 +224,7 @@ test-screen .grid-icon {
     --shadow-color: transparent;
     /* box-shadow: unset; */
 }
-test-screen .grid-icon:active {
+test-screen .grid-icon:not([i-disable-active]):active {
     transform: translateX(-50%) scale(0.98);
 }
 
