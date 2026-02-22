@@ -77,9 +77,12 @@ export default class VideoCall extends Features {
         this.topPanelWidget = new VideoPanelWidget();
         this.sidePanelWidget = new VideoPanelWidget();
         this.mainAreaWidget = new VideoPanelWidget();
+
+        /** @type {[VideoPanelWidget]} */
         this._allWidgets = [this.topPanelWidget, this.sidePanelWidget, this.mainAreaWidget]
 
         // store video elements for each user
+        /** @type {Object.<string, HTMLVideoElement>} */
         this.videos = {
             host: dummyVideo(),
             participant: dummyVideo()
@@ -114,7 +117,7 @@ export default class VideoCall extends Features {
 
             let next = () => {
                 for (let w of this._allWidgets) {
-                    w[user].captureFrame(video);
+                    w[user].captureFrame(this._muteState[user].video ? video : null);
                 }
                 video.requestVideoFrameCallback(next);
             }

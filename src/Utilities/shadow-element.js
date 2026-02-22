@@ -33,30 +33,57 @@ async function newCSSStyleSheet(text) {
     }
 }
 
-
+/**
+ * @template {SvgPlus} RootElementType
+ */
 export class ShadowElement extends SvgPlus {
+    /**
+     * @param {string | Element} el element or tag name to be used as the root of the shadow element.
+     * @param {string | RootElementType} name element or tag name to be used as the root of the shadow element. If a string is provided, an SvgPlus element with that tag name will be created and used as the root. If an SvgPlus element is provided, it will be used directly as the root. If not provided, the element created from `el` will be used as the root.
+     */
     constructor(el, name = el) {
         super(el);
         this.attachShadow({mode: "open"});
         this.loadStyles();
         let root;
         if (typeof name === "string") {
-            root = new SvgPlus(name);
+            this._root = /** @type {RootElementType} */ new SvgPlus(name);
         } else if (SvgPlus.is(name, SvgPlus)) {
-            root = name;
+            this._root = name;
         }
 
-        root.toggleAttribute("shadow");
-        this.shadowRoot.appendChild(root);
-        this._root = root;
+        this._root.toggleAttribute("shadow");
+        this.shadowRoot.appendChild(this._root);
     }
 
     appendChild(...args) {
         return this.root.appendChild(...args);
     }
 
-    createChild(...args) {
-        return this.root.createChild(...args);
+    /** Creates a child SvgPlus element, sets its properties and appends it to its root element
+     * @template {new (...args: any[]) => SvgPlus} T
+     * @overload
+     * @param {T} type class definition of the element to be created.
+     * @param {Props} props properties to be set on the element before it is appended to the DOM.
+     * @param {...any} args arguments to be passed to the constructor of the class definition provided in type.
+     * @returns {InstanceType<T>}
+     */
+    /** Creates a child SvgPlus element, sets its properties and appends to its root element
+     * @overload
+     * @param {ElementLike} type tag name of the element to be created.
+     * @param {Props} props properties to be set on the element before it is appended to the DOM.
+     * @returns {SvgPlus}
+     */
+    /** Creates a child SvgPlus element, sets its properties and appends to its root element
+     * @template {new (...args: any[]) => SvgPlus} T 
+     * @param {ElementLike | T} type type Can be provided as an element tag name or an SvgPlus class.
+     * @param {Props} props props element properties will be set before appending the newly created element.
+     * @param {...any} args args if a type is given as an SvgPlusClass then the params will be passed to the 
+     *                      constructor of that class when constructing the element.
+     * @return {SvgPlus | InstanceType<T>}
+     */
+    createChild(type, props = {}, ...args) {
+        return this.root.createChild(type, props, ...args);
     }
 
     async waitStyles(){
@@ -114,6 +141,7 @@ export class ShadowElement extends SvgPlus {
         return this["__+"].usedStyleSheets
     }
 
+    /** @returns {RootElementType} */
     get root() {return this._root;}
 }
 

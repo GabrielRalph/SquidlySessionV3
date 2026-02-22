@@ -112,8 +112,6 @@ export function createFeatureList(src) {
 
     console.log("\nFeatures: \n\t" + features.map(f => f.name).join("\n\t"));
     const module = [
-        "import { relURL } from '../Utilities/usefull-funcs.js';",
-        "",
         ...features.map(
             f => `/** @typedef {import('${f.relPath}').default} ${f.className} */`
         ),
@@ -130,7 +128,7 @@ export function createFeatureList(src) {
         "",
         "export const FeaturesList = [",
         features.map(
-            f=>`\t[relURL("${f.relPath}", import.meta), "${f.name}"]`
+            f=>`\t[ () => import("${f.relPath}"), "${f.name}"]`
         ).join(",\n"),
         "];"
     ]

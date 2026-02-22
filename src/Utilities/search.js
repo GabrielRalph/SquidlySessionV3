@@ -125,10 +125,12 @@ export class SearchBar extends GridCard {
 
 export class LetterIcon extends GridIcon {
     constructor(letter, group) {
-        let config = SPECIAL_LETTERS[letter] || {type: "adjective", symbol: {text: letter.toUpperCase()}};
+        let config = SPECIAL_LETTERS[letter] || {type: "adjective", symbol: {text: letter}};
         config.events = { "access-click": (e) => { this.dispatchEvent(new LetterEvent(letter, e)) }}
         super(config, group);
     }
+
+   
 }
 
 export class LettersIcon extends GridIcon {

@@ -155,6 +155,7 @@ session-view[font="opendyslexic"] {
 }
 session-view[font="atkinson"] {
     font-family: 'Atkinson Hyperlegible', sans-serif;
+    line-height: 0.9;
 }
 
 session-view[font="inclusive"] {

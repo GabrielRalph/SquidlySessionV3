@@ -160,12 +160,20 @@ export class GridIconSymbol extends SvgPlus{
                         "font-size": symbol.size || null
                     }
                 });
+            } else if ("svg" in symbol) {
+                this.innerHTML = symbol.svg;
+                
             }
         }
         this.isLoaded = true;
     }
 }
 
+/**
+ * @class GridCard
+ * A GridCard represents a card in the grid layout. It has a type which determines
+ * its appearance, elements should be placed inside the content element. 
+ */
 export class GridCard extends SvgPlus { 
     constructor(el, type) {
         super(el);
@@ -497,7 +505,17 @@ export class GridLayout extends SvgPlus {
                 "--rows": rows,
                 "--cols": cols
             }
+            this._rows = rows;
+            this._cols = cols;
         } 
+    }
+
+    /**
+     * Gets the size of the grid as an array containing the number of rows and columns, respectively.
+     * @return {[number, number]} An array containing the number of rows and columns, respectively.
+     */
+    get size() {
+        return [this._rows, this._cols];
     }
 
 

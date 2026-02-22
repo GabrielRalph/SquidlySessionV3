@@ -81,10 +81,14 @@ function parseMode(mode) {
     return modeParsed
 }
 
+const Canvas = new SvgPlus("canvas");
+const Ctx = Canvas.getContext("2d");
+
 export class MarkdownElement extends SvgPlus {
     constructor(el, mode = false){
         super(el)
         this.markdownMode = mode;
+        this._lastFontSize = 1;
     }
 
     set markdownMode(mode) {
@@ -111,30 +115,30 @@ export class MarkdownElement extends SvgPlus {
     }
 
     adjustFS() {
-        // window.requestAnimationFrame(() => {
-        //     let els = this.querySelectorAll("*")
-        //     let bboxes = [...els].map(el => el.getBoundingClientRect())
-        //     let maxWidth = Math.max(...bboxes.map(bbox => bbox.width));
-        //     let {width, height} = this.getBoundingClientRect();
-            
-        //     if (maxWidth > width) {
-        //         let ratio =  width / (maxWidth);
-        //         let aspect = ((height/width) - 1) * 0.1;
 
-        //         // console.log(ratio, aspect);
-        //         ratio += aspect;
+        if (!this.markdownMode.markdown && !this.markdownMode.math) {
+            let width = this.clientWidth;
+            let value = this.textContent;
+            if (value !== "" && width > 0) {
+                const font = getComputedStyle(this).font;
+                Ctx.font = font;
                 
-        //         this.styles = {
-        //             "font-size": `${ratio.toFixed(3)}em`
-        //         }
-        //     }
-        // })
+                let wordWidths = value.split(" ").map(w => Ctx.measureText(w).width);
+                let tWidth = Math.max(...wordWidths);
+                let dWidth = width * 0.9;
+
+                if (this._lastFontSize * dWidth / tWidth < 1) {
+                    this.children[0].style.setProperty("font-size", `${dWidth / tWidth}em`);
+                    this._lastFontSize = dWidth / tWidth;
+                }
+            }
+        }
     }
 
     async set(content){
         if (typeof content === "string" && content.length > 0) {
             this._content = content;
-            let contentTokenised = content;
+            let contentTokenised = `<span>${content}</span>`;
             let tokens = [];
 
             if (this.markdownMode.math) {

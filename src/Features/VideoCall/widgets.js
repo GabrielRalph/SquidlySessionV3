@@ -14,6 +14,8 @@ class MuteEvent extends Event {
     }
 }
 
+const DEFAULT_SIZE = [640, 480];
+
 class VideoDisplay extends HideShowTransition {
     
     constructor(el = "video-display") {
@@ -133,8 +135,16 @@ class VideoDisplay extends HideShowTransition {
 
 
     captureFrame(video) {
-        const { videoWidth, videoHeight } = video;
-        if (video.videoWidth > 0 && video.videoHeight > 0) {
+        if (video == null && this.canvas.width !== DEFAULT_SIZE[0] || this.canvas.height !== DEFAULT_SIZE[1]) {
+                this.canvas.width = DEFAULT_SIZE[0];
+                this.canvas.height = DEFAULT_SIZE[1];
+                this._aspect = DEFAULT_SIZE[0] / DEFAULT_SIZE[1];
+                this.styles = {
+                    "--aspect": this.aspect
+                }
+                this.dispatchEvent(new Event("aspect"));
+        } else if (video != null && video.videoWidth > 0 && video.videoHeight > 0) {
+            const { videoWidth, videoHeight } = video;
             this.waiting = false;
             this._aspect = videoWidth / videoHeight;
             this.styles = {

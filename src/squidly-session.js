@@ -431,10 +431,10 @@ export class SquidlySessionElement extends ShadowElement {
   async initialiseFeatures() {
     this.publicFeatureProxies = {};
     let featureModules = await Promise.all(
-      FeaturesList.map(async ([path, name]) => {
+      FeaturesList.map(async ([loader, name]) => {
         let niceName = uncamelCase(name);
         setLoadState(name, 0, "Loading " + niceName + " feature");
-        const module = await import(path);
+        const module = await loader();
         setLoadState(name, 0.2, "Loading " + niceName + " resources");
         await module.default.loadResources();
         setLoadState(name, 0.6, "Starting " + niceName + " feature");
@@ -478,6 +478,7 @@ export class SquidlySessionElement extends ShadowElement {
         }
       }
 
+
       if (occupiables.length == 1) {
         this.occupiables[name] = occupiables[0][0];
       } else {
@@ -495,14 +496,15 @@ export class SquidlySessionElement extends ShadowElement {
       return [feature, refName];
     };
 
+
     // Instantiate all features.
     let features = featureModules.map(makeFeature);
 
     // Initialise all features.
     await Promise.all(
       features.map(async ([feature, refName]) => {
-        await feature.initialise();
-        setLoadState(refName, 1);
+          await feature.initialise();
+          setLoadState(refName, 1);
       }),
     );
   }
@@ -930,4 +932,4 @@ export class SquidlySession extends SquildyFeatureProxy {
   }
 }
 
-SvgPlus.defineHTMLElement(SquidlySessionElement);
+SvgPlus.defineHTMLElement(SquidlySessionElement, "squidly-session-element");

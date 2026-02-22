@@ -388,7 +388,7 @@ export default class EyeGazeFeature extends Features {
     }
 
     async initialise(){
-        await Promise.all([load(), FeedbackWindow.loadStyleSheets(), this.calibrationFrame.loadGuides()])
+        await Promise.all([this.calibrationFrame.loadGuides()])
         if (!await startWebcam()) {
             this.throwInitialisationError("Could not start webcam. Please check your camera permissions.", "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/videopermissions.mp4?alt=media&token=743c04cc-974e-4ed9-bb21-8f0ac56c2d83s");
         }
@@ -512,6 +512,13 @@ export default class EyeGazeFeature extends Features {
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+    static loadResources() {
+        return Promise.all([
+            FeedbackWindow.loadStyleSheets(),
+            load()
+        ]);
+    }
+    
     static get layers() {
         return {
             feedbackWindow: {   // EyeGaze feedback window

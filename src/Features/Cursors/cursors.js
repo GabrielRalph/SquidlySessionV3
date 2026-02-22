@@ -3,7 +3,6 @@ import { Vector } from "../../SvgPlus/vector.js";
 import { HideShowTransition } from "../../Utilities/hide-show.js";
 import { ShadowElement } from "../../Utilities/shadow-element.js";
 import { POINTERS, SvgResize } from "../../Utilities/svg-resize.js";
-import { delay, relURL } from "../../Utilities/usefull-funcs.js";
 import { Features } from "../features-interface.js";
 
 const MAXTIME = 5000;

@@ -1,5 +1,5 @@
 import { SvgPlus } from "../SvgPlus/4.js";
-import { HideShow, HideShowTransition } from "./hide-show.js";
+import { HideShowTransition } from "./hide-show.js";
 import { relURL } from "./usefull-funcs.js";
 
 
@@ -37,7 +37,7 @@ class RotaterFrame extends HideShowTransition {
             {"transform": `rotateY(${start}deg)`},
             {"transform": `rotateY(${end}deg)`},
         ];
-        if (this.shown) this.animationSequence .reverse();
+        if (this.shown) this.animationSequence.reverse();
 
         // Toggle shown state to start the animation
         await this.toggle(!this.shown, duration);
@@ -67,7 +67,7 @@ class SlotTransition extends SvgPlus {
             this.contentSets.push(args);
         } else {
             this._settingContent = true;
-            await this.applyTransition(...args);
+            await this._applyTransition(...args);
             this._settingContent = false;
             if (this.contentSets.length > 0) {
                 this.setContent(...this.contentSets.pop());
@@ -76,7 +76,7 @@ class SlotTransition extends SvgPlus {
         }
     }
 
-    async applyTransition() {}
+    async _applyTransition() {}
 }
 
 /** Rotates between two elements */
@@ -89,12 +89,23 @@ export class Rotater extends SlotTransition {
         this.slot2 = this.flipper.createChild("div", {class: "slot-2"});
     }
 
+
+    /**
+     * Set the content of the rotater
+     * @param {Element} content
+     * @param {boolean} immediate whether to use rotation transition or immediate.
+     * @returns {Promise<void>}
+     */
+    async setContent(content, immediate = false) {
+        super.setContent(content, immediate);
+    }
+
     /** Set the content of the rotater
      * @param {Element} content
      * @param {boolean} immediate whether to use rotation transition or immediate.
      * @returns {Promise<void>}
      */
-    async applyTransition(content, immediate = false) {
+    async _applyTransition(content, immediate = false) {
         let element = immediate ? this.shownSlot : this.hiddenSlot;
         element.innerHTML = "";
         if (content instanceof Element) {
@@ -121,15 +132,48 @@ export class Rotater extends SlotTransition {
 
 
 export class Slider extends SlotTransition {
-    constructor(){
+    constructor(mode = "vertical"){
         super("div");
         this.class = "slider";
         this.slot1 = this.createChild(HideShowTransition, {class: "slot-1"}, "div", "up");
         this.slot2 = this.createChild(HideShowTransition, {class: "slot-2"}, "div", "up");
         this.slot1.shown = true;
+        this._directions = mode === "vertical" ? ["down", "up"] : ["left", "right"];
     }
 
-    async applyTransition(content, direction = 1) {
+    /**
+     * Set the mode of the slider
+     * @param {"vertical"|"horizontal"} mode
+     */
+    set mode(mode){
+        if (mode === "vertical") {
+            this._directions = ["down", "up"];
+        } else if (mode === "horizontal") {
+            this._directions = ["left", "right"];
+        }
+    }
+
+    /** @return {string} The slider mode */
+    get mode(){
+        return this._directions[0] === "down" ? "vertical" : "horizontal";
+    }
+
+
+    /**
+     * Set the content of the rotater. Direction can be set to the following values:
+     * ~  1: right or down,
+     * ~ -1: left or up, 
+     * ~ any other value: immediate transition without animation.
+     * @param {Element} content
+     * @param {(1|2|any)} direction 
+     * @returns {Promise<void>}
+     */
+    async setContent(content, direction) {
+        super.setContent(content, direction);
+    }
+
+
+    async _applyTransition(content, direction = 1) {
         let immediate = !(direction === 1 || direction === -1);
        
         let element = immediate ? this.shownSlot : this.hiddenSlot;
@@ -140,14 +184,15 @@ export class Slider extends SlotTransition {
         }
 
         if (!immediate) {
-            await this.slide(direction > 0);
+            await this._slide(direction > 0);
         }
     }
 
 
-    async slide(direction = false){
-        this.shownSlot.animationSequence = direction ? "down" : "up";
-        this.hiddenSlot.animationSequence = direction ? "up" : "down";
+    async _slide(direction = false){
+        let [dL, dR] = this._directions;
+        this.shownSlot.animationSequence = direction ? dL : dR;
+        this.hiddenSlot.animationSequence = direction ? dR : dL;
         await Promise.all([
             this.slot1.toggle(!this.slot1.shown, this.transitionTime * 1000),
             this.slot2.toggle(!this.slot2.shown, this.transitionTime * 1000)

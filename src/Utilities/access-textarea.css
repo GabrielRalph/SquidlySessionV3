@@ -1,0 +1,39 @@
+
+access-textarea {
+    overflow: hidden;
+    --shadow-color: transparent;
+    --margin-x: 1.5vmin;
+    --margin-y: 0.75vmin;
+    --caret-width: 3px;
+    --caret-height: 2.5em;
+    --caret-color: var(--action-red);
+}
+
+
+access-textarea textarea {
+    width: calc(100% - 2 * var(--margin-x));
+    height: calc(100% - 2 * (var(--margin-y)));
+    background-color: transparent;
+    border: none;
+    resize: none;
+    outline: none;
+    margin: var(--margin-y) var(--margin-x);
+    font: inherit;
+    font-size: 1.5em;
+    padding: 0;
+    line-height: 1.5;
+    caret-color: transparent;
+}
+
+access-textarea::after {
+    content: " ";
+    position: absolute;
+    top: calc(var(--caret-y, 1.5em) + var(--margin-y));
+    left: calc(var(--caret-x, 0px) + var(--margin-x));
+    right: 0;
+    bottom: 0;
+    width: var(--caret-width);
+    background-color: var(--caret-color);
+    height: var(--caret-height);
+    transform: translate(0.5px, -50%);
+}

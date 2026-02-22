@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="test">x = \cfrac{\sin(y)}{\sqrt{1 + \red{\cos(y)}}} = \mat{1 & 2 \\ 0 & 3} </div>
+    <div id="out"></div>
+</body>
+<script type = "module">
+    import katex from "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.mjs";
+    console.log(katex)
+    const test = document.getElementById("test");
+    const out = document.getElementById("out");
+
+
+    const MACROS = {
+        trans: "\\underset{heat}{\\overset{cool}{\\rightleftharpoons}}",
+        mat: "\\left[ \\begin{matrix} #1 \\end{matrix}\\right]",
+        abs: "\\left| \\ #1 \\right|",
+        dpar: "\\cfrac{\\partial #1}{\\partial #2}",
+        // hl: ["\\textColor{WildStrawberry}{#1}", 1],
+        // red: "\\textcolor{BrickRed}{#1}",
+        // blue: ["\\textColor{RoyalBlue}{#1}", 1],
+        mod: ["\\ (\\text{mod } {#1})", 1],
+    };
+
+    let macros = {}
+    for (let key in MACROS) {
+        macros["\\" + key] = MACROS[key];
+    }
+    
+    let res = katex.render(test.textContent, out, {
+        throwOnError: false,
+        output: "mathml",
+        macros
+    });
+    console.log(res);
+    // out.innerHTML = res;
+</script>
+</html>

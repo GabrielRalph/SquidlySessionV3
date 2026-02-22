@@ -1,22 +1,20 @@
 
-const MODEL_SRCS = [
-    "./Models/RRVectorsRed.js",
-]
+import { ModelList } from "./model-list.js";
 let Models = {};
 
 async function load() {
-  for (let url of MODEL_SRCS) {
+  for (let key in ModelList) {
     try {
-        let module = await import(url);
+        let module = await ModelList[key]();
         let model = module.default
         console.log("LOADING MODEL", model.name);
         if (model.name) {
           Models[model.name] = model;
         } else {
-          console.log(`The model at ${url} is not a valid model.`);
+          console.log(`The model at ${key} is not a valid model.`);
         }
     } catch (e) {
-        console.log(`The model at ${url} was unable to load.`, e)
+        console.log(`The model at ${key} was unable to load.`, e)
     }
   }
 }

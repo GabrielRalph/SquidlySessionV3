@@ -120,6 +120,9 @@ export class Features {
     static get privatePropertyNames() { return []}
 }
 
+/**
+ * @extends {ShadowElement<HideShowTransition>}
+ */
 export class OccupiableWindow extends ShadowElement {
     constructor(elementName, transitionMode="fade") {
         let root = new HideShowTransition(elementName, transitionMode);

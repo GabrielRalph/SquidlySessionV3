@@ -2,3 +2,8 @@
 */*.DS_Store
 */node_modules/
 /temp
+/node_modules
+/package-lock.json
+/package.json
+/rollup.config.js
+/build

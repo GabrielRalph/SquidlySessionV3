@@ -3,7 +3,7 @@ import { relURL } from "../../Utilities/usefull-funcs.js";
 import { Features, OccupiableWindow } from "../features-interface.js";
 import { SvgPlus } from "../../SvgPlus/4.js";
 import { GridIcon, GridLayout } from "../../Utilities/Buttons/grid-icon.js";
-import { KeyboardPanel } from "./keyboard-panel.js";
+// import { KeyboardPanel } from "./keyboard-panel.js";
 
 
 const ChatList = [
@@ -279,21 +279,21 @@ class ChatWindow extends OccupiableWindow {
         });
 
         // Create keyboard panel as a child of ChatWindow (like Quiz's search/quizView)
-        this.keyboardPanel = this.createChild(KeyboardPanel, {}, this.feature);
+        // this.keyboardPanel = this.createChild(KeyboardPanel, {}, this.feature);
 
         // Single source of truth: both inputBar and keyboard panel stay in sync
         this.feature._inputDraft = '';
         this.feature._onKeyboardInputChange = (value) => {
-            this.feature._inputDraft = value ?? '';
-            if (this.inputBar) this.inputBar.value = this.feature._inputDraft;
+        //     this.feature._inputDraft = value ?? '';
+        //     if (this.inputBar) this.inputBar.value = this.feature._inputDraft;
         };
         this.feature._syncDraftToKeyboardPanel = (v, force = false) => {
-            this.feature._inputDraft = v ?? '';
-            const k = this.keyboardPanel;
-            if ((force || k?.shown) && k?.chatInput) {
-                k.chatInput.value = this.feature._inputDraft;
-                k._updateWordSuggestions();
-            }
+        //     this.feature._inputDraft = v ?? '';
+        //     const k = this.keyboardPanel;
+        //     if ((force || k?.shown) && k?.chatInput) {
+        //         k.chatInput.value = this.feature._inputDraft;
+        //         k._updateWordSuggestions();
+        //     }
         };
 
         // Create chat history (red rectangle area for messages)
@@ -488,6 +488,11 @@ export default class ChatFeature extends Features {
             onSelect: e => e.waitFor(this.session.openWindow("chat")),
         })
 
+        this.session.keyboard.addEventListener("close", async (e) => {
+            if (this.session.currentOpenFeature === "chat") {
+                this.chatWindow.inputBar.value = this.session.keyboard.value; // Sync keyboard input back to chat input bar
+            }
+        });
 
         // Note: We don't use onValue listener for selected_chat like Apps does
         // because Chat doesn't need remote synchronization of window state
@@ -507,11 +512,12 @@ export default class ChatFeature extends Features {
     };
 
     async _handleKeyboardButton(e) {
-        const keyboardPanel = this.chatWindow.keyboardPanel;
-        if (!keyboardPanel) return;
-        if (!keyboardPanel.shown) this._syncDraftToKeyboardPanel(this._inputDraft ?? this.chatWindow.inputBar?.value ?? '', true);
-        const handler = this._keyboardHandlers[keyboardPanel.shown];
-        handler && await handler(keyboardPanel);
+        this.session.keyboard.bringUpKeyboard(this.chatWindow.inputBar?.value)
+        // const keyboardPanel = this.chatWindow.keyboardPanel;
+        // if (!keyboardPanel) return;
+        // if (!keyboardPanel.shown) this._syncDraftToKeyboardPanel(this._inputDraft ?? this.chatWindow.inputBar?.value ?? '', true);
+        // const handler = this._keyboardHandlers[keyboardPanel.shown];
+        // handler && await handler(keyboardPanel);
     }
 
     // User name mapping - factory pattern

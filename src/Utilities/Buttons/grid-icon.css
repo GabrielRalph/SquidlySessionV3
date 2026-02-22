@@ -49,12 +49,12 @@
 .grid-icon .content {
     position: absolute;
     --b1: calc(var(--border) / 2);
-    top: var(--b1);
+    top: var(--border);
     left: var(--b1);
     right: var(--b1);
-    bottom: var(--b1);
+    bottom: var(--border);
     width: calc(100% - 2 * var(--b1));
-    height: calc(100% - 2 * var(--b1));
+    height: calc(100% - 4 * var(--b1));
 
     display: flex;
     flex-direction: column;
@@ -117,7 +117,7 @@
     font-size: 1.2em;
     font-weight: 300;
     text-align: center;
-    max-width: 90%;
+    width: 90%;
     word-wrap: break-word;
 }
 
@@ -128,7 +128,7 @@
     font-size: 0.85em;
     font-style: italic;
     opacity: 0.9;
-    max-width: 90%;
+    width: 90%;
 }
 
 .grid-icon .card-icon {

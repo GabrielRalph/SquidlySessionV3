@@ -8,5 +8,8 @@
         "build": "node main.js"
     },
     "author": "Gabriel Ralph",
-    "license": "ISC"
+    "license": "ISC",
+    "devDependencies": {
+        "rollup": "^4.57.1"
+    }
 }

@@ -1,16 +1,15 @@
-import { relURL } from '../Utilities/usefull-funcs.js';
-
 /** @typedef {import('./ToolBar/tool-bar.js').default} ToolBarFeature */
 /** @typedef {import('./Settings/settings.js').default} SettingsFeature */
 /** @typedef {import('./Cursors/cursors.js').default} Cursors */
 /** @typedef {import('./EyeGaze/eye-gaze.js').default} EyeGazeFeature */
-/** @typedef {import('./VideoCall/video-call.js').default} VideoCall */
 /** @typedef {import('./Text2Speech/text2speech.js').default} Text2Speech */
+/** @typedef {import('./VideoCall/video-call.js').default} VideoCall */
 /** @typedef {import('./Notifications/notifications.js').default} Notifications */
 /** @typedef {import('./AccessControl/access-control.js').default} AccessControl */
 /** @typedef {import('./AAC/grid.js').default} AACGrid */
 /** @typedef {import('./Apps/apps.js').default} Apps */
 /** @typedef {import('./Chat/chat.js').default} ChatFeature */
+/** @typedef {import('./KeyboardT/keyboard.js').default} KeyboardFeature */
 /** @typedef {import('./Quiz/quiz.js').default} QuizFeature */
 /** @typedef {import('./ShareContent/share-content.js').default} ShareContent */
 
@@ -28,11 +27,11 @@ export class SquildyFeatureProxy {
 	/** @return {EyeGazeFeature} */
 	get eyeGaze() { return this.getFeature("eyeGaze"); }
 
-	/** @return {VideoCall} */
-	get videoCall() { return this.getFeature("videoCall"); }
-
 	/** @return {Text2Speech} */
 	get text2speech() { return this.getFeature("text2speech"); }
+
+	/** @return {VideoCall} */
+	get videoCall() { return this.getFeature("videoCall"); }
 
 	/** @return {Notifications} */
 	get notifications() { return this.getFeature("notifications"); }
@@ -49,6 +48,9 @@ export class SquildyFeatureProxy {
 	/** @return {ChatFeature} */
 	get chat() { return this.getFeature("chat"); }
 
+	/** @return {KeyboardFeature} */
+	get keyboard() { return this.getFeature("keyboard"); }
+
 	/** @return {QuizFeature} */
 	get quiz() { return this.getFeature("quiz"); }
 
@@ -61,17 +63,18 @@ export class SquildyFeatureProxy {
 }
 
 export const FeaturesList = [
-	[relURL("./ToolBar/tool-bar.js", import.meta), "toolBar"],
-	[relURL("./Settings/settings.js", import.meta), "settings"],
-	[relURL("./Cursors/cursors.js", import.meta), "cursors"],
-	[relURL("./EyeGaze/eye-gaze.js", import.meta), "eyeGaze"],
-	[relURL("./VideoCall/video-call.js", import.meta), "videoCall"],
-	[relURL("./Text2Speech/text2speech.js", import.meta), "text2speech"],
-	[relURL("./Notifications/notifications.js", import.meta), "notifications"],
-	[relURL("./AccessControl/access-control.js", import.meta), "accessControl"],
-	[relURL("./AAC/grid.js", import.meta), "aacGrid"],
-	[relURL("./Apps/apps.js", import.meta), "apps"],
-	[relURL("./Chat/chat.js", import.meta), "chat"],
-	[relURL("./Quiz/quiz.js", import.meta), "quiz"],
-	[relURL("./ShareContent/share-content.js", import.meta), "shareContent"]
+	[ () => import("./ToolBar/tool-bar.js"), "toolBar"],
+	[ () => import("./Settings/settings.js"), "settings"],
+	[ () => import("./Cursors/cursors.js"), "cursors"],
+	[ () => import("./EyeGaze/eye-gaze.js"), "eyeGaze"],
+	[ () => import("./Text2Speech/text2speech.js"), "text2speech"],
+	[ () => import("./VideoCall/video-call.js"), "videoCall"],
+	[ () => import("./Notifications/notifications.js"), "notifications"],
+	[ () => import("./AccessControl/access-control.js"), "accessControl"],
+	[ () => import("./AAC/grid.js"), "aacGrid"],
+	[ () => import("./Apps/apps.js"), "apps"],
+	[ () => import("./Chat/chat.js"), "chat"],
+	[ () => import("./KeyboardT/keyboard.js"), "keyboard"],
+	[ () => import("./Quiz/quiz.js"), "quiz"],
+	[ () => import("./ShareContent/share-content.js"), "shareContent"]
 ];

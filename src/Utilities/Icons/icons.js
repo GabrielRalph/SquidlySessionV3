@@ -150,4 +150,8 @@ export class Icon extends SvgPlus {
             this.onrender();
         }
     }
+
+    static get ICON_DEFAULT_STYLE() {
+        return DEFAULT_ICON_STYLE;
+     }
 }

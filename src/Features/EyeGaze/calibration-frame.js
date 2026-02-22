@@ -440,12 +440,12 @@ const speedName2value = {
 	"fast": 2,
 }
 
-const Guides = [
-	"default",
-	"balloon",
-	"bee",
-	"squidly"
-]
+const Guides = {
+	default: relURL("../../Utilities/CalibrationGuides/default.svg", import.meta),
+	ballon: relURL("../../Utilities/CalibrationGuides/balloon.svg", import.meta),
+	bee: relURL("../../Utilities/CalibrationGuides/bee.svg", import.meta),
+	squidly: relURL("../../Utilities/CalibrationGuides/squidly.svg", import.meta),
+}
 
 export class CalibrationFrame extends HideShowTransition {
 	/** @type {BasePointer} */
@@ -663,11 +663,11 @@ export class CalibrationFrame extends HideShowTransition {
 
 	async loadGuides(){
 		let guides = {};
-		await Promise.all(Guides.map(async (g) => {
-			let url = `../../Utilities/CalibrationGuides/${g}.svg`;
-			let svg = await (await fetch(relURL(url, import.meta))).text();
+		await Promise.all(Object.keys(Guides).map(async (name) => {
+			let url = Guides[name];
+			let svg = await (await fetch(url)).text();
 			svg = SvgPlus.parseSVGString(svg);
-			guides[g] = svg.innerHTML;
+			guides[name] = svg.innerHTML;
 		}))
 		this.guides = guides;
 	}
