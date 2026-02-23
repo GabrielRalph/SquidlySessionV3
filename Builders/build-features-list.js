@@ -106,7 +106,7 @@ function addDependencies(features) {
     features.sort((a, b) => b.dependentsCount - a.dependentsCount);
 }
 
-export function createFeatureList(src) {
+export function buildFeaturesList(src) {
     const features = getAllFeatures(src);
     addDependencies(features);
 

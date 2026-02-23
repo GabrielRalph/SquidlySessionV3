@@ -1,4 +1,4 @@
-import Colors from '../src/Utilities/Buttons/color-themes.json' assert { type: 'json' }; 
+import path from 'path';
 import fs from 'fs';
 
 function cap(num, min, max) {
@@ -19,8 +19,9 @@ function makeDarkenedColor(color, satFac, lightFac) {
 }
 
 
-export function buildColorThemeLibrary() {
-    const COLOR_THEMES = Colors;
+export function buildGridIconThemes(directory, baseStyle = "grid-icon-base.css", outputFile = "grid-icon.css") {
+    const jsonDir = path.join(directory, "color-themes.json");
+    const COLOR_THEMES = JSON.parse(fs.readFileSync(jsonDir, "utf-8")) || {};
 
     for (let type in COLOR_THEMES) {
         let cardColors = COLOR_THEMES[type];
@@ -56,14 +57,16 @@ export function buildColorThemeLibrary() {
         }
     }
 
-    console.log("\nColor themes: \n\t" + Object.keys(COLOR_THEMES).join("\n\t"));
-    const gridIconTypes = Object.keys(COLOR_THEMES).flatMap(k => k === "topic" ? ["topic"] : [k, "topic-"+k]).map(k => `"${k}"`);
+    const gridIconCSS = Object.keys(COLOR_THEMES).map(type => {
+        let header = `.grid-icon[type="${type}"]` + (type === "topic" ? "" : `, .grid-icon[type="topic-${type}"]`);
+        let entries = Object.entries(COLOR_THEMES[type])
+            .map(([key, value]) => `    ${key}: ${value};`).join("\n");
+        return `${header} {\n${entries}\n}`;
+    }).join("\n\n");
 
-    const moudle = [
-        `/** @typedef {(${gridIconTypes.join("|")})} GridIconTypes */`,
-        "",
-        "export const COLOR_THEMES = " + JSON.stringify(COLOR_THEMES, null, 4) + ";",
-    ].join("\n");
-
-    fs.writeFileSync('../src/Utilities/Buttons/color-themes.js', moudle);
+    console.log("\nGenerated Grid Icon Themes:\n" + Object.keys(COLOR_THEMES).map(t => `\t${t}`).join("\n"));
+    
+    const baseCSS = fs.readFileSync(path.join(directory, baseStyle), "utf-8");
+    const moudle = `${baseCSS}\n\n${gridIconCSS}`;
+    fs.writeFileSync(path.join(directory, outputFile), moudle);
 }

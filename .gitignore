@@ -2,3 +2,6 @@
 */*.DS_Store
 */node_modules/
 /temp
+/build
+/node_modules
+/rollup.config.js

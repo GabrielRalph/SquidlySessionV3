@@ -1,0 +1,21 @@
+{
+  "type": "module",
+  "name": "squidlyv3",
+  "version": "1.0.0",
+  "description": "## Getting Started",
+  "main": "rollup.config.js",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.57.1",
+    "rollup-plugin-obfuscator": "^1.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup -c"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

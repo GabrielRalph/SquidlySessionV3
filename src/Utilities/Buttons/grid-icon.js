@@ -2,7 +2,6 @@ import { SvgPlus, Vector } from "../../SvgPlus/4.js";
 import { Icon, isIconName } from "../Icons/icons.js";
 import { MarkdownElement } from "../markdown.js";
 import { relURL } from "../usefull-funcs.js";
-import { COLOR_THEMES } from "./color-themes.js";
 
 /**
  * GridIconSymbol can be a string or an object defining the icon symbol.
@@ -85,28 +84,28 @@ function folderCard(size, border = BORDER_SIZE) {
              <path stroke-width = "${border}" class = "outline" d = "${outline}" />`
 }
 
-function parseCardType(type) {
-    let isTopic = null;
-    let colorTheme = null;
+// function parseCardType(type) {
+//     let isTopic = null;
+//     let colorTheme = null;
 
-    if (typeof type === "string") {
-        isTopic = false;
-        let parts = type.split("-");
-        if (parts.length > 1 && parts[0] === "topic") {
-            isTopic = true;
-            colorTheme = parts[1];
-        } else if (parts.length == 1) {
-            if (type === "topic") {
-                colorTheme = "topic";
-                isTopic = true;
-            } else {
-                colorTheme = type;
-            }
-        }
-    }
+//     if (typeof type === "string") {
+//         isTopic = false;
+//         let parts = type.split("-");
+//         if (parts.length > 1 && parts[0] === "topic") {
+//             isTopic = true;
+//             colorTheme = parts[1];
+//         } else if (parts.length == 1) {
+//             if (type === "topic") {
+//                 colorTheme = "topic";
+//                 isTopic = true;
+//             } else {
+//                 colorTheme = type;
+//             }
+//         }
+//     }
 
-    return {isTopic, colorTheme};
-}
+//     return {isTopic, colorTheme};
+// }
 
 
 /** A GridIconSymbol represents the image from a grid icon. */
@@ -173,17 +172,14 @@ export class GridCard extends SvgPlus {
 
         this.type = type;
 
-        let {isTopic, colorTheme} = parseCardType(type);
-        this.styles = COLOR_THEMES[colorTheme] || COLOR_THEMES["normal"];
-
         this.cardIcon = this.createChild("svg", {class: "card-icon"});
         this.content = this.createChild("div", {class: "content"});
 
-        if (isTopic !== null) {
-            this.cardRenderer = isTopic ? folderCard : plainCard;
-            let rs = new ResizeObserver(this.onresize.bind(this));
-            rs.observe(this);
-        }
+        const isTopic = type && type.startsWith("topic");
+       
+        this.cardRenderer = isTopic ? folderCard : plainCard;
+        let rs = new ResizeObserver(this.onresize.bind(this));
+        rs.observe(this);
     }
 
     /** 
@@ -240,9 +236,10 @@ export class GridCard extends SvgPlus {
 
     /** @param {string} type */
     set type(type) {
+        this.setAttribute("type", type);
+        // this.classList.remove(this.type);
         this._type = type;
-        this.classList.remove(this.type);
-        this.classList.add(type);
+        // this.classList.add(type);
         this.onresize();
     }
 

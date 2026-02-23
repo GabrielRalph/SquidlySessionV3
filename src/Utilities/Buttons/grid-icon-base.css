@@ -1,0 +1,182 @@
+[shadow] {
+    --border: 4px;
+    --gap: calc(1.25 * var(--border));
+    --shadow-color: #bfbfbfc5;
+}
+
+.grid-icon {
+    --outline: var(--color-danger);
+
+    --icon-color: rgb(245, 244, 244);
+    --icon-color-hover: white;
+
+    --text: white;
+
+    --main: rgb(250, 70, 199);
+    --tab: rgb(200, 50, 150);
+
+    --main-hover: rgb(220, 66, 184);
+    --tab-hover: rgb(169, 22, 120);
+    
+    --main-active: rgb(180, 54, 150);
+    --tab-active: rgb(150, 10, 100);
+
+
+    --tab-color: var(--tab);
+    --main-color: var(--main);
+    --outline-color: transparent;
+
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+	-webkit-user-drag: none;
+
+    cursor: pointer;
+    color: var(--text);
+}
+.grid-icon[i-hidden] {
+    opacity: 0;
+    pointer-events: none;
+}
+.grid-icon[i-disabled] {
+    opacity: 0.4;
+    pointer-events: none;
+}
+.grid-icon[i-display-only] {
+    pointer-events: none;
+}
+.grid-icon .content {
+    position: absolute;
+    --b1: calc(var(--border) / 2);
+    top: var(--b1);
+    left: var(--b1);
+    right: var(--b1);
+    bottom: var(--b1);
+    width: calc(100% - 2 * var(--b1));
+    height: calc(100% - 2 * var(--b1));
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    gap: 0.3em;
+
+}
+
+.grid-icon .content .symbol {
+    width: 100%;
+    height: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-icon.image .content .symbol{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-icon.image .content .symbol img{
+    max-width: 100%;
+    border-radius: 1.5vmin;
+}
+
+.grid-icon.image .content .display-value{
+    display: none;
+}
+
+.symbol .text {
+    font-size: 2em;
+}
+
+.symbol svg {
+    height: 100%;
+    max-width: 90%;
+}
+
+.symbol img {
+    height: 100%;
+    max-width: 90%;
+    object-fit: contain;
+}
+
+.symbol .bg-img {
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.grid-icon .content .display-value {
+    font-size: 1.2em;
+    font-weight: 300;
+    text-align: center;
+    max-width: 90%;
+    word-wrap: break-word;
+}
+
+.grid-icon .content .subtitle {
+    font-weight: 300;
+    text-align: center;
+    word-wrap: break-word;
+    font-size: 0.85em;
+    font-style: italic;
+    opacity: 0.9;
+    max-width: 90%;
+}
+
+.grid-icon .card-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(2px 2px 4px var(--shadow-color));
+}
+
+.grid-icon .card-icon .outline {
+    fill: none;
+    stroke: var(--outline-color);
+}
+
+.grid-icon .card-icon .card {
+    fill: var(--main-color);
+    transition: fill 0.15s ease-in-out
+}
+
+.grid-icon .card-icon .tab {
+    fill: var(--tab-color);
+    transition: fill 0.15s ease-in-out
+}
+
+.grid-icon:not([i-disable-hover])[hover],
+.grid-icon:not([i-disable-hover]):hover {
+    --tab-color: var(--tab-hover);
+    --main-color: var(--main-hover);
+    --outline-color: var(--outline);
+} 
+
+.grid-icon:not([i-disable-hover]):hover .icon,
+.grid-icon:not([i-disable-hover])[hover] .icon {
+    --icon-color: var(--icon-color-hover);
+}
+
+.grid-icon:not([i-disable-active]):active {
+    --tab-color: var(--tab-active);
+    --main-color: var(--main-active);
+    --outline-color: var(--outline-active, var(--outline));
+    transform: scale(0.97);
+}
+
+grid-layout {
+    display: grid;
+    gap: var(--gap);
+}
