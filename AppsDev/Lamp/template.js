@@ -1,7 +1,7 @@
-import { SvgPlus } from "../../src/SvgPlus/4.js";
-import { AccessEvent } from "../../src/Utilities/Buttons/access-buttons.js";
-import { GridIcon, GridLayout } from "../../src/Utilities/Buttons/grid-icon.js";
-import { relURL } from "../../src/Utilities/usefull-funcs.js";
+import { SvgPlus } from "https://v3.squidly.com.au/src/SvgPlus/4.js";
+import { AccessEvent } from "https://v3.squidly.com.au/src/Utilities/Buttons/access-buttons.js";
+import { GridIcon, GridLayout } from "https://v3.squidly.com.au/src/Utilities/Buttons/grid-icon.js";
+import { relURL } from "https://v3.squidly.com.au/src/Utilities/usefull-funcs.js";
 
 SquidlyAPI.setGridSize(8, 6);
 
