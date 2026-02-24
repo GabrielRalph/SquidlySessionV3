@@ -5,3 +5,5 @@
 /build
 /node_modules
 /rollup.config.js
+/package.json
+/package-lock.json
