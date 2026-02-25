@@ -151,9 +151,17 @@
    * Automatically registers an access-button element using its attributes.
    * @param {HTMLElement} element - The access-button element
    */
-  function autoRegisterAccessButton(element) {
+  async function autoRegisterAccessButton(element) {
     // Skip if already registered
     if (element.dataset.accessButtonId) return;
+
+    // Wait for custom element definition
+    if (!customElements.get("access-button")) {
+      await customElements.whenDefined("access-button");
+    }
+
+    // Wait one microtask for upgrade to complete
+    await Promise.resolve();
 
     const group = element.getAttribute("access-group") || "default";
     const orderAttr = element.getAttribute("access-order");
@@ -333,12 +341,12 @@
         if (node.nodeType !== Node.ELEMENT_NODE) continue;
 
         if (node.tagName === "ACCESS-BUTTON") {
-          autoRegisterAccessButton(node);
+          void autoRegisterAccessButton(node);
         }
         // Also check descendants
-        node
-          .querySelectorAll?.("access-button")
-          .forEach(autoRegisterAccessButton);
+        node.querySelectorAll?.("access-button").forEach((element) => {
+          void autoRegisterAccessButton(element);
+        });
       }
 
       // Handle removed nodes
@@ -361,9 +369,9 @@
       subtree: true,
     });
     // Register any existing access-button elements
-    document
-      .querySelectorAll("access-button")
-      .forEach(autoRegisterAccessButton);
+    document.querySelectorAll("access-button").forEach((element) => {
+      void autoRegisterAccessButton(element);
+    });
   }
 
   // Start observer when DOM is ready
