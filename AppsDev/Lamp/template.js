@@ -135,7 +135,7 @@ class LampWindow extends SvgPlus {
             symbol: "back",
             displayValue: "delete",
             events: {"access-click": e => this.deleteWord()}
-        }, "lamp-top"), 0, 5);
+        }, "apps"), 0, 5);
         
         this.events = {
             "C65": e => this.addS(),
