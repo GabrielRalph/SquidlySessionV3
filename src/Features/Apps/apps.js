@@ -702,19 +702,27 @@ export default class Apps extends Features {
     // return parent-viewport coordinates instead of iframe-local ones.
     const element = this._getIframeElement(id);
     if (element) {
-      const origGetCenter = element.getCenter.bind(element);
-      const origIsPointInElement = element.isPointInElement.bind(element);
+      if (
+        typeof element.getCenter === "function" &&
+        typeof element.isPointInElement === "function"
+      ) {
+        const origGetCenter = element.getCenter.bind(element);
+        element.getCenter = () => {
+          const center = origGetCenter();
+          return this._toParentCoords(center);
+        };
 
-      element.getCenter = () => {
-        const center = origGetCenter();
-        return this._toParentCoords(center);
-      };
-
-      element.isPointInElement = (p) => {
-        if (!this._isPointInIframe(p)) return false;
-        const pIframe = this._toIframeCoords(p);
-        return origIsPointInElement(pIframe);
-      };
+        const origIsPointInElement = element.isPointInElement.bind(element);
+        element.isPointInElement = (p) => {
+          if (!this._isPointInIframe(p)) return false;
+          const pIframe = this._toIframeCoords(p);
+          return origIsPointInElement(pIframe);
+        };
+      }
+    } else {
+      console.warn(
+        `[Apps] Element "${id}" found but not yet upgraded to AccessButtonRoot. Skipping coordinate override.`,
+      );
     }
 
     // Create proxy AccessButton element
