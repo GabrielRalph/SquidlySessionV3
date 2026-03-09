@@ -3,6 +3,17 @@ import { AccessEvent } from "https://v3.squidly.com.au/src/Utilities/Buttons/acc
 import { GridIcon, GridLayout } from "https://v3.squidly.com.au/src/Utilities/Buttons/grid-icon.js";
 import { relURL } from "https://v3.squidly.com.au/src/Utilities/usefull-funcs.js";
 
+
+if (!window.SquidlyAPI) {
+    window.SquidlyAPI = {
+        firebaseOnValue: () => {},
+        firebaseSet: () => {},
+        speak: () => {},
+        loadUtterances: () => {},
+        setGridSize: () => {},
+    }
+}
+
 SquidlyAPI.setGridSize(8, 6);
 
 function rgb2hsl(r, g, b) {
@@ -78,10 +89,17 @@ export class LampAction extends AccessEvent {
 
 class LampIcon extends GridIcon {
     constructor(opts) {
+        let symbol = null;
+        if (opts.icon_url) {
+            symbol = opts.icon_url;
+        } else if (opts.symbol_text) {
+            symbol = {text: opts.symbol_text};
+        }
+
         super({
             type: "white",
             displayValue: opts.label,
-            symbol: opts.icon_url ? opts.icon_url : null,
+            symbol: symbol,
             events: {
                 "access-click": (e) => {
                     this.dispatchEvent(new LampAction(opts, e));
@@ -118,7 +136,7 @@ class LampWindow extends SvgPlus {
         super(el);
         this.mainLayout = this.createChild(GridLayout, {}, 8, 6);
         this.text = new SvgPlus("div");
-        this.text.class = "text"
+        this.text.class = "text-output"
         this.mainLayout.add(this.text, 0, 1, 0, 4);
         this.layout = this.mainLayout.add(new GridLayout(7, 12), 1, 0, 8, 5);
         this.layout.class = "lamp-layout";
@@ -170,7 +188,7 @@ class LampWindow extends SvgPlus {
 
 
     async load(){
-        LampPages = await (await fetch(relURL("./lamp_pages.json", import.meta))).json();
+        LampPages = await (await fetch(relURL("./zuns_lamp_pages.json", import.meta))).json();
         SquidlyAPI.firebaseOnValue("value1", value => {
             if (this.text.innerHTML !== value) {
                 this.text.innerHTML = value;

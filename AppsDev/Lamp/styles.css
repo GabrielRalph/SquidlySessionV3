@@ -1,5 +1,6 @@
 body {
     background: rgb(27, 29, 35);
+    font-size: 3vw;
 }
 lamp-window {
     display: block;
@@ -15,12 +16,16 @@ lamp-window grid-layout {
     pointer-events: all;
 }
 
-lamp-window .text { 
+lamp-window .text-output { 
     background: white;
     margin: calc(var(--border)/2);
     border-radius: 1.5vmin;
     padding: var(--border) calc(var(--border) * 2);
     font-size: 1.7em;
+}
+
+.symbol .text {
+    font-size: 4.2em;
 }
 
 lamp-window .grid-icon {

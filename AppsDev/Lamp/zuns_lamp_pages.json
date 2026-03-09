@@ -7801,7 +7801,9 @@
         ],
         "actions": "C6 R0 Value: 0",
         "linked_page": null,
-        "pos": "0-0"
+        "pos": "0-0",
+        "icon_file": "GOBACKLF",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FGOBACKLF.png?alt=media&token=9af65e8f-64cc-4344-a97e-730c10053873"
       }
     ]
   },
@@ -15163,7 +15165,9 @@
         },
         "actions": "C73 R0 Page: 533",
         "linked_page": 533,
-        "pos": "3-10"
+        "pos": "3-10",
+        "icon_file": "TICKLE1",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FTICKLE1.png?alt=media&token=5f221eee-cb55-4a0b-bc18-d2be25d5ff01"
       },
       {
         "label": "TRICK",
@@ -17109,7 +17113,9 @@
         },
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "2-8"
+        "pos": "2-8",
+        "icon_file": "BULLY",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FBULLY.png?alt=media&token=45f08681-d4c3-474d-8579-43b9ecfa76a5"
       },
       {
         "message": "more abusive ",
@@ -17129,7 +17135,9 @@
         },
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "2-9"
+        "pos": "2-9",
+        "icon_file": "ADJER1",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FADJER1.png?alt=media&token=107801e5-4be2-4115-b596-e3cc0a4b5728"
       },
       {
         "message": "most abusive ",
@@ -17149,7 +17157,9 @@
         },
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "2-10"
+        "pos": "2-10",
+        "icon_file": "ADJEST1",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FADJEST1.png?alt=media&token=5b310a71-733d-4817-8855-90a0f267cd2b"
       }
     ]
   },
@@ -19619,7 +19629,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "0-7"
+        "pos": "0-7",
+        "icon_file": "CAP",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FCAP.png?alt=media&token=ae719959-36a2-4604-87fa-da203944c89b"
       }
     ]
   },
@@ -51985,7 +51997,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "0-2"
+        "pos": "0-2",
+        "icon_file": "FLAG",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FFLAG.png?alt=media&token=4d68ce27-7d89-4cbb-9f2e-f2e35452780d"
       },
       {
         "message": "president ",
@@ -52001,7 +52015,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "0-4"
+        "pos": "0-4",
+        "icon_file": "HISTORY2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FHISTORY2.png?alt=media&token=e30ed89f-902d-4631-b8e7-a7e185aeb8df"
       }
     ]
   },
@@ -59085,7 +59101,9 @@
         },
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "1-9"
+        "pos": "1-9",
+        "icon_file": "NOUNPL",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FNOUNPL.png?alt=media&token=3545c339-55d3-4559-bd59-15a39a53d5a1"
       }
     ]
   },
@@ -60246,7 +60264,9 @@
         },
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "1-9"
+        "pos": "1-9",
+        "icon_file": "NOUN1",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FNOUN1.png?alt=media&token=df983a2a-f885-4354-a495-b98ff5d864f4"
       }
     ]
   },
@@ -69905,7 +69925,9 @@
         },
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "2-8"
+        "pos": "2-8",
+        "icon_file": "TOWEL",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FTOWEL.png?alt=media&token=3214aab3-c51d-4b09-a26f-6108d2a928ff"
       },
       {
         "message": "drier ",
@@ -94300,7 +94322,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "5-4"
+        "pos": "5-4",
+        "icon_file": "BALD3",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FBALD3.png?alt=media&token=a6b51630-bf46-4143-a24d-563f14021f45"
       },
       {
         "message": "tummy ",
@@ -104901,7 +104925,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "4-1"
+        "pos": "4-1",
+        "icon_file": "BEAK",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FBEAK.png?alt=media&token=b74bc5b5-56fc-4a9e-8ef6-2a157fbe34fd"
       }
     ]
   },
@@ -106064,7 +106090,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "2-0"
+        "pos": "2-0",
+        "icon_file": "BIB",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FBIB.png?alt=media&token=d0be94c9-3857-4613-b6d6-d0adf2e6df1b"
       },
       {
         "message": "sneaker ",
@@ -106080,7 +106108,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "3-9"
+        "pos": "3-9",
+        "icon_file": "SHOE_0B",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FSHOE_0B.png?alt=media&token=551b5f8a-48bd-4bd6-8b58-1721be6c9bfe"
       },
       {
         "message": "suit ",
@@ -106096,7 +106126,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "2-6"
+        "pos": "2-6",
+        "icon_file": "SUIT",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FSUIT.png?alt=media&token=caa06464-80a4-478e-a41d-72a505e9911b"
       }
     ]
   },
@@ -110080,7 +110112,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "6-9"
+        "pos": "6-9",
+        "icon_file": "TORAH",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FTORAH.png?alt=media&token=28858378-e87b-4cdf-9d24-17ac4d8486d8"
       },
       {
         "message": "Koran ",
@@ -110096,7 +110130,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "6-11"
+        "pos": "6-11",
+        "icon_file": "KORAN",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FKORAN.png?alt=media&token=45c4d022-0dcc-48c7-9ebe-a5705b515b82"
       }
     ]
   },
@@ -111456,7 +111492,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "6-3"
+        "pos": "6-3",
+        "icon_file": "ARCHERY",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FARCHERY.png?alt=media&token=d21a37a0-d23a-4441-ba21-f1cc92bb5e34"
       },
       {
         "message": "yoga ",
@@ -111472,7 +111510,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "6-5"
+        "pos": "6-5",
+        "icon_file": "YOGA1",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FYOGA1.png?alt=media&token=05dd7946-586e-4fd6-a31b-78adefe58a6e"
       },
       {
         "message": "karate ",
@@ -111488,7 +111528,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "6-7"
+        "pos": "6-7",
+        "icon_file": "KARATE",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FKARATE.png?alt=media&token=e629d1dd-b7b2-4d96-a73c-7ed21d887a68"
       },
       {
         "message": "Olympic ",
@@ -111504,7 +111546,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "6-9"
+        "pos": "6-9",
+        "icon_file": "OLYMPIC",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FOLYMPIC.png?alt=media&token=01915ba6-a7b1-4128-b957-2dcc5f94b920"
       }
     ]
   },
@@ -111732,7 +111776,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "1-4"
+        "pos": "1-4",
+        "icon_file": "ARROW",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FARROW.png?alt=media&token=057d44c7-6977-4e74-9b9e-f3844f1bbe72"
       }
     ]
   },
@@ -120544,7 +120590,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "4-4"
+        "pos": "4-4",
+        "icon_file": "CACTUS",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FCACTUS.png?alt=media&token=0ad7a94e-b39b-480e-b9e6-d05bf7566b71"
       },
       {
         "message": "volcano ",
@@ -121141,7 +121189,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "4-10"
+        "pos": "4-10",
+        "icon_file": "TRICYCLE",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FTRICYCLE.png?alt=media&token=77cbb249-e103-4a4f-9523-510169b9ca6b"
       },
       {
         "message": "wagon ",
@@ -121157,7 +121207,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "5-1"
+        "pos": "5-1",
+        "icon_file": "WAGON",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FWAGON.png?alt=media&token=d48e0847-9e1f-4a20-b1f1-dbdfff41855c"
       }
     ]
   },
@@ -122987,7 +123039,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "5-11"
+        "pos": "5-11",
+        "icon_file": "PHARMAC2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FPHARMAC2.png?alt=media&token=abcc94c8-7051-4940-96a3-d520c8585570"
       },
       {
         "message": "engineer ",
@@ -123003,7 +123057,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "6-2"
+        "pos": "6-2",
+        "icon_file": "ENGINEE",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FENGINEE.png?alt=media&token=e7ac85fe-e1be-4f5d-a21c-69034ac32a29"
       },
       {
         "message": "janitor ",
@@ -123019,7 +123075,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "6-4"
+        "pos": "6-4",
+        "icon_file": "JANITOR",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FJANITOR.png?alt=media&token=cd83dc2c-f3b0-41eb-8503-cb95436c7db6"
       },
       {
         "message": "electrician ",
@@ -123035,7 +123093,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "6-6"
+        "pos": "6-6",
+        "icon_file": "ELECTRI",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FELECTRI.png?alt=media&token=bc22e51c-aae6-43ce-9c99-2c120661d8c7"
       },
       {
         "message": "writer ",
@@ -123051,7 +123111,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "6-8"
+        "pos": "6-8",
+        "icon_file": "WRITE",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FWRITE.png?alt=media&token=9b396f8f-3a9b-4cd3-a264-d65970cbb347"
       }
     ]
   },
@@ -124014,7 +124076,9 @@
         ],
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "0-10"
+        "pos": "0-10",
+        "icon_file": "IGLOO",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FIGLOO.png?alt=media&token=89d6ce67-acac-4366-96ed-018bf887000d"
       },
       {
         "message": "cabin ",
@@ -124397,7 +124461,9 @@
         },
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "2-8"
+        "pos": "2-8",
+        "icon_file": "ADJ",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FADJ.png?alt=media&token=9da514f9-2807-41c2-9678-88c904b38cd4"
       }
     ]
   },
@@ -125311,7 +125377,9 @@
         },
         "actions": "C10 R0 ",
         "linked_page": null,
-        "pos": "2-6"
+        "pos": "2-6",
+        "icon_file": "VRBEN_M1",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FVRBEN_M1.png?alt=media&token=17da65fe-43f5-4a48-af65-17b8fb9e02b2"
       }
     ]
   },
@@ -129016,7 +129084,7 @@
       },
       {
         "message": "ch",
-        "label": "ch",
+        "symbol_text": "ch",
         "symbol_link": {
           "id": 8356,
           "rid": "{A89C3AC2-59BA483B-B822ED68-0725E4DF}",
@@ -129032,7 +129100,7 @@
       },
       {
         "message": "sh",
-        "label": "sh",
+        "symbol_text": "sh",
         "symbol_link": {
           "id": 8357,
           "rid": "{2C020888-59C84774-BCFE3D5B-C8780857}",
@@ -129048,7 +129116,7 @@
       },
       {
         "message": "th",
-        "label": "th",
+        "symbol_text": "th",
         "symbol_link": {
           "id": 8358,
           "rid": "{BEA697EF-B7FF44B1-A7788A0F-CA18DAAC}",
@@ -129064,7 +129132,7 @@
       },
       {
         "message": "TH",
-        "label": "TH",
+        "symbol_text": "TH",
         "symbol_link": {
           "id": 8359,
           "rid": "{5280B164-B06F4F33-AC65FE9E-D321D050}",
@@ -129080,7 +129148,7 @@
       },
       {
         "message": "wh",
-        "label": "wh",
+        "symbol_text": "wh",
         "symbol_link": {
           "id": 8360,
           "rid": "{B6721315-9F55464E-A4FCAB1F-4CAAED6F}",
@@ -129156,11 +129224,11 @@
           6,
           1
         ],
-        "icon_file": "F2",
-        
         "actions": "C42 R0  | C4 R1 Linked Resource: {186F7269-CE6F405B-80481FE3-B3052053}",
         "linked_page": null,
-        "pos": "1-6"
+        "pos": "1-6",
+        "icon_file": "F2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FF2.png?alt=media&token=9e4be0de-9053-4d53-b63f-dedf15f0d6a1"
       },
       {
         "message": "a",
@@ -129179,7 +129247,9 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {ED0EDC7E-05BC46C6-8D946B2D-1F645CF0}",
         "linked_page": null,
-        "pos": "1-7"
+        "pos": "1-7",
+        "icon_file": "A2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FA2.png?alt=media&token=7805d058-48b9-4741-b9db-a79bbbab4367"
       },
       {
         "message": "a",
@@ -129198,7 +129268,9 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {295EB787-36364A27-9630BC81-396A0632}",
         "linked_page": null,
-        "pos": "1-8"
+        "pos": "1-8",
+        "icon_file": "A2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FA2.png?alt=media&token=7805d058-48b9-4741-b9db-a79bbbab4367"
       },
       {
         "message": "g",
@@ -129215,6 +129287,7 @@
         "linked_page": null,
         "pos": "2-3",
         "icon_file": "G2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FG2.png?alt=media&token=d7f6e28e-550a-452b-ba61-f1b03abf69e8"
       },
       {
         "message": "h",
@@ -129229,9 +129302,9 @@
         ],
         "actions": "C42 R0  | C4 R1 Linked Resource: {4770AB8D-DEEB4502-B8B82547-5E8199F0}",
         "linked_page": null,
-        "icon_file": "H2",
         "pos": "2-4",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FG2.png?alt=media&token=d7f6e28e-550a-452b-ba61-f1b03abf69e8"
+        "icon_file": "H2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FH2.png?alt=media&token=7dceb824-c192-4118-995b-a336d602e9b3"
       },
       {
         "message": "j",
@@ -129241,13 +129314,14 @@
           "feature": 29
         },
         "position": [
-          5,
-          2
+            5,
+            2
         ],
         "actions": "C42 R0  | C4 R1 Linked Resource: {98509AAD-580641D5-8B83EF20-7F245137}",
         "linked_page": null,
         "pos": "2-5",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FH2.png?alt=media&token=7dceb824-c192-4118-995b-a336d602e9b3"
+        "icon_file": "J2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FJ2.png?alt=media&token=0a27d6bf-83a3-4654-901e-d592d277897e"
       },
       {
         "message": "k",
@@ -129262,7 +129336,9 @@
         ],
         "actions": "C42 R0  | C4 R1 Linked Resource: {B5D60A38-6E564DF6-9FBF9DF1-56D08577}",
         "linked_page": null,
-        "pos": "2-6"
+        "pos": "2-6",
+        "icon_file": "K2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FK2.png?alt=media&token=f668434d-6c4a-49a6-97e9-622ef6310408"
       },
       {
         "message": "e",
@@ -129281,7 +129357,9 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {B4A50016-6F414F4B-894FD686-963DB19A}",
         "linked_page": null,
-        "pos": "2-7"
+        "pos": "2-7",
+        "icon_file": "E2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FE2.png?alt=media&token=cb7e2d2d-ff85-4953-a962-dc8cdfce87d8"
       },
       {
         "message": "e",
@@ -129300,7 +129378,9 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {E2ABC4A0-08BA4139-9B4BD910-23455A96}",
         "linked_page": null,
-        "pos": "2-8"
+        "pos": "2-8",
+        "icon_file": "E2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FE2.png?alt=media&token=cb7e2d2d-ff85-4953-a962-dc8cdfce87d8"
       },
       {
         "message": "l",
@@ -129316,61 +129396,61 @@
         "actions": "C42 R0  | C4 R1 Linked Resource: {36A39B88-E4CA4047-A727BFF2-88C0CDCD}",
         "linked_page": null,
         "pos": "3-3",
-        "icon_file": "J2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FJ2.png?alt=media&token=0a27d6bf-83a3-4654-901e-d592d277897e"
-      },
-      {
+        "icon_file": "L2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FL2.png?alt=media&token=736d633a-75b3-4ac3-ae17-f85026db4148"
+    },
+    {
         "message": "m",
         "symbol_link": {
-          "id": 8374,
-          "rid": "{75CAF66E-39AA044F-9F1BB225-6BB7CF69}",
-          "feature": 29
+            "id": 8374,
+            "rid": "{75CAF66E-39AA044F-9F1BB225-6BB7CF69}",
+            "feature": 29
         },
         "position": [
-          4,
-          3
+            4,
+            3
         ],
         "actions": "C42 R0  | C4 R1 Linked Resource: {75585665-2F50427A-81659D8A-D1D79143}",
         "linked_page": null,
         "pos": "3-4",
-        "icon_file": "K2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FK2.png?alt=media&token=f668434d-6c4a-49a6-97e9-622ef6310408"
-      },
-      {
+        "icon_file": "M2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FM2.png?alt=media&token=71c7608f-5ccb-4b69-914b-c1522cdc7d55"
+    },
+    {
         "message": "n",
         "symbol_link": {
-          "id": 8375,
-          "rid": "{09C0A900-1030194E-BA868BAD-71626FC7}",
-          "feature": 29
+            "id": 8375,
+            "rid": "{09C0A900-1030194E-BA868BAD-71626FC7}",
+            "feature": 29
         },
         "position": [
-          5,
-          3
+            5,
+            3
         ],
         "actions": "C42 R0  | C4 R1 Linked Resource: {8948DC4F-CA4F4E14-8BE344E3-CB80E07E}",
         "linked_page": null,
         "pos": "3-5",
-        "icon_file": "L2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FL2.png?alt=media&token=736d633a-75b3-4ac3-ae17-f85026db4148"
-      },
-      {
+        "icon_file": "N2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FN2.png?alt=media&token=8c8312f5-5252-4c0d-ba07-e79c96627434"
+    },
+    {
         "message": "p",
         "symbol_link": {
-          "id": 8376,
-          "rid": "{C812CBA8-08833E43-A3DD5E21-21A3003A}",
-          "feature": 29
+            "id": 8376,
+            "rid": "{C812CBA8-08833E43-A3DD5E21-21A3003A}",
+            "feature": 29
         },
         "position": [
-          6,
-          3
+            6,
+            3
         ],
         "actions": "C42 R0  | C4 R1 Linked Resource: {3A7D1AC6-575A402C-80279C93-E48F004F}",
         "linked_page": null,
         "pos": "3-6",
-        "icon_file": "M2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FM2.png?alt=media&token=71c7608f-5ccb-4b69-914b-c1522cdc7d55"
-      },
-      {
+        "icon_file": "P2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FP2.png?alt=media&token=b7dc350a-7093-49a2-b56f-3023eeb3ee57"
+    },
+    {
         "message": "i",
         "label": "SHORT",
         "symbol_link": {
@@ -129388,8 +129468,8 @@
         "actions": "C42 R0  | C4 R1 Linked Resource: {76CEC275-92484652-8E6250A1-A45D26DF}",
         "linked_page": null,
         "pos": "3-7",
-        "icon_file": "N2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FN2.png?alt=media&token=8c8312f5-5252-4c0d-ba07-e79c96627434"
+        "icon_file": "I2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FI2.png?alt=media&token=f7365c8f-e565-489b-9274-1c116890aaf8"
       },
       {
         "message": "i",
@@ -129408,7 +129488,9 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {D97FE735-666F439E-8A28DB2C-2300EF2F}",
         "linked_page": null,
-        "pos": "3-8"
+        "pos": "3-8",
+        "icon_file": "I2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FI2.png?alt=media&token=f7365c8f-e565-489b-9274-1c116890aaf8"
       },
       {
         "label": "DEL WORD",
@@ -129423,7 +129505,9 @@
         ],
         "actions": "C43 R0 ",
         "linked_page": null,
-        "pos": "4-0"
+        "pos": "4-0",
+        "icon_file": "DELTWORD",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FDELTWORD.png?alt=media&token=f0eea03a-72f7-4f92-9808-3f8729022c2f"
       },
       {
         "message": "q",
@@ -129439,8 +129523,8 @@
         "actions": "C42 R0  | C4 R1 Linked Resource: {ABF7F06B-1C9043D9-BECA4120-7D312F42}",
         "linked_page": null,
         "pos": "4-3",
-        "icon_file": "P2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FP2.png?alt=media&token=b7dc350a-7093-49a2-b56f-3023eeb3ee57"
+        "icon_file": "Q2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FQ2.png?alt=media&token=a979c563-2a81-4de2-8331-8a215a59cecd"
       },
       {
         "message": "r",
@@ -129456,8 +129540,8 @@
         "actions": "C42 R0  | C4 R1 Linked Resource: {48EDCAAC-82854044-B20328DF-00E4D571}",
         "linked_page": null,
         "pos": "4-4",
-        "icon_file": "Q2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FQ2.png?alt=media&token=a979c563-2a81-4de2-8331-8a215a59cecd"
+        "icon_file": "R2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FR2.png?alt=media&token=d677bf89-d363-44fc-8629-885d13ad535f"
       },
       {
         "message": "s",
@@ -129473,9 +129557,9 @@
         "actions": "C42 R0  | C4 R1 Linked Resource: {479FC7CE-63C448FE-B570E1A5-18046DD2}",
         "linked_page": null,
         "pos": "4-5",
-        "icon_file": "R2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FR2.png?alt=media&token=d677bf89-d363-44fc-8629-885d13ad535f"
-      },
+        "icon_file": "S2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FS2.png?alt=media&token=ad712902-ca31-4697-b5ff-2628d6298248"
+    },
       {
         "message": "t",
         "symbol_link": {
@@ -129490,9 +129574,10 @@
         "actions": "C42 R0  | C4 R1 Linked Resource: {FB6E3A70-7E2B49F8-8A792986-AB734795}",
         "linked_page": null,
         "pos": "4-6",
-        "icon_file": "S2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FS2.png?alt=media&token=ad712902-ca31-4697-b5ff-2628d6298248"
-      },
+        "icon_file": "T2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FT2.png?alt=media&token=dc2c05b3-e9b1-4b28-83c4-e9aad28ddc16"
+
+    },
       {
         "message": "o",
         "label": "SHORT",
@@ -129511,8 +129596,8 @@
         "actions": "C42 R0  | C4 R1 Linked Resource: {B1E04D72-EDE949A4-B2A40698-A5B06586}",
         "linked_page": null,
         "pos": "4-7",
-        "icon_file": "T2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FT2.png?alt=media&token=dc2c05b3-e9b1-4b28-83c4-e9aad28ddc16"
+        "icon_file": "O2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FO2.png?alt=media&token=f6fe2101-8932-426a-9c95-d9a3932af015"
       },
       {
         "message": "u",
@@ -129531,9 +129616,13 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {EF2D81D5-B0E04BE1-9D2D06D9-EDD5E048}",
         "linked_page": null,
-        "pos": "5-8"
+        "pos": "5-8",
+        "icon_file": "U2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FU2.png?alt=media&token=f8a67742-cbad-4e36-a362-4fdf013e52d7"
+        
       },
       {
+        "label": "BACKSPACE",
         "symbol_link": {
           "id": 8386,
           "rid": "{CAF8EEF4-BAF64A85-8C0F246C-E5C10075}",
@@ -129545,7 +129634,9 @@
         ],
         "actions": "C16 R0 ",
         "linked_page": null,
-        "pos": "5-0"
+        "pos": "5-0",
+        "icon_file": "DELTCHAR",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FDELTCHAR.png?alt=media&token=bce8eee7-0e74-4445-83c8-e6e363892b04"
       },
       {
         "message": "v",
@@ -129633,8 +129724,8 @@
         "actions": "C42 R0  | C4 R1 Linked Resource: {9617862B-6F5948CB-8D841399-8B6725B8}",
         "linked_page": null,
         "pos": "5-7",
-        "icon_file": "Z2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FZ2.png?alt=media&token=d98aa2fd-11e5-43ee-8f68-4ff53560a0be"
+        "icon_file": "U2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FU2.png?alt=media&token=f8a67742-cbad-4e36-a362-4fdf013e52d7"
       },
       {
         "message": "o",
@@ -129653,7 +129744,9 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {23B0313C-5C1A4846-8C1CA702-17AED21E}",
         "linked_page": null,
-        "pos": "4-8"
+        "pos": "4-8",
+        "icon_file": "O2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FO2.png?alt=media&token=f6fe2101-8932-426a-9c95-d9a3932af015"
       },
       {
         "label": "CLEAR",
@@ -129686,7 +129779,8 @@
         "actions": "C42 R0  | C4 R1 Linked Resource: {BFF390C5-8AD54CBE-9C20B8B7-59715151}",
         "linked_page": null,
         "pos": "6-4",
-        "icon_file": ""
+        "icon_file": "Z2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FZ2.png?alt=media&token=d98aa2fd-11e5-43ee-8f68-4ff53560a0be"
       },
       {
         "message": " ",
@@ -129737,10 +129831,13 @@
         },
         "actions": "C42 R0 ",
         "linked_page": null,
-        "pos": "6-8"
+        "pos": "6-8",
+        "icon_file": "E2",
+        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FE2.png?alt=media&token=cb7e2d2d-ff85-4953-a962-dc8cdfce87d8"
       },
       {
         "message": "bl",
+        "symbol_text": "bl",
         "symbol_link": {
           "id": 8396,
           "rid": "{32DAE8C2-6CE245AE-B8C1C636-C29C5102}",
@@ -129760,6 +129857,7 @@
       },
       {
         "message": "br",
+        "symbol_text": "br",
         "symbol_link": {
           "id": 8397,
           "rid": "{8DE8057A-B02E4594-A3298359-9481FE9C}",
@@ -129778,6 +129876,7 @@
       },
       {
         "message": "cl",
+        "symbol_text": "cl",
         "symbol_link": {
           "id": 8398,
           "rid": "{4596AEE3-BE174550-94353B70-218B744F}",
@@ -129792,12 +129891,11 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {7B978044-C81CEB43-8EE5BC6D-A30F566D} | C16 R2 ",
         "linked_page": null,
-        "pos": "1-1",
-        "icon_file": "A2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FA2.png?alt=media&token=7805d058-48b9-4741-b9db-a79bbbab4367"
+        "pos": "1-1"
       },
       {
         "message": "cr",
+        "symbol_text": "cr",
         "symbol_link": {
           "id": 8399,
           "rid": "{FB13CD0E-89BD42C6-AF9DBD3F-B46B3987}",
@@ -129812,12 +129910,11 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {D0EEC837-7AEA2DE3-40AE493A-8623007D} | C16 R2 ",
         "linked_page": null,
-        "pos": "1-2",
-        "icon_file": "A2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FA2.png?alt=media&token=7805d058-48b9-4741-b9db-a79bbbab4367"
+        "pos": "1-2"
       },
       {
         "message": "dr",
+        "symbol_text": "dr",
         "symbol_link": {
           "id": 8400,
           "rid": "{C6D8DB6C-B41F4BFE-8E96C14C-2B4CEA96}",
@@ -129832,12 +129929,11 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {D63D58CF-919A764D-9DD2AC6B-694FCE24} | C16 R2 ",
         "linked_page": null,
-        "pos": "2-0",
-        "icon_file": "E2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FE2.png?alt=media&token=cb7e2d2d-ff85-4953-a962-dc8cdfce87d8"
+        "pos": "2-0"
       },
       {
         "message": "fl",
+        "symbol_text": "fl",
         "symbol_link": {
           "id": 8401,
           "rid": "{5CA1415C-E2EC47F2-91FAC5D9-191B7A1B}",
@@ -129852,12 +129948,11 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {33C27117-C62D654F-A643E637-BBA54468} | C16 R2 ",
         "linked_page": null,
-        "pos": "2-1",
-        "icon_file": "E2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FE2.png?alt=media&token=cb7e2d2d-ff85-4953-a962-dc8cdfce87d8"
+        "pos": "2-1"
       },
       {
         "message": "fr",
+        "symbol_text": "fr",
         "symbol_link": {
           "id": 8402,
           "rid": "{EDDEAB7F-CBE34103-A2D17A3E-04C4E103}",
@@ -129872,12 +129967,11 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {AA8AB1F6-0EC49145-99DEC7F8-76CD8803} | C16 R2 ",
         "linked_page": null,
-        "pos": "2-2",
-        "icon_file": "E2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FE2.png?alt=media&token=cb7e2d2d-ff85-4953-a962-dc8cdfce87d8"
+        "pos": "2-2"
       },
       {
         "message": "tr",
+        "symbol_text": "tr",
         "symbol_link": {
           "id": 8403,
           "rid": "{2F3913ED-BB384E9D-83D4CF15-4004EEF7}",
@@ -129896,6 +129990,7 @@
       },
       {
         "message": "gl",
+        "symbol_text": "gl",
         "symbol_link": {
           "id": 8404,
           "rid": "{87F9B80B-9D344C04-B9AED21D-CE899E3B}",
@@ -129910,12 +130005,11 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {63219D98-24FCEB43-B55C8F19-90417F5B} | C16 R2 ",
         "linked_page": null,
-        "pos": "3-1",
-        "icon_file": "I2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FI2.png?alt=media&token=f7365c8f-e565-489b-9274-1c116890aaf8"
+        "pos": "3-1"
       },
       {
         "message": "gr",
+        "symbol_text": "gr",
         "symbol_link": {
           "id": 8405,
           "rid": "{E8FA6BCC-ACAC4548-A785EBDB-A792CC65}",
@@ -129930,12 +130024,11 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {6188C8C9-B13CD14D-9CAF318D-BB96A3FA} | C16 R2 ",
         "linked_page": null,
-        "pos": "3-2",
-        "icon_file": "I2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FI2.png?alt=media&token=f7365c8f-e565-489b-9274-1c116890aaf8"
+        "pos": "3-2"
       },
       {
         "message": "pl",
+        "symbol_text": "pl",
         "symbol_link": {
           "id": 8406,
           "rid": "{AF548666-77B449E4-AA99CF25-F850FAE4}",
@@ -129950,12 +130043,11 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {2809545D-02590A4E-8F4F5428-BD6223B9} | C16 R2 ",
         "linked_page": null,
-        "pos": "4-1",
-        "icon_file": "O2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FO2.png?alt=media&token=f6fe2101-8932-426a-9c95-d9a3932af015"
+        "pos": "4-1"
       },
       {
         "message": "pr",
+        "symbol_text": "pr",
         "symbol_link": {
           "id": 8407,
           "rid": "{1D5A80E1-BD6B4566-9BC06FDA-82BE5B00}",
@@ -129970,12 +130062,11 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {26ACDA24-AFE5594E-8CABEB0B-D45815BE} | C16 R2 ",
         "linked_page": null,
-        "pos": "4-2",
-        "icon_file": "O2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FO2.png?alt=media&token=f6fe2101-8932-426a-9c95-d9a3932af015"
+        "pos": "4-2"
       },
       {
         "message": "sl",
+        "symbol_text": "sl",
         "symbol_link": {
           "id": 8408,
           "rid": "{A1969A5D-1D134802-B01BEA45-0333967F}",
@@ -129990,12 +130081,11 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {F87FA4BC-B1510B4E-891BC445-6173E5B5} | C16 R2 ",
         "linked_page": null,
-        "pos": "5-1",
-        "icon_file": "U2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FU2.png?alt=media&token=f8a67742-cbad-4e36-a362-4fdf013e52d7"
+        "pos": "5-1"
       },
       {
         "message": "sm",
+        "symbol_text": "sm",
         "symbol_link": {
           "id": 8409,
           "rid": "{559A81F1-5AEA4D01-9415D5D2-C557095E}",
@@ -130010,12 +130100,11 @@
         },
         "actions": "C42 R0  | C4 R1 Linked Resource: {0C2F1349-BE65D14D-BB96D070-B6C6CC07} | C16 R2 ",
         "linked_page": null,
-        "pos": "5-2",
-        "icon_file": "U2",
-        "icon_url": "https://firebasestorage.googleapis.com/v0/b/eyesee-d0a42.appspot.com/o/LampIcons%2FSCSH%2FU2.png?alt=media&token=f8a67742-cbad-4e36-a362-4fdf013e52d7"
+        "pos": "5-2"
       },
       {
         "message": "sp",
+        "symbol_text": "sp",
         "symbol_link": {
           "id": 8410,
           "rid": "{C3ADD347-86FC4C64-9208404E-1E3B738B}",
@@ -130034,6 +130123,7 @@
       },
       {
         "message": "st",
+        "symbol_text": "st",
         "symbol_link": {
           "id": 8411,
           "rid": "{746E49DC-C32142D2-9805E358-56E21232}",
