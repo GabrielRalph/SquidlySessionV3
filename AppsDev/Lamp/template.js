@@ -154,7 +154,10 @@ class LampWindow extends SvgPlus {
             },
             "C42": ({b}) => this.addText(b.message),
             "C43": e => this.deleteWord(),
-            "C73": ({b}) => this.page = b.linked_page,
+            "C73": ({b}) => {
+                this.page = b.linked_page
+                SquidlyAPI.firebaseSet("value2", this.page);
+            },
             "C16": e => this.backspace(),
             // "C74": b => this.window.openWordFinder(),
             // "C20": b => this.window.speakAll(),
